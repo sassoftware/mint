@@ -312,6 +312,7 @@ permission_list_xml_for_role = """
       <name>ModMembers</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/22">
+      <description/>
       <name>datacenter</name>
     </queryset>
     <role id="http://testserver/api/v1/rbac/roles/2">
@@ -326,6 +327,7 @@ permission_list_xml_for_role = """
       <name>CreateResource</name>
     </permission>
     <queryset id="http://testserver/api/v1/query_sets/22">
+      <description/>
       <name>datacenter</name>
     </queryset>
     <role id="http://testserver/api/v1/rbac/roles/2">
@@ -414,6 +416,7 @@ permission_put_xml_output="""
   </queryset>
   <role id="http://testserver/api/v1/rbac/roles/3">
     <name>intern</name>
+    <description/>
   </role>
 </grant>
 """

@@ -96,8 +96,7 @@ class FilterDescriptor(modellib.XObjIdModel):
 
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = "filter_descriptor")
+    _xobj = xobj.XObjMetadata(attributes = {'id':str})
 
     id = models.AutoField(primary_key=True)
     view_name = "QuerySetFilterDescriptor"
@@ -189,17 +188,17 @@ class QuerySet(modellib.XObjIdModel):
             )
             self.actions.action.append(invalidate)
 
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
+    def serialize(self, request=None, **kwargs):
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
 
         # whether the user can create any resource of this type or not
         # determines whether the UI should show the "+" button as enabled.
         # in RBAC 1.5, this logic will likely want to change.
 
-        xobjModel.user_create_permission = False
+        userCreatePermission = False
         user = getattr(request, '_authUser', None)
         if getattr(request, '_is_admin', False):
-           xobjModel.user_create_permission = True
+            userCreatePermission = True
         elif user is not None:
             matching_grants = rbacmodels.RbacPermission.objects.filter(
                 queryset__resource_type=self.resource_type, 
@@ -207,33 +206,37 @@ class QuerySet(modellib.XObjIdModel):
                 permission__name='CreateResource'
             )
             if matching_grants.count() > 0:
-                xobjModel.user_create_permission = True
+                userCreatePermission = True
+
+        modellib.Etree.Node('user_create_permission', parent=etreeModel,
+                text=str(userCreatePermission).lower())
 
         am = AllMembers()
         am._parents = [self]
-        xobjModel.all_members = am.serialize(request)
+        etreeModel.append(am.serialize(request, tag='all_members'))
         cm = ChosenMembers()
         cm._parents = [self]
-        xobjModel.chosen_members = cm.serialize(request)
+        etreeModel.append(cm.serialize(request, tag='chosen_members'))
         fm = FilteredMembers()
         fm._parents = [self]
-        xobjModel.filtered_members = fm.serialize(request)
+        etreeModel.append(fm.serialize(request, tag='filtered_members'))
         childM = ChildMembers()
         childM._parents = [self]
-        xobjModel.child_members = childM.serialize(request)
+        etreeModel.append(childM.serialize(request, tag='child_members'))
         universe = Universe()
         universe._parents = [self]
-        xobjModel.universe = universe.serialize(request)
+        etreeModel.append(universe.serialize(request, tag='universe'))
         grant_matrix = GrantMatrix()
         grant_matrix._parents = [self]
-        xobjModel.grant_matrix = grant_matrix.serialize(request)
+        etreeModel.append(grant_matrix.serialize(request, tag='grant_matrix'))
 
         fd = FilterDescriptor(id=self.query_set_id)
-        xobjModel.filter_descriptor = fd.serialize(request)
+        etreeModel.append(fd.serialize(request, tag='filter_descriptor'))
 
-        xobjModel.is_top_level = self.isTopLevel()
+        modellib.Etree.Node('is_top_level', text=str(self.isTopLevel()).lower(),
+                parent=etreeModel)
 
-        return xobjModel
+        return etreeModel
 
     def getFilterBy(self):
         filterBy = []
@@ -445,12 +448,6 @@ class SystemTag(modellib.XObjIdModel):
     def get_absolute_url(self, *args, **kwargs):
         self._parents = [self.system, self]
         return modellib.XObjIdModel.get_absolute_url(self, *args, **kwargs)
-
-    def serialize(self, request=None, values=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        querySetHref = self.query_set.get_absolute_url(request)
-        xobjModel.query_set = modellib.XObjHrefModel(querySetHref)
-        return xobjModel
 
 class ImageTag(modellib.XObjIdModel):
     '''

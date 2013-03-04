@@ -424,7 +424,7 @@ class WindowsServiceInfo(modellib.XObjIdModel):
     def computeSyntheticFields(self, sender, **kwargs):
         self.required_services = WindowsRequiredServiceInfoList()
         services = []
-        if services != "":
+        if self._required_services:
             services = self._required_services.split(",")
         results = WindowsServiceInfo.objects.filter(name__in=services)
         results = [ FakeWindowsServiceInfo(

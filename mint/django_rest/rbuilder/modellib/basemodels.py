@@ -21,13 +21,52 @@ from django.db.utils import IntegrityError
 from django.core import exceptions
 from django.core import urlresolvers 
 
-from xobj import xobj
 from copy import deepcopy
 
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
 from mint.lib import data as mintdata
+
+class Etree(object):
+    @classmethod
+    def Node(cls, tag, children=[], attributes={}, text=None, parent=None):
+        e = etree.Element(tag)
+        # Drop None attributes
+        e.attrib.update((k, v) for (k, v) in attributes.iteritems()
+                if v is not None)
+        e.extend(children)
+        e.text = text
+        if parent is not None:
+            parent.append(e)
+        return e
+
+    @classmethod
+    def findBasicChild(cls, etreeModel, childName, default=None):
+        ret = etreeModel.find(childName)
+        if ret is None or ret.text is None:
+            return default
+        return ret.text
+
+    @classmethod
+    def findChildren(cls, etreeModel, *path):
+        """
+        Walk over all the path items, return the last one as a list,
+        gracefully handling missing intermediate ones
+        """
+        return etreeModel.xpath("./%s" % '/'.join(path))
+
+    @classmethod
+    def tostring(cls, etreeModel, xmlDeclaration=False, prettyPrint=True,
+            encoding="UTF-8", withTail=None):
+        if withTail is None:
+            withTail = (prettyPrint == True)
+        return etree.tostring(etreeModel, xml_declaration=xmlDeclaration,
+                pretty_print=prettyPrint, encoding=encoding, with_tail=withTail)
+
+    @classmethod
+    def fromstring(cls, strobj):
+        return etree.fromstring(strobj)
 
 class BaseFlags(util.Flags):
     __slots__ = []
@@ -72,7 +111,7 @@ type_map = {}
 class etreeObjectWrapper(object):
     def __init__(self, element):
         self.element = element
-    def to_xml(self, request=None, xobj_model=None):
+    def to_xml(self, request=None, etreeModel=None):
         return etree.tostring(self.element, pretty_print=False,
             encoding="UTF-8", xml_declaration=False)
 
@@ -105,7 +144,7 @@ class BaseManager(models.Manager):
     """
     Common manager class all models should use.  Adds ability to load a model
     from the database based on an existing model, and the ability to
-    deserialize an object from xobj into an instance of the model.
+    deserialize an object from an etree object into an instance of the model.
     """
 
     def _load_from_db(self, model_inst):
@@ -145,7 +184,7 @@ class BaseManager(models.Manager):
         except exceptions.MultipleObjectsReturned:
             return None, None
 
-    def _load(self, model_inst, xobjModel, withReadOnly=False):
+    def _load(self, model_inst, etreeModel, withReadOnly=False):
         """
         Load a model based on model_inst, which is an instance of the model.
         Allows for checking to see if model_inst already exists in the db, and
@@ -162,9 +201,9 @@ class BaseManager(models.Manager):
         and the loaded model, or (None, None) if no loaded model was found.
         """
 
-        # First try to load by an id or href attribute on xobjModel.  This
+        # First try to load by an id or href attribute on etreeModel.  This
         # attribute (if present) should a be the full url of the model.
-        loadedModel = self._load_from_href(xobjModel)
+        loadedModel = self._load_from_href(etreeModel)
         if loadedModel:
             oldModel = loadedModel.serialize()
         else:
@@ -176,7 +215,7 @@ class BaseManager(models.Manager):
         # loadedModel.  In this case we are most likely handling a PUT or an
         # update to a model.
         if loadedModel:
-            self._copyFields(loadedModel, model_inst, xobjModel,
+            self._copyFields(loadedModel, model_inst, etreeModel,
                 withReadOnly=withReadOnly)
             return oldModel, loadedModel
 
@@ -184,7 +223,7 @@ class BaseManager(models.Manager):
             # Don't touch the old model's fields even if they are read-only
             return oldModel, loadedModel
 
-        # We need to remove the read-only fields, added from the xobj model
+        # We need to remove the read-only fields, added from the etree model
         for field in model_inst._meta.fields:
             if getattr(field, 'APIReadOnly', None):
                 defaultValue = None
@@ -193,7 +232,7 @@ class BaseManager(models.Manager):
                 setattr(model_inst, field.name, defaultValue)
         return oldModel, loadedModel
 
-    def _copyFields(self, dest, src, xobjModel=object(), withReadOnly=False):
+    def _copyFields(self, dest, src, etreeModel=None, withReadOnly=False):
         """
         Copy fields from src to dest
         If withReadOnly is set to True, read-only fields will also be copied
@@ -216,8 +255,8 @@ class BaseManager(models.Manager):
 
             # Make sure we don't overwrite existing values on dest with fields
             # that default to None by checking that the field was actually
-            # provided on xobjModel.
-            if newFieldVal is None and not hasattr(xobjModel, field.name):
+            # provided on etreeModel.
+            if newFieldVal is None and (etreeModel is None or etreeModel.find(field.name) is None):
                 continue
 
             # Set the new value on dest if it differs from the old value.
@@ -225,14 +264,14 @@ class BaseManager(models.Manager):
             if newFieldVal != oldFieldVal:
                 setattr(dest, field.name, newFieldVal)
 
-    def load_or_create(self, model_inst, xobjModel=None, withReadOnly=False):
+    def load_or_create(self, model_inst, etreeModel=None, withReadOnly=False):
         """
         Similar in vein to django's get_or_create API.  Try to load a model
         based on model_inst, if one wasn't found, create one and return it.
         """
         # Load the model from the db.
         oldModel, loaded_model = self._load(model_inst,
-            xobjModel=xobjModel, withReadOnly=withReadOnly)
+            etreeModel=etreeModel, withReadOnly=withReadOnly)
         if not loaded_model:
             # No matching model was found. We need to save.  This scenario
             # means we must be creating something new (POST), so it's safe to
@@ -243,21 +282,24 @@ class BaseManager(models.Manager):
 
         return oldModel, loaded_model
 
-    def _load_from_href(self, xobjModel):
+    def _load_from_href(self, etreeModel):
         """
-        Given an xobjModel, and an attribute to look at on that xobjModel for
+        Given an etreeModel, and an attribute to look at on that etreeModel for
         a url, try to load the corresponding django model identified by that
         url.
         """
 
-        if xobjModel is None:
+        if etreeModel is None:
             return None
 
         # Check both href and id, preferring id.
-        if hasattr(xobjModel, "id"):
-            href = getattr(xobjModel, "id")
-        elif hasattr(xobjModel, "href"):
-            href = getattr(xobjModel, "href")
+        for propName in [ 'id', 'href' ]:
+            href = etreeModel.attrib.get(propName)
+            if href is not None:
+                break
+            href = etreeModel.find(propName)
+            if href is not None:
+                href = href.text
         else:
             href = None
 
@@ -285,49 +327,64 @@ class BaseManager(models.Manager):
             return
         cursor = connection.cursor()
         cursor.execute("LOCK TABLE %s" % self.model._meta.db_table)
-        
-    def _add_fields(self, model, xobjModel, request, flags=None):
+
+    @classmethod
+    def _etreeGetProperty(cls, etreeModel, model, field):
+        if isinstance(field, basestring):
+            fieldName = field
+        else:
+            fieldName = field.name
+        # If the field is defined as an attribute, prefer attributes
+        # over elements
+        if fieldName in model._xobj.attributes:
+            ret = etreeModel.attrib.get(fieldName)
+            if ret is not None:
+                return ret
+            # Look for an element too
+            val = etreeModel.find(fieldName)
+            return val
+        # Not an attribute. Prefer elements
+        val = etreeModel.find(fieldName)
+        if val is not None:
+            return val
+        return etreeModel.attrib.get(fieldName)
+
+    def _add_fields(self, model, etreeModel, request, flags=None):
         """
-        For each xobjModel attribute, if the attribute matches a field name on
+        For each etreeModel attribute, if the attribute matches a field name on
         model, set the attribute's value on model.
         """
         fields = model._get_field_dict()
-        set_fields = []
+        set_fields = set([])
 
-        for key, val in xobjModel.__dict__.items():
-            field = fields.get(key, None)
-
-            if field is None:
-                # No field, this attribute does not match a field we know
-                # about.
-                continue
-
+        for field in fields.values():
+            fieldName = field.name
             # special case for fields that may not exist at load time or we
             # want to ignore for other reasons
-            if key in model.load_ignore_fields:
+            if fieldName in model.load_ignore_fields:
                 continue
-
+            val = self._etreeGetProperty(etreeModel, model, field)
+            if val is None:
+                continue
             # If val is an empty string, and it has no elements and no
             # attributes, then it's not a complex xml element, so the intent
             # is to set the new value to None on the model.
-            if val == '' and not val._xobj.elements \
-                and not val._xobj.attributes:
+            if not val.text and not val.attrib and not val.getchildren():
                 val = None
-
             # Serialized foreign keys are serialized inline, so we need to
             # load the model for them based on their inline xml
             # representation.
             elif isinstance(field, SerializedForeignKey):
-                val = field.related.parent_model.objects.load_from_object(val, request, flags=flags)
+                val = field.related.parent_model.objects.load_from_object(val,
+                        request, flags=flags)
 
             # Foreign keys can be serialized based on a text field, or the
             # text of an xml elements, try to load the foreign key model if
             # so.
             elif isinstance(field, ForeignKey) and \
                  field.text_field is not None and \
-                 str(val) is not '' and \
-                 hasattr(val, "_xobj"): 
-                lookup = { field.text_field : str(val) }
+                 getattr(val, 'text', val):
+                lookup = { field.text_field : getattr(val, 'text', val) }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
 
@@ -341,50 +398,43 @@ class BaseManager(models.Manager):
             # BooleanFields.
             elif isinstance(field, (djangofields.BooleanField,
                                     djangofields.NullBooleanField)):
-                val = str(val)
-                val = (val.lower() == str(True).lower())
+                # val may have been an attribute
+                val = getattr(val, 'text', val)
+                val = (val.lower() == 'true')
 
             # Handle xml fields
             elif isinstance(field, XMLField):
-                if not val._xobj.elements:
-                    # No children for this element
-                    continue
-                subelementTag = val._xobj.tag
-                subelementName = val._xobj.elements[0]
-                subelement = getattr(val, subelementName, None)
-                if subelement is None:
-                    continue
-                subelement = getattr(subelement, key, subelement)
-                val = xobj.toxml(subelement, tag=subelementTag,
-                    prettyPrint=False, xml_declaration=False)
+                subelementTag = val.tag
+                # Grab the first child, rename it as the main field
+                for subelement in val.iterchildren():
+                    val = etree.tostring(subelement, pretty_print=False, xml_declaration=False)
+                    break
+                else:
+                    val = None
 
             # DateTimeUtcFeilds can not be set to empty string.
             elif isinstance(field, DateTimeUtcField):
-                # Empty string is not valid, explicitly convert to None
-                if val:
-                    val = str(val)
-                else:
-                    val = None
+                val = getattr(val, 'text', val)
 
             # All other cases where val was specified, use Django's
             # get_prep_value, except in the case of the primary key.
             elif val is not None:
                 if field.primary_key:
                     try:
-                        val = int(val)
+                        val = int(val.text)
                     except:
                         # primary keys might not just be ints!
-                        val = str(val)
+                        val = val.text
                 else:
                     # Cast to str, django will just do the right thing.
-                    val = str(val)
+                    val = getattr(val, 'text', val)
                     val = field.get_prep_value(val)
 
             else:
                 val = None
 
-            set_fields.append(key)
-            setattr(model, key, val)
+            set_fields.add(field.name)
+            setattr(model, field.name, val)
 
         # Values for fields that are not provided should be preserved.
         # However, since we've instantiated the model, we've gotten the
@@ -392,30 +442,30 @@ class BaseManager(models.Manager):
         # get saved, overwriting existing values if they weren't actually
         # provided.
         for field in model._meta.fields:
+            if field.name in set_fields:
+                continue
             try:
                 value = getattr(model, field.name, None)
             except exceptions.ObjectDoesNotExist:
                 continue
+            if value is None:
+                continue
             # There is a value, and we didn't set the field, so it wasn't
             # provided.
-            if value is not None and field.name not in set_fields:
-                default_val = field.get_default()
-                if default_val == '' and not hasattr(xobjModel, field.name):
-                    setattr(model, field.name, None)
+            default_val = field.get_default()
+            if default_val != '':
+                continue
+            setattr(model, field.name, None)
 
         return model
 
-    def _add_list_fields(self, model, xobjModel, request, flags=None):
+    def _add_list_fields(self, model, etreeModel, request, flags=None):
         """
-        For each list_field on the model, get the objects off of xobjModel, load
+        For each list_field on the model, get the objects off of etreeModel, load
         their corresponding model and add them to our model in a list.
         """
         for key in model.list_fields:
-            # xobj deserializes lists by adding a list as an attribute to the
-            # model named after the element.
-            flist = getattr(xobjModel, key, None)
-            if type(flist) != type([]):
-                flist = [flist]
+            flist = etreeModel.iterchildren(key)
 
             mods = []
             for val in flist:
@@ -427,7 +477,7 @@ class BaseManager(models.Manager):
 
         return model
 
-    def _get_accessors(self, model, xobjModel, request=None, flags=None):
+    def _get_accessors(self, model, etreeModel, request=None, flags=None):
         """
         Build and return a dict of accessor name and list of accessor
         objects.
@@ -447,26 +497,26 @@ class BaseManager(models.Manager):
         # (original_flags is largely for this purpose, see below)
         flags = Flags(save=False, original_flags=flags)
 
-        for key, val in xobjModel.__dict__.items():
-            if key in accessors:
-                ret_accessors[key] = []
-                rel_obj_model = accessors[key].model
-                rel_obj_name = rel_obj_model.getTag()
-                rel_objs = getattr(val, rel_obj_name, None)
-                if rel_objs is None:
-                    continue
-                if type(rel_objs) != type([]):
-                    rel_objs = [rel_objs]
-                for rel_obj in rel_objs:
-                    rel_mod = type_map[rel_obj_name].objects.load_from_object(
-                        rel_obj, request, flags=flags)
-                    ret_accessors[key].append(rel_mod)
+        for accessorName, accessor in accessors.items():
+            val = etreeModel.find(accessorName)
+            if val is None:
+                continue
+            ret_accessors[accessorName] = accessorList = []
+            rel_obj_model = accessor.model
+            rel_obj_name = rel_obj_model.getTag()
+            rel_objs = list(val.iterchildren(rel_obj_name))
+            if rel_objs is None:
+                continue
+            for rel_obj in rel_objs:
+                rel_mod = type_map[rel_obj_name].objects.load_from_object(
+                    rel_obj, request, flags=flags)
+                accessorList.append(rel_mod)
         return ret_accessors
 
     def _add_accessors(self, model, accessors):
         """
-        For each xobjModel attribute, if the attribute matches an accessor name,
-        load all the acccessor models off xobjModel and add them to the model's 
+        For each model attribute, if the attribute matches an accessor name,
+        load all the acccessor models off model and add them to the model's 
         accessor.
         """
         for key, val in accessors.items():
@@ -488,10 +538,10 @@ class BaseManager(models.Manager):
         """
         getattr(model, m2m_accessor).clear()
 
-    def _add_m2m_accessors(self, model, xobjModel, request, flags=None):
+    def _add_m2m_accessors(self, model, etreeModel, request, flags=None):
         """
-        Populate the many to many accessors on model based on the xobj model
-        in xobjModel.
+        Populate the many to many accessors on model based on the etree model
+        in etreeModel.
         """
         flags = flags.copy(save=False, original_flags=flags)
         for m2m_accessor, m2m_mgr in model._get_m2m_accessor_dict().items():
@@ -501,12 +551,12 @@ class BaseManager(models.Manager):
             else:
                 rel_obj_name = m2m_mgr.target_field_name
 
-            acobj = getattr(xobjModel, m2m_accessor, None)
-            objlist = getattr(acobj, rel_obj_name, None)
-            if objlist is not None:
+            acobj = etreeModel.find(m2m_accessor)
+            if acobj is None:
+                continue
+            objlist = list(acobj.iterchildren(rel_obj_name))
+            if objlist:
                 self._clear_m2m_accessor(model, m2m_accessor)
-                if not isinstance(objlist, list):
-                    objlist = [ objlist ]
             for rel_obj in objlist or []:
                 modelCls = m2m_mgr.model
                 rel_mod = modelCls.objects._load_from_href(rel_obj)
@@ -517,29 +567,36 @@ class BaseManager(models.Manager):
 
         return model
 
-    def _add_synthetic_fields(self, model, xobjModel, request):
+    def _add_synthetic_fields(self, model, etreeModel, request):
         # Not all models have the synthetic fields option set, so use getattr
         for fieldName, fmodel in getattr(model._meta, 'synthetic_fields', {}).items():
-            val = getattr(xobjModel, fieldName, None)
+            if fmodel.APIReadOnly:
+                continue
+            # Since this is a field, we ignore all but the first
+            # occurrence
+            val = etreeModel.find(fieldName)
+            if val is None:
+                continue
+            modelClass = fmodel.model
+            if modelClass is str:
+                val = val.text
+            elif isinstance(modelClass, XObjIdModel):
+                raise Exception("Unexpected serialization object")
+            elif inspect.isclass(modelClass):
+                if issubclass(modelClass, XObjModel):
+                    val = modelClass.objects.load_from_object(val, request)
+                elif not issubclass(modelClass, EtreeField):
+                    raise Exception("Unexpected serialization object")
             if val is not None:
-                if isinstance(val, XObjIdModel):
-                    val = self.load_from_object(val, request)
-                elif isinstance(val, xobj.XObj) and bool(val):
-                    # This catches xobj strings inheriting from unicode,
-                    # confusing database drivers if they are not real
-                    # unicode. Still it would be nice if xobj did this
-                    # for us.
-                    val = unicode(val)
-            if val is not None:
-                    setattr(model, fieldName, val)
+                setattr(model, fieldName, val)
         return model
 
-    def _add_abstract_fields(self, model, xobjModel):
+    def _add_abstract_fields(self, model, etreeModel):
         abstractFields = getattr(model._meta, 'abstract_fields', None)
         if not abstractFields:
             return model
         for fieldName, mdl in abstractFields.items():
-            val = getattr(xobjModel, fieldName, None)
+            val = etreeModel.find(fieldName)
             if val is None:
                 continue
             currentVal = getattr(model, fieldName, None)
@@ -553,14 +610,11 @@ class BaseManager(models.Manager):
         return model
 
 
-    def load_from_object(self, xobjModel, request, flags=None):
+    def load_from_object(self, etreeModel, request, flags=None):
         """
-        Given an object (xobjModel) from xobj, create and return the  corresponding
+        Given an object (etreeModel) , create and return the  corresponding
         model.  If load is True, load the model from the db and apply the
-        updates to it based on xobjModel, otherwise, always create a new model.
-        
-        xobjModel does not have to be from xobj, but it should match the
-        similar structure of an object that xobj would create from xml.
+        updates to it based on etreeModel, otherwise, always create a new model.
         """
         if flags is None:
             flags = Flags(save=True, load=True)
@@ -577,9 +631,9 @@ class BaseManager(models.Manager):
 
         # We need access to synthetic fields before loading from the DB, they
         # may be used in load_or_create
-        model = self._add_synthetic_fields(model, xobjModel, request)
-        model = self._add_fields(model, xobjModel, request, flags=flags)
-        accessors = self._get_accessors(model, xobjModel, request, flags=flags)
+        model = self._add_synthetic_fields(model, etreeModel, request)
+        model = self._add_fields(model, etreeModel, request, flags=flags)
+        accessors = self._get_accessors(model, etreeModel, request, flags=flags)
 
         # Only try to load the model if load is True.  
         if not flags.load:
@@ -590,28 +644,27 @@ class BaseManager(models.Manager):
                 raise e
             oldModel = None
         elif flags.save:
-            oldModel, model = self.load_or_create(model, xobjModel)
+            oldModel, model = self.load_or_create(model, etreeModel)
         else:
-            oldModel, dbmodel = self._load(model, xobjModel)
+            oldModel, dbmodel = self._load(model, etreeModel)
             if dbmodel:
                 model = dbmodel
 
-        # Copy the synthetic fields again - this is unfortunate
-        model = self._add_synthetic_fields(model, xobjModel, request)
+        model = self._add_synthetic_fields(model, etreeModel, request)
 
         # If this is an abstract model, we want to pass down the
         # original flags, because we've turned saving off here.
-        model = self._add_m2m_accessors(model, xobjModel, request, flags=flags)
-        model = self._add_list_fields(model, xobjModel, request, flags=origFlags)
+        model = self._add_m2m_accessors(model, etreeModel, request, flags=flags)
+        model = self._add_list_fields(model, etreeModel, request, flags=origFlags)
         model = self._add_accessors(model, accessors)
-        model = self._add_abstract_fields(model, xobjModel)
+        model = self._add_abstract_fields(model, etreeModel)
 
         # Save a reference to the oldModel on model.  This could be helpful
         # later on to detect state changes.
         model.oldModel = oldModel
-        # Save a reference to the original xobj model, e.g. to inspect
+        # Save a reference to the original etree model, e.g. to inspect
         # read-only fields
-        model._xobjModel = xobjModel
+        model._etreeModel = etreeModel
 
         return model
 
@@ -708,16 +761,15 @@ class JobManager(BaseManager):
 class CredentialsManager(BaseManager):
     def load_from_object(self, obj, request, flags=None):
         model = self.model(system=None)
-        for k, v in obj.__dict__.items():
+        # XXX This doesn't really sound right -- misa
+        for k, v in obj.attrib.iteritems():
             setattr(model, k, v)
+        for child in obj.iterchildren():
+            setattr(model, child.tag, child.text)
         return model
-    
-class ConfigurationDescriptorManager(BaseManager):
-    def load_from_object(self, obj, request, flags=None):
-        model = self.model(system=None)
-        for k, v in obj.__dict__.items():
-            setattr(model, k, v)
-        return model
+
+class ConfigurationDescriptorManager(CredentialsManager):
+    pass
 
 class SystemManager(BaseManager):
     
@@ -924,6 +976,9 @@ class SyntheticField(object):
             model = str
         self.model = model
 
+class EtreeField(object):
+    pass
+
 class XObjModel(models.Model):
     """
     Common model class all models should inherit from.  Overrides the default
@@ -1107,13 +1162,13 @@ class XObjModel(models.Model):
             fields_dict[f.name] = getattr(self, f.name, None)
         return fields_dict
 
-    def to_xml(self, request=None, xobj_model=None):
+    def to_xml(self, request=None, etreeModel=None):
         """
         Returns the xml serialization of this model.
         """
-        if not xobj_model:
-            xobj_model = self.serialize(request)
-        return xobj.toxml(xobj_model, xobj_model.__class__.__name__)
+        if not etreeModel:
+            etreeModel = self.serialize(request)
+        return etree.tostring(etreeModel)
 
     def to_json(self, request=None, xobj_model=None):
         """
@@ -1139,7 +1194,7 @@ class XObjModel(models.Model):
         # url_key should always be a list, since potentially a resource id
         # could have multiple uniquely identifying parts.
         # E.g., network might be /api/inventory/systems/10/networks/10
-        if type(self.url_key) != type([]):
+        if not isinstance(self.url_key, list):
             url_key = [self.url_key]
         else:
             url_key = self.url_key
@@ -1235,10 +1290,10 @@ class XObjModel(models.Model):
                 pass
         return m2m_accessors
 
-    def _serialize_fields(self, xobj_model, fields, request, summarize):
+    def _serialize_fields(self, etreeModel, fields, request, summarize):
         """
         For each attribute on self (the model), see if it's a field, if so,
-        set the value on xobj_model.  Then, remove it from fields, as don't
+        set the value on etreeModel.  Then, remove it from fields, as don't
         want to try to serialize it later.
         """
         syntheticFields = getattr(self._meta, 'synthetic_fields', {})
@@ -1249,6 +1304,11 @@ class XObjModel(models.Model):
                 if field is not None:
                     if getattr(field, 'XObjHidden', False):
                         continue
+                    if inspect.isclass(field.model) and issubclass(field.model, EtreeField):
+                        if isinstance(val, etree._Element):
+                            etreeModel.append(val)
+                            continue
+
                     # XXX using isinstance seems bad. We should make sure
                     # val is an acceptable value for a field, and that can
                     # be any field, model or xobj object, and it's hard
@@ -1276,93 +1336,88 @@ class XObjModel(models.Model):
                                         djangofields.NullBooleanField)):
                     val = str(bool(val)).lower()
                 elif isinstance(field, XMLField):
-                    if val is None:
+                    if val is None or val == '':
                         continue
-                    try:
-                        val = xobj.parse(val)
-                        # avoid rendering as <values><values> etc
-                        # if the field name matches the XML field name
-                        subelt = getattr(val, key, None)
-                        if subelt is not None:
-                            val = subelt
-                    except:
-                        if val is None or val == '':
-                            val = ''
-                        else:
-                            raise
+                    val = etree.fromstring(val)
+                    etreeModel.append(Etree.Node(field.name, children=[val]))
+                    continue
                 elif isinstance(field, HrefField):
                     if isinstance(val, HrefField):
                         # If a value was passed in, then ignore the
                         # definition and use the value
                         field = val
-                    val = field.serialize_value(request)
+                    etreeModel.append(field.serialize_value(request, tag=key))
+                    continue
                 elif isinstance(field, djangofields.DecimalField):
-                    val = float(val)
+                    val = str(float(val))
                 elif isinstance(val, XObjModel):
                     # allow nested synthetic fields to override serialization
                     # if the child of the synthetic field is an XObjIdModel
-                    val = val.serialize(request)
+                    etreeModel.append(val.serialize(request, tag=key))
+                    continue
                 elif hasattr(val, "getElementTree"):
                     val = val.getElementTree().element
-                setattr(xobj_model, key, val)
+                    etreeModel.append(val)
+                    continue
+
+                _xobj = getattr(self, '_xobj', None)
+                if _xobj and key in _xobj.attributes:
+                    etreeModel.attrib[key] = unicode(val)
+                else:
+                    Etree.Node(tag=key, parent=etreeModel, text=unicode(val))
   
-    def _serialize_fk_fields(self, xobj_model, fields, request):
+    def _serialize_fk_fields(self, etreeModel, fields, request):
         """
         For each remaining field in fields, see if it's a FK field, if so set
-        the create an href object and set it on xobj_model.
+        the create an href object and set it on etreeModel.
         TODO: accessors?
         """
         for fieldName in fields:
             field = fields[fieldName]
             if getattr(field, 'XObjHidden', False):
                 continue
-            if isinstance(field, related.RelatedField):
-                val = getattr(self, fieldName)
-                text_field = getattr(field, 'text_field', None)
-                serialized = getattr(field, 'serialized', False)
-                visible = getattr(field, 'visible', None)
-                if val:
-                    if visible:
-                        # If the visible prop is set, we want to copy the
-                        # field's value for that property
-                        setattr(xobj_model, fieldName,
-                            getattr(val, visible))
-                    elif not serialized:
-                        refModel = type('%s_ref' % \
-                            self.__class__.__name__, (object,), {})()
-                        refModel._xobj = xobj.XObjMetadata(
-                                            attributes = {"id":str})
-                        absolute_url = val.get_absolute_url(request)
-                        setattr(refModel, "id", absolute_url)
-                        if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
-                            for sField in val.summary_view:
-                                try:
-                                    sVal = getattr(val, sField, None)
-                                    setattr(refModel, sField, sVal)
-                                except:
-                                    # if summary view references value that doesn't exist
-                                    pass
-                        else:
-                            if text_field and getattr(val, text_field):
-                                refModel._xobj.text = getattr(val, text_field)
-                        setattr(xobj_model, fieldName, refModel)
-                    else:
-                        val = val.serialize(request)
-                        serialized_as = getattr(val, 'serialized_as', fieldName)
-                        val._xobj = xobj.XObjMetadata(
-                           elements   = val._xobj.elements,
-                           attributes = val._xobj.attributes,
-                           text       = val._xobj.text,
-                           tag        = serialized_as
-                        ) 
-                        setattr(xobj_model, serialized_as, val)
-                else:
-                    setattr(xobj_model, fieldName, '')
+            if not isinstance(field, related.RelatedField):
+                continue
+            val = getattr(self, fieldName)
+            text_field = getattr(field, 'text_field', None)
+            serialized = getattr(field, 'serialized', False)
+            visible = getattr(field, 'visible', None)
+            if not val:
+                # Create empty node
+                Etree.Node(fieldName, parent=etreeModel)
+                continue
+            if visible:
+                # If the visible prop is set, we want to copy the
+                # field's value for that property
+                etreeModel.append(val.serialize(request, tag=fieldName))
+                continue
+            if serialized:
+                serialized_as = getattr(val, 'serialized_as', fieldName)
+                val = val.serialize(request, tag=serialized_as)
+                etreeModel.append(val)
+                continue
 
-    def _serialize_fk_accessors(self, xobj_model, accessors, request):
+            absolute_url = val.get_absolute_url(request)
+            refModel = Etree.Node(fieldName, attributes=dict(id=absolute_url),
+                    parent=etreeModel)
+            if hasattr(val, "summary_view") and fieldName not in getattr(self, '_xobj_summary_view_hide', []):
+                for sField in val.summary_view:
+                    try:
+                        sVal = getattr(val, sField, None)
+                        Etree.Node(sField, text=sVal, parent=refModel)
+                    except:
+                        # if summary view references value that doesn't exist
+                        pass
+            else:
+                if text_field:
+                    textValue = getattr(val, text_field)
+                    if textValue:
+                        refModel.text = textValue
+
+    def _serialize_fk_accessors(self, etreeModel, accessors, request):
         """
         Builds up an object for each accessor for this model and sets it on
-        xobj_model.  This is so that things like <networks> appear as an xml
+        etreeModel.  This is so that things like <networks> appear as an xml
         representation on <system> xml.
         """
         xobjExplicitAccessors = getattr(self, '_xobj_explicit_accessors', None)
@@ -1379,85 +1434,72 @@ class XObjModel(models.Model):
             # overriden via _xobj.  E.g., The related model name for the
             # networks accessor on system is "network".
             var_name = self.getAccessorName(accessor)
-            # Simple object to create for our accessor
-            accessor_model = type(accessorName, (object,), {})()
 
+            accessorEtreeModel = Etree.Node(accessorName, parent=etreeModel)
             if getattr(accessor.field, 'Deferred', False):
 
                 # The accessor is deferred.  Create an href object for it
                 # instead of a object representing the xml.
                 rel_mod = accessor.model()
-                href = rel_mod.get_absolute_url(request, parents=[self],
-                    view_name=accessor.field.view_name)
-                accessor_model._xobj = xobj.XObjMetadata(
-                    attributes={"id":str})
-                setattr(accessor_model, "id", href)
-                setattr(xobj_model, accessorName, accessor_model)
+                viewName = accessor.field.relatedViewName
+                if viewName:
+                    href = self.get_absolute_url(request, view_name=viewName)
+                else:
+                    href = rel_mod.get_absolute_url(request, parents=[self],
+                        view_name=accessor.field.view_name)
+                if href:
+                    accessorEtreeModel.attrib['id'] = href
+                continue
 
-            else:
-                # In django, accessors are always lists of other models.
-                accessorModelValues = []
-                setattr(accessor_model, var_name, accessorModelValues)
-                try:
-                    # For each related model in the accessor, serialize it,
-                    # then append the serialized object to the list on
-                    # accessor_model.
-                    accessorValues = getattr(self, accessorName)
-                    if isinstance(accessorValues, BaseManager):
-                        accessorValues = [ (x, None)
-                            for x in accessorValues.all() ]
-                    else:
-                        accessorValues = None
-                    if accessorValues is not None:
-                        for rel_mod, subvalues in accessorValues:
-                            rel_mod_ser = rel_mod.serialize(request)
+            try:
+                # For each related model in the accessor, serialize it,
+                # then append the serialized object to the list
+                accessorValues = getattr(self, accessorName)
+                if isinstance(accessorValues, BaseManager):
+                    accessorValues = [ (x, None)
+                        for x in accessorValues.all() ]
+                else:
+                    accessorValues = None
+                if accessorValues is not None:
+                    for rel_mod, subvalues in accessorValues:
+                        rel_mod_ser = rel_mod.serialize(request, tag=var_name)
+                        accessorEtreeModel.append(rel_mod_ser)
+                        if 'id' in rel_mod_ser.attrib:
+                            continue
 
-                            # attempt to add IDs where known to reverse
-                            # FK relationships (aka one-to-many)
-                            view_name = getattr(rel_mod, 'view_name', None)
-                            
-                            if view_name is not None:
-                                href = rel_mod.get_absolute_url(request, 
-                                    parents=[self], 
-                                    view_name=rel_mod.view_name)
-                                #rel_mod_ser._xobj = xobj.XObjMetadata(
-                                #    attributes={"id":str})
-                                if getattr(rel_mod_ser, 'id', None) is None:
-                                    # set the id only if already not set by a
-                                    # custom serializer
-                                    setattr(rel_mod_ser, "id", href)
-                            
-                            accessorModelValues.append(rel_mod_ser)
-                    else:
-                        accessor_model = None
+                        # attempt to add IDs where known to reverse
+                        # FK relationships (aka one-to-many)
+                        view_name = getattr(rel_mod, 'view_name', None)
 
+                        if view_name is None:
+                            continue
+                        href = rel_mod.get_absolute_url(request,
+                            parents=[self],
+                            view_name=rel_mod.view_name)
+                        if href:
+                            rel_mod_ser.attrib['id'] = href
+            # TODO: do we still need to handle this exception here? not
+            # sure what was throwing it.
+            except exceptions.ObjectDoesNotExist:
+                Raise
 
-                    setattr(xobj_model, accessorName, accessor_model)
-
-                # TODO: do we still need to handle this exception here? not
-                # sure what was throwing it.
-                except exceptions.ObjectDoesNotExist:
-                    setattr(xobj_model, accessorName, None)
-
-    def _m2m_buildXobjModel(self, request, m2m_accessor):
-        dmodel = type_map.get(m2m_accessor)
+    def _m2m_buildEtreeModel(self, request, m2mAccessorName):
+        dmodel = type_map.get(m2mAccessorName)
+        etreeModel = Etree.Node(m2mAccessorName)
         if dmodel is not None:
-            m2m_accessor_model = dmodel._xobjClass()
             _xobj = getattr(dmodel, '_xobj', None)
             if _xobj is not None:
-                m2m_accessor_model._xobj = _xobj
                 if 'id' in _xobj.attributes:
                     m = dmodel()
-                    m2m_accessor_model.id = m.get_absolute_url(request,
-                        parents=[self])
-        else:
-            m2m_accessor_model = type(m2m_accessor, (object,), {})()
-        return m2m_accessor_model
+                    m2mId = m.get_absolute_url(request, parents=[self])
+                    if m2mId:
+                        etreeModel.attrib['id'] = m2mId
+        return etreeModel
 
-    def _serialize_m2m_accessors(self, xobj_model, m2m_accessors, request):
+    def _serialize_m2m_accessors(self, etreeModel, m2m_accessors, request):
         """
         Build up an object for each many to many field on this model and set
-        it on xobj_model.
+        it on etreeModel.
         """
         m2mWhitelist = getattr(self, '_xobj_explicit_m2m', None)
         m2mBlacklist = getattr(self, '_xobj_hidden_m2m', [])
@@ -1471,12 +1513,7 @@ class XObjModel(models.Model):
             if deferred:
                 rel_mod = type_map[m2m_accessor]()
                 resourceId = rel_mod.get_absolute_url(request, parents=[self])
-                m2mIdModel = type(m2m_accessor, (object,), {})()
-                m2mIdModel._xobj = xobj.XObjMetadata(
-                    attributes={"id":str})
-                m2mIdModel._xobj.tag = m2m_accessor
-                m2mIdModel.id = resourceId
-                setattr(xobj_model, m2m_accessor, m2mIdModel)
+                Etree.Node(m2m_accessor, attributes=dict(id=resourceId), parent=etreeModel)
                 continue
 
             m2model = m2m_accessors[m2m_accessor].model
@@ -1486,38 +1523,29 @@ class XObjModel(models.Model):
             var_name = self._getM2MName(m2model)
 
             # Simple object to create for our m2m_accessor
-            m2m_accessor_model = self._m2m_buildXobjModel(request, m2m_accessor)
-
-            # In django, m2m_accessors are always lists of other models.
-            accessorModelValues = []
-            setattr(m2m_accessor_model, var_name, accessorModelValues)
+            m2mEtreeModel = self._m2m_buildEtreeModel(request, m2m_accessor)
+            etreeModel.append(m2mEtreeModel)
             try:
                 # For each related model in the m2m_accessor, serialize
-                # it, then append the serialized object to the list on
-                # m2m_accessor_model.
+                # it, then append the serialized object to the list
                 accessorValues = [ (x, None)
                     for x in getattr(self, m2m_accessor).all() ]
                 for rel_mod, subvalues in accessorValues:
-                    rel_mod = rel_mod.serialize(request)
-                    accessorModelValues.append(rel_mod)
-
-                setattr(xobj_model, m2m_accessor, m2m_accessor_model)
-
+                    rel_mod = rel_mod.serialize(request, tag=var_name)
+                    m2mEtreeModel.append(rel_mod)
             # TODO: do we still need to handle this exception here? not
             # sure what was throwing it.
             except exceptions.ObjectDoesNotExist:
-                setattr(xobj_model, m2m_accessor, None)
+                raise
 
-    def _serialize_list_fields(self, xobj_model, request):
+    def _serialize_list_fields(self, etreeModel, request):
         """
         Special handling of list_fields.  For each field in list_fields, get
         the list found at the attribute on the model and serialize each model
         found in that list.  Set a list of the serialized models on
-        xobj_model.
+        etreeModel.
         """
         for list_field in self.list_fields:
-            listFieldVals = []
-            setattr(xobj_model, list_field, listFieldVals)
             show_collapsed = getattr(self, '_supports_collapsed_collection', False)
             for val in getattr(self, list_field, []):
                 if hasattr(val, '_meta'):
@@ -1526,51 +1554,58 @@ class XObjModel(models.Model):
                     # as things we need to show in summary view, to
                     if getattr(self, '_supports_collapsed_collection', False):
                         val._summarize = True
-                    xobjModelVal = val.serialize(request)
+                    xobjModelVal = val.serialize(request, tag=list_field)
                 elif isinstance(val, HrefField):
-                    xobjModelVal = val.serialize_value(request)
+                    tag = list_field
+                    # We do have mixed lists like JobResults, so let the
+                    # tag be variable
+                    if val.tag is not None:
+                        tag = val.tag
+                    xobjModelVal = val.serialize_value(request, tag=tag)
                 else:
                     xobjModelVal = val
-                listFieldVals.append(xobjModelVal)
+                etreeModel.append(xobjModelVal)
 
-    def _serialize_abstract_fields(self, xobj_model, request):
+    def _serialize_abstract_fields(self, etreeModel, request):
         abstractFields = getattr(self._meta, 'abstract_fields', dict())
         for fieldName, field in abstractFields.iteritems():
             val = getattr(self, fieldName, None)
             if val is None:
                 continue
-            val = val.serialize(request)
-            setattr(xobj_model, fieldName, val)
+            val = val.serialize(request, tag=fieldName)
+            etreeModel.append(val)
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, tag=None):
         """
         Serialize this model into an object that can be passed blindly into
         xobj to produce the xml that we require.
         """
-        # Basic object to use to send to xobj.
-        xobjModelClass = self._xobjClass
-        xobj_model = xobjModelClass()
 
-        _xobj = getattr(self, '_xobj', None)
-        if _xobj:
-            xobj_model._xobj = _xobj
+        if tag is None:
+            _xobj = getattr(self, '_xobj', None)
+            if _xobj:
+                tag = _xobj.tag
+        if tag is None:
+            raise Exception("Tag not specified for object %s" % self)
+
+        etreeModel = Etree.Node(tag)
 
         fields = self._get_field_dict()
         m2m_accessors = self._get_m2m_accessor_dict()
 
         summarize = getattr(self, '_summarize', False)
 
-        self._serialize_fields(xobj_model, fields, request, summarize)
+        self._serialize_fields(etreeModel, fields, request, summarize)
         if not summarize:
-            self._serialize_fk_fields(xobj_model, fields, request)
+            self._serialize_fk_fields(etreeModel, fields, request)
             if self.serialize_accessors:
                 accessors = self._get_accessor_dict()
-                self._serialize_fk_accessors(xobj_model, accessors, request)
-            self._serialize_m2m_accessors(xobj_model, m2m_accessors, request)
-            self._serialize_abstract_fields(xobj_model, request)
-            self._serialize_list_fields(xobj_model, request)
+                self._serialize_fk_accessors(etreeModel, accessors, request)
+            self._serialize_m2m_accessors(etreeModel, m2m_accessors, request)
+            self._serialize_abstract_fields(etreeModel, request)
+            self._serialize_list_fields(etreeModel, request)
 
-        return xobj_model
+        return etreeModel
 
     def update(self, **kwargs):
         """
@@ -1590,31 +1625,20 @@ class XObjIdModel(XObjModel):
     class Meta:
         abstract = True
 
-    def serialize(self, request=None):
-        xobj_model = XObjModel.serialize(self, request)
-        _xobj = getattr(xobj_model, '_xobj', None)
-        if _xobj:
-            xobj_model._xobj.attributes['id'] = str
-        else:
-            xobj_model._xobj = xobj.XObjMetadata(
-                                attributes = {'id':str})
-        xobj_model.id = self.get_absolute_url(request)
-        return xobj_model
+    def serialize(self, request=None, tag=None):
+        etreeModel = XObjModel.serialize(self, request, tag=tag)
+        objId = self.get_absolute_url(request)
+        if objId is not None:
+            etreeModel.attrib['id'] = objId
+        return etreeModel
 
-class XObjHrefModel(XObjModel):
+class XObjHrefModel(object):
     """
     Model that serializes to an href.
     """
-    class Meta:
-        abstract = True
-
-    _xobj = xobj.XObjMetadata(
-                attributes = {})
-
     def __init__(self, refValue):
-        self._xobj.attributes["id"] = str
-        setattr(self, "id", refValue)
-        
+        self.attributes = dict(id=refValue)
+
 class HrefField(models.Field):
     def __init__(self, href=None, values=None):
         """
@@ -1635,12 +1659,15 @@ class HrefField(models.Field):
             return url
         return "%s/%s" % (url, href)
 
-    def serialize_value(self, request=None):
-        if request is None:
-            return None
+    def serialize_value(self, request=None, tag=None):
         href = self._getRelativeHref()
-        hrefModel = XObjHrefModel(request.build_absolute_uri(href))
-        return hrefModel
+        if request is not None:
+            href = request.build_absolute_uri(href)
+        attributes = {}
+        if href is not None:
+            attributes.update(id=href)
+        et = Etree.Node(tag, attributes=attributes)
+        return et
 
 class HrefFieldFromModel(HrefField):
     """
@@ -1649,10 +1676,13 @@ class HrefFieldFromModel(HrefField):
     def __init__(self, model=None, viewName=None, tag=None):
         self.model = model
         self.viewName = viewName
+        if tag is None:
+            if model is not None:
+                tag = self.model._xobj.tag
         self.tag = tag
         HrefField.__init__(self)
 
-    def serialize_value(self, request=None):
+    def serialize_value(self, request=None, tag=None):
         "Extracts the URL from the given model and builds an href from it"
         if self.model is None:
             url = urlresolvers.reverse(self.viewName)
@@ -1663,15 +1693,12 @@ class HrefFieldFromModel(HrefField):
             if type(self.model) == list:
                 self.model = self.model[0]
             url = self.model.get_absolute_url(request, view_name=self.viewName)
-                  
+
         url = self._getRelativeHref(url=url)
-        hrefModel = XObjHrefModel(url)
-        if self.tag:
-            # We need to instantiate an instance xobj metadata, setting
-            # it here directly would change the class-wide one
-            hrefModel._xobj = deepcopy(hrefModel._xobj)
-            hrefModel._xobj.tag = self.tag
-        return hrefModel
+        if tag is None:
+            tag = self.tag
+        et = Etree.Node(tag, attributes=dict(id=url))
+        return et
 
 class ForeignKey(models.ForeignKey):
     """
@@ -1724,13 +1751,20 @@ class DeferredForeignKeyMixIn(object):
     model instead of a full xml representation of the model.
     """
     Deferred = True
+    def setRelatedViewName(self, viewName):
+        self.relatedViewName = viewName
 
-class DeferredForeignKey(ForeignKey, DeferredForeignKeyMixIn):
-    pass
+class DeferredForeignKey(DeferredForeignKeyMixIn, ForeignKey):
+    def __init__(self, *args, **kwargs):
+        relatedViewName = kwargs.pop('related_view_name', None)
+        ForeignKey.__init__(self, *args, **kwargs)
+        self.setRelatedViewName(relatedViewName)
 
-class DeferredManyToManyField(models.ManyToManyField,
-                              DeferredForeignKeyMixIn):
-    pass                              
+class DeferredManyToManyField(DeferredForeignKeyMixIn, models.ManyToManyField):
+    def __init__(self, *args, **kwargs):
+        relatedViewName = kwargs.pop('related_view_name', None)
+        models.ManyToManyField.__init__(self, *args, **kwargs)
+        self.setRelatedViewName(relatedViewName)
 
 class XMLField(models.TextField):
     """

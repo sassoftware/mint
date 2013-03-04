@@ -21,6 +21,7 @@ from mint.django_rest.deco import D
 class Platforms(modellib.Collection):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(tag='platforms')
         
     list_fields = ['platform']
 

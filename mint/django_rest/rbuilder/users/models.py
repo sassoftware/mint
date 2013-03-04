@@ -92,9 +92,7 @@ class User(modellib.XObjIdModel):
     def computeSyntheticFields(self, sender, **kwargs):
         self._populateExternalAuthField()
         # sub-collections off of user
-        self.roles = modellib.HrefField(
-           href="/api/v1/users/%s/roles" % self.user_id
-        )
+        self.roles = modellib.HrefFieldFromModel(self, viewName='UserRoles')
 
 class Session(modellib.XObjIdModel):
     class Meta:

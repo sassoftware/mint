@@ -157,15 +157,15 @@ class Job(modellib.XObjIdModel):
         " ")
     _descriptor_data = D(XObjHidden(models.TextField(null=True, db_column="descriptor_data")),
         " ")
-    descriptor = D(modellib.SyntheticField(), "")
-    descriptor_data = D(modellib.SyntheticField(), "")
+    descriptor = D(modellib.SyntheticField(modellib.EtreeField), "")
+    descriptor_data = D(modellib.SyntheticField(modellib.EtreeField), "")
     time_created = D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was created (UTC)")
     time_updated =  D(modellib.DateTimeUtcField(auto_now_add=True),
         "the date the job was updated (UTC)")
     job_description = D(modellib.SyntheticField(),
         "a description of the job")
-    results = modellib.SyntheticField()
+    results = modellib.SyntheticField(modellib.EtreeField)
     created_resources = modellib.SyntheticField()
 
     created_by = D(modellib.APIReadOnly(modellib.DeferredForeignKey(
@@ -209,11 +209,10 @@ class Job(modellib.XObjIdModel):
             resources2.append(res)
         self.created_resources.resource = resources2
 
-    def serialize(self, request=None):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.job_description = self.job_type.description
-
-        return xobj_model
+    def serialize(self, request=None, **kwargs):
+        self.job_description = self.job_type.description
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        return etreeModel
 
 class JobStates(modellib.Collection):
     
@@ -248,6 +247,14 @@ class JobState(modellib.XObjIdModel):
         "the name of the job state, must be unique")
 
     load_fields = [ name ]
+
+class JobResults(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(
+                tag = 'results')
+    list_fields = ['result']
+    result = []
 
 class EventTypes(modellib.XObjModel):
     

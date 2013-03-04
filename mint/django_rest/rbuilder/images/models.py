@@ -38,19 +38,10 @@ class Images(modellib.Collection):
     def get_url_key(self, *args, **kwargs):
         return self.url_key
 
-class BuildLogHref(modellib.HrefFieldFromModel):
-    def __init__(self, model):
-        modellib.HrefFieldFromModel.__init__(self, model)
-
-    def serialize_value(self, request=None):
-        "Extracts the URL from the given model and builds an href from it"
-        url = self.model.get_absolute_url(request)
-        url = self._getRelativeHref(url=url)
-        return modellib.XObjHrefModel(url + '/build_log')
-
 class ImageTypes(modellib.Collection):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(tag='image_types')
 
     list_fields = ['image_type']
 
@@ -92,6 +83,26 @@ class ImageType(modellib.XObjIdModel):
 
     def get_url_key(self):
         return [ self.image_type_id ]
+
+class ImageMetadata(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    objects = models_manager.ImageMetadataManager()
+
+    def asDict(self):
+        return self._imageMetadata
+
+    def setMetadata(self, metadataDict):
+        self._imageMetadata = dict(metadataDict)
+
+    def serialize(self, request, tag=None, **kwargs):
+        E = modellib.Etree
+        etreeModel = E.Node(tag)
+        for k, v in self._imageMetadata.items():
+            if v is None:
+                continue
+            etreeModel.append(E.Node(k, text=unicode(v)))
+        return etreeModel
 
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -158,7 +169,7 @@ class Image(modellib.XObjIdModel):
     base_image = D(modellib.DeferredForeignKey('Image', null=True,
         related_name='layered_images', db_column='base_image'), "Image base image, by default is null", short="Image base image")
 
-    metadata = D(modellib.SyntheticField(), "Image metadata", short="Image metadata")
+    metadata = D(modellib.SyntheticField(ImageMetadata), "Image metadata", short="Image metadata")
     architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")
     trailing_version = modellib.SyntheticField()
     num_image_files = D(modellib.SyntheticField(), "Image file count", short="Image file count")
@@ -186,7 +197,8 @@ class Image(modellib.XObjIdModel):
         else:
             self.num_image_files = 0;
 
-        self.build_log = self._getBuildLog()
+        self.build_log = modellib.HrefFieldFromModel(self,
+            viewName="BuildLog")
 
         if self._image_type is not None:
             self.image_type = ImageType.fromImageTypeId(self._image_type)
@@ -203,9 +215,6 @@ class Image(modellib.XObjIdModel):
 
         self._computeActions()
 
-    def _getBuildLog(self):
-        return BuildLogHref(self)
-
     def getMetadata(self):
         troveTup = self._getOutputTrove()
         if self._rbmgr is None or troveTup is None:
@@ -215,13 +224,11 @@ class Image(modellib.XObjIdModel):
         return metadata
 
     def _computeMetadata(self):
-        metadata = self.getMetadata()
-        if metadata is None:
+        metadataDict = self.getMetadata()
+        if metadataDict is None:
             return
-        metaxml = xobj.XObj()
-        for key, value in metadata.items():
-            setattr(metaxml, key, value)
-        self.metadata = metaxml
+        self.metadata = metadata = ImageMetadata()
+        metadata.setMetadata(metadataDict)
 
     def saveMetadata(self):
         if (self._rbmgr is None or self.output_trove is None
@@ -255,12 +262,7 @@ class Image(modellib.XObjIdModel):
     def _getMetadataDict(self):
         if self.metadata is None:
             return None
-        metadataDict = {}
-        for name, value in self.metadata.__dict__.items():
-            if name.startswith('_'):
-                continue
-            metadataDict[name] = str(value)
-        return metadataDict
+        return self.metadata.asDict()
 
     def save(self):
         if self.image_type is not None:
@@ -355,8 +357,8 @@ class BuildFiles(modellib.Collection):
 
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
-    metadata = modellib.SyntheticField()
-    attributes = modellib.SyntheticField()
+    metadata = modellib.SyntheticField(ImageMetadata)
+    attributes = modellib.SyntheticField(modellib.EtreeField)
 
 class BuildFile(modellib.XObjIdModel):
     class Meta:
@@ -375,9 +377,9 @@ class BuildFile(modellib.XObjIdModel):
         'sha1 associated with the build file, max length is 40 characters')
     file_name = modellib.SyntheticField()
     url = modellib.SyntheticField()
-    target_images = modellib.XObjHidden(modellib.SyntheticField())
+    target_images = modellib.XObjHidden(modellib.SyntheticField(modellib.EtreeField))
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, **kwargs):
         fileUrls = BuildFilesUrlsMap.objects.filter(file=self.file_id
                 ).order_by('url').all()
         if fileUrls and request:
@@ -386,8 +388,8 @@ class BuildFile(modellib.XObjIdModel):
             self.url = request.build_absolute_uri(
                     '/downloadImage?fileId=%d&urlType=%d' % (self.file_id,
                         fileUrl.url_type))
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        return xobjModel
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        return etreeModel
 
 
 class ImageData(modellib.XObjIdModel):

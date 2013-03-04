@@ -835,14 +835,15 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
               FROM tmp_target_image""")
 
     def _image(self, target, image):
-        imageName = self._unXobj(getattr(image, 'productName', None))
+        findBasic = modellib.Etree.findBasicChild
+        imageName = findBasic(image, 'productName')
         if imageName is None:
-            imageName = self._unXobj(getattr(image, 'shortName', None))
+            imageName = findBasic(image, 'shortName')
         if imageName is None:
-            imageName = self._unXobj(getattr(image, 'longName', None))
-        imageDescription = self._unXobj(getattr(image, 'longName', imageName))
-        imageId = self._unXobj(getattr(image, 'internalTargetId'))
-        rbuilderImageId = self._unXobj(getattr(image, 'imageId'))
+            imageName = findBasic(image, 'longName')
+        imageDescription = findBasic(image, 'longName', imageName)
+        imageId = findBasic(image, 'internalTargetId')
+        rbuilderImageId = findBasic(image, 'imageId')
         if rbuilderImageId == imageId:
             rbuilderImageId = None
 
@@ -852,24 +853,23 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return model
 
     def _system(self, target, system):
-        name = self._unXobj(getattr(system, 'instanceName', None))
-        description = self._unXobj(getattr(system, 'instanceDescription', name))
-        systemId = self._unXobj(getattr(system, 'instanceId'))
-        ipAddr1 = self._unXobj(getattr(system, 'publicDnsName', None))
-        ipAddr2 = self._unXobj(getattr(system, 'privateDnsName', None))
-        state = self._unXobj(getattr(system, 'state'))
-        createdDate = self._unXobj(getattr(system, 'launchTime', None))
+        findBasic = modellib.Etree.findBasicChild
+        name = findBasic(system, 'instanceName')
+        description = findBasic(system, 'instanceDescription', '')
+        systemId = findBasic(system, 'instanceId')
+        ipAddr1 = findBasic(system, 'publicDnsName')
+        ipAddr2 = findBasic(system, 'privateDnsName')
+        state = findBasic(system, 'state')
+        createdDate = findBasic(system, 'launchTime')
         if createdDate is not None:
             if createdDate:
                 createdDate = timeutils.fromtimestamp(createdDate)
             else:
                 createdDate = None
-        credentials = getattr(system, 'credentials', [])
+        credentials = system.find('credentials')
         if credentials is not None:
-            opaqueIds = getattr(credentials, 'opaqueCredentialsId', [])
-            if not isinstance(opaqueIds, list):
-                opaqueIds = [ opaqueIds ]
-            credentials = [ int(self._unXobj(x)) for x in opaqueIds ]
+            opaqueIds = [ x.text for x in credentials.iterchildren('opaqueCredentialsId') ]
+            credentials = [ int(x) for x in opaqueIds ]
 
         model = models.TargetSystem(target=target,
             name=name, description=description,

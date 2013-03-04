@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+from xobj import xobj
 from django.db import models
 
 from mint.django_rest.rbuilder import modellib
@@ -24,6 +25,7 @@ XObjHidden = modellib.XObjHidden
 class Fault(modellib.XObjModel):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(tag = 'fault')
     code = models.IntegerField(null=True)
     message = models.CharField(max_length=8092, null=True)
     traceback = models.TextField(null=True)

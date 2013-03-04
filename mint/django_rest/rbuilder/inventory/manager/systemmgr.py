@@ -13,6 +13,7 @@ import traceback
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from conary import trovetup
+from lxml import etree
 from xobj import xobj
 
 from django.db import connection
@@ -576,12 +577,12 @@ class SystemManager(basemanager.BaseManager):
         # add the system
         system.save()
 
-        if system.survey is not None and system.survey._xobj.elements:
+        if system.survey is not None:
             # XXX we theoretically shouldn't have to have the synthetic
             # field, and be able to pass the survey as part of the
             # surveys collection, but because of all the special parsing
             # in surveymgr, this is not possible at the moment -- misa
-            survey = self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+            survey = self.mgr.addSurveyForSystemFromEtree(system.system_id, system.survey)
             system = survey.system
 
         # Verify potential duplicates here
@@ -635,10 +636,10 @@ class SystemManager(basemanager.BaseManager):
         responsiveState = self.systemState(models.SystemState.RESPONSIVE)
         savedState = None
         oldModel = getattr(system, 'oldModel', None)
-        if oldModel:
-            currentState = self.systemState(oldModel.current_state.name)
-            if currentState == responsiveState:
-                savedState = currentState
+        if oldModel is not None:
+            currentState = oldModel.xpath('./current_state/name/text()')
+            if currentState and currentState[0] == responsiveState:
+                savedState = responsiveState
 
         models.System.objects._copyFields(system, other, withReadOnly=True)
 
@@ -744,8 +745,7 @@ class SystemManager(basemanager.BaseManager):
             # Already registered and no need to re-synchronize, if the
             # old state was online, and the new state is registered, we must
             # be coming in through rpath-tools, so preserve the online state.
-            elif (system.oldModel is not None and
-                    system.oldModel.current_state.system_state_id == \
+            elif (self._getSystemOldCurrentStateId(system) == \
                     onlineState.system_state_id and
                     system.current_state_id == \
                     registeredState.system_state_id):
@@ -769,6 +769,14 @@ class SystemManager(basemanager.BaseManager):
         # with lots of system activity
         self.mgr.invalidateQuerySetsByType('system')
 
+    @classmethod
+    def _getSystemOldCurrentStateId(cls, system):
+        if system.oldModel is None:
+            return None
+        ret = system.oldModel.xpath('./current_state/system_state_id/text()')
+        if ret:
+            return ret[0]
+        return None
 
     def generateSystemCertificates(self, system):
         if system._ssl_client_certificate is not None and \
@@ -822,7 +830,7 @@ class SystemManager(basemanager.BaseManager):
                 withManagementInterfaceDetection=False,
                 withRetagging=False)
         elif system.survey is not None:
-            survey = self.mgr.addSurveyForSystemFromXobj(system.system_id, system)
+            survey = self.mgr.addSurveyForSystemFromEtree(system.system_id, system)
             system = survey.system
         self.setSystemStateFromJob(system)
         if for_user:
@@ -1048,17 +1056,17 @@ class SystemManager(basemanager.BaseManager):
                 self.postSystemLaunch(djSystem)
         return systems
 
-    def fromXobj(self, obj):
-        if obj is None:
-            return obj
-        return unicode(obj)
-
     @exposed
-    def getXobjProperty(self, obj, prop, default=None):
-        val = getattr(obj, prop, default)
-        if val is default:
+    def getEtreeProperty(self, obj, prop, default=None):
+        if obj is None:
+            return default
+        val = obj.find(prop)
+        if val is not None:
+            return val.text
+        val = obj.attrib.get(prop)
+        if val is not None:
             return val
-        return self.fromXobj(val)
+        return default
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
@@ -1086,13 +1094,13 @@ class SystemManager(basemanager.BaseManager):
             system.managing_zone = self.getLocalZone()
         oldModel, system = models.System.objects.load_or_create(system,
             withReadOnly=True)
-        xobjModel = getattr(system, '_xobjModel', None)
+        etreeModel = getattr(system, '_etreeModel', None)
         # Copy some of the otherwise read-only fields
-        system.target_system_name = self.getXobjProperty(xobjModel,
+        system.target_system_name = self.getEtreeProperty(etreeModel,
             'target_system_name', system.target_system_name)
-        system.target_system_description = self.getXobjProperty(xobjModel,
+        system.target_system_description = self.getEtreeProperty(etreeModel,
             'target_system_description', system.target_system_description)
-        system.target_system_state= self.getXobjProperty(xobjModel,
+        system.target_system_state= self.getEtreeProperty(etreeModel,
             'target_system_state', system.target_system_state)
         # Add an old style job, to persist the boot uuid
         self._addOldStyleJob(system)
@@ -1167,22 +1175,23 @@ class SystemManager(basemanager.BaseManager):
     def _getConfigurationDataFromJob(self, job):
         if job._descriptor_data is None:
             return None
-        descriptorData = xobj.parse(job._descriptor_data).descriptor_data
+        descriptorData = models.modellib.Etree.fromstring(job._descriptor_data)
         if not self.descriptorHasConfigurationData(descriptorData):
             return None
 
         # This has validated, so it Should Not Fail (TM)
-        data = descriptorData.system_configuration
+        data = descriptorData.find('system_configuration')
         # RCE-1138
-        data._xobj.tag = 'configuration'
-        configurationData = xobj.toxml(data)
+        data.tag = 'configuration'
+        configurationData = etree.tostring(data)
         return configurationData
 
     @exposed
-    def descriptorHasConfigurationData(self, descriptorDataXobj):
-        withConfigurationData = unicode(getattr(descriptorDataXobj,
-            'withConfiguration', 'false'))
-        return (withConfigurationData.lower() == 'true')
+    def descriptorHasConfigurationData(self, descriptorDataEtree):
+        withConfigurationData = descriptorDataEtree.find('withConfiguration')
+        if withConfigurationData is not None:
+            return withConfigurationData.text.lower() == 'true'
+        return False
 
     @exposed
     def setDesiredTopLevelItems(self, system, topLevelItems):
@@ -1858,13 +1867,6 @@ class SystemManager(basemanager.BaseManager):
             enableTime=self.now(),
             eventData=system.configuration)
 
-    @classmethod
-    def configDictToXml(cls, configuration):
-        if configuration is None:
-            configuration = {}
-        obj = Configuration(**configuration)
-        return xobj.toxml(obj, prettyPrint=False, xml_declaration=False)
-
     def _scheduleEvent(self, system, eventType, enableTime=None,
             eventData=None):
         eventTypeObject = self.eventType(eventType)
@@ -1940,7 +1942,7 @@ class SystemManager(basemanager.BaseManager):
         job.descriptor = self.mgr.getDescriptorRefreshSystems(target.pk)
         job.descriptor.id = ("/api/v1/targets/%s/descriptors/refresh_systems" %
            target.target_id)
-        job.descriptor_data = xobj.parse('<descriptor_data/>').descriptor_data
+        job.descriptor_data = etree.fromstring('<descriptor_data/>')
         self.mgr.addJob(job)
         return job
 
@@ -1956,7 +1958,7 @@ class SystemManager(basemanager.BaseManager):
         job.descriptor = self.getDescriptorConfigure(system.system_id)
         job.descriptor.id = ("/api/v1/inventory/systems/%s/descriptors/configure" %
             system.system_id)
-        job.descriptor_data = xobj.parse("<descriptor_data/>").descriptor_data
+        job.descriptor_data = etree.fromstring("<descriptor_data/>")
         self.mgr.addJob(job, forUser=system.created_by,
             system_id=system.system_id)
         self.log_system(system, "Applying system configuration")

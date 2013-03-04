@@ -117,53 +117,57 @@ class RbacManager(basemanager.BaseManager):
         ) 
         roles_obj = models.RbacRoles()
         roles_obj.role = dbroles
-                    
+
         permissions = dict([ (x, models.RbacPermissionType.objects.get(name=x)) for x in PERMISSION_TYPES ])
 
+        E = modellib.Etree
+
+        # XXX This needs redone. Badly. -- misa
         def mod_serialize(request, *args, **kwargs):
-            xobj_model = modellib.XObjIdModel.serialize(roles_obj, request)
-            # xobj gets confused with one element entries
-            if type(xobj_model.role) != list:
-               xobj_model.role = [ xobj_model.role ] 
-            xobj_model.id = xobj_model.id.replace("/rbac/roles","/query_sets/%s/grant_matrix" % qs.pk)
-            xobj_model.num_pages = 1
-            xobj_model.next_page = 0
-            xobj_model.previous_page = 0
-            xobj_model.count = len(xobj_model.role)
-            xobj_model.end_index = len(xobj_model.role) - 1
-            xobj_model.limit = 999999 
-            xobj_model.per_page = xobj_model.count
-            xobj_model.id = roles_obj.get_absolute_url(request)
-            xobj_model.start_index = 0
-            for role in xobj_model.role:
-                role.matrix_role_id = role.id
-                actual_role = models.RbacRole.objects.get(pk = role.role_id)
-                del role.id
+            etreeModel = modellib.XObjIdModel.serialize(roles_obj, request)
+            itemCount = E.findBasicChild(etreeModel, 'count')
+            etreeModel.attrib.update((x, str(y)) for (x, y) in dict(
+                    id = roles_obj.get_absolute_url(request),
+                    num_pages = 1,
+                    next_page = 0,
+                    previous_page = 0,
+                    count = len(dbroles),
+                    end_index = len(dbroles) - 1,
+                    limit = 999999,
+                    start_index = 0,
+            ).items())
+            if itemCount is not None:
+                etreeModel.attrib.update(count=itemCount)
+            for role in etreeModel.iterchildren('role'):
+                roleId = role.attrib['id']
+                E.Node('matrix_role_id', text=roleId, parent=role)
+                actual_role = models.RbacRole.objects.get(
+                        pk = E.findBasicChild(role, 'role_id'))
+                role.attrib.pop('id')
                 for ptype in PERMISSION_TYPES:
                     xperm = None
                     permission_type = permissions[ptype]
                     ptypename = "%s_permission" % ptype.lower()
+                    xperm = permission_type.serialize(request,
+                            tag=ptypename)
+                    E.Node('matrix_permission_id',
+                            parent=xperm,
+                            text=xperm.attrib['id'])
+                    xperm.attrib.pop('id')
                     try:
                         grant = models.RbacPermission.objects.get(
                             queryset = qs,
                             role = actual_role,
                             permission = permission_type
                         )
-                        permission_type._xobj = deepcopy(permission_type._xobj)
-                        xperm = modellib.XObjIdModel.serialize(permission_type, request)
-                        xperm.matrix_permission_id = xperm.id
-                        del xperm.id
-                        permission_type._xobj.tag = ptypename
-                        xgrant = modellib.XObjIdModel.serialize(grant, request)
-                        del xgrant.modified_by 
-                        del xgrant.modified_date
-                        del xgrant.created_by
-                        del xgrant.created_date
-                        del xgrant.grant_id
-                        del xgrant.role
-                        del xgrant.queryset
-                        del xgrant.permission
-                        xperm.grant = xgrant
+
+                        xgrant = grant.serialize(request, tag='grant')
+                        for childName in ['modified_by', 'modified_date',
+                                'created_by', 'created_date', 'grant_id',
+                                'role', 'queryset', 'permissions']:
+                            for child in xgrant.findall(childName):
+                                xgrant.remove(child)
+                        xperm.append(xgrant)
                     except models.RbacPermission.DoesNotExist:
                         # important: should NOT be saved
                         grant = models.RbacPermission(
@@ -171,22 +175,21 @@ class RbacManager(basemanager.BaseManager):
                             role = actual_role,
                             permission = permission_type
                         )
-                        permission_type._xobj = deepcopy(permission_type._xobj)
-                        xperm = modellib.XObjIdModel.serialize(permission_type, request)
-                        xperm.matrix_permission_id = xperm.id
-                        del xperm.id
-                        permission_type._xobj.tag = ptypename
-                    setattr(role, "%s_permission" % ptypename, xperm)
-                # since this collection is not actually paged, (because it's not relative to the true
-                # DB structure, and is a great reason why we shouldn't do this again), 
-                # avoid XML spam of data we don't need.
-                del role.grants
-                del role.users
-                del role.created_by
-                del role.modified_by
-                del role.created_date
-                del role.modified_date
-            return xobj_model
+                        xgrant = grant.serialize(request, tag='grant')
+                        xperm.append(xgrant)
+                    role.append(xperm)
+
+                # since this collection is not actually paged, (because
+                # it's not relative to the true DB structure, and is a
+                # great reason why we shouldn't do this again), avoid
+                # XML spam of data we don't need.
+                for childName in ['modified_by', 'modified_date',
+                        'created_by', 'created_date', 'grants',
+                        'users', ]:
+                    for child in role.findall(childName):
+                        role.remove(child)
+
+            return etreeModel
 
         roles_obj.serialize = mod_serialize
         return roles_obj
@@ -206,7 +209,8 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacRole(self, old_id, role, by_user):
-        old_obj = models.RbacRole.objects.get(pk=role.oldModel.role_id)
+        oldRoleId = role.oldModel.xpath('./role_id/text()')[0]
+        old_obj = models.RbacRole.objects.get(pk=oldRoleId)
         role.created_by = old_obj.created_by
         if old_obj.created_date is None:
             raise Exception("ERROR: invalid previous object?")
@@ -314,7 +318,8 @@ class RbacManager(basemanager.BaseManager):
 
     @exposed
     def updateRbacPermission(self, old_id, permission, by_user):
-        old_obj = models.RbacPermission.objects.get(pk=permission.oldModel.grant_id)
+        oldGrantId = permission.oldModel.xpath('./grant_id/text()')[0]
+        old_obj = models.RbacPermission.objects.get(pk=oldGrantId)
         if old_obj.created_date is None:
             raise Exception("ERROR: invalid previous object?")
         permission.created_by    = old_obj.created_by

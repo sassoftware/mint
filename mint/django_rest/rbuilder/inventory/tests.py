@@ -2,8 +2,8 @@ import base64
 import cPickle
 import os
 import random
-from lxml import etree
 from xobj import xobj
+from lxml import etree
 from datetime import datetime, timedelta
 
 from smartform import descriptor
@@ -464,8 +464,8 @@ install needle
             testsxml2.two + "\n</system>")
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        doc = xobj.parse(response.content)
-        systemId = doc.system.system_id
+        doc = etree.fromstring(response.content)
+        systemId = doc.find('system_id').text
         # Make sure we got a survey
         system = models.System.objects.get(system_id=systemId)
         self.assertEquals(system.surveys.count(), 1)
@@ -566,13 +566,9 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         # do we see assimilate as a possible action?
         response = self._get('inventory/systems/%s' % self.system.pk, username="admin",
             password="password")
-        obj = xobj.parse(response.content)
-        # xobj hack: obj doesn't listify 1 element lists
-        # don't break tests if there is only 1 action
-        actions = obj.system.actions.action
-        if not isinstance(actions, list):
-           actions = [actions]
-        self.assertTrue(len(actions) == 5)
+        doc = etree.fromstring(response.content)
+        actions = doc.xpath('./actions/action')
+        self.assertEqual(len(actions), 5)
 
     def testFetchActionsDescriptor(self):
         descriptorTestData = [
@@ -584,17 +580,28 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
             url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
             response = self._get(url, username="admin", password="password")
             self.failUnlessEqual(response.status_code, 200)
-            obj = xobj.parse(response.content)
-            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
-            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            obj = etree.fromstring(response.content)
+            # We have namespaces, grumble...
+            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
+            self.assertEquals(metadata.xpath('./sm:displayName/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrName])
+            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrDescr])
             # make sure the same works with parameters
             url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
                 descriptorType)
             response = self._get(url, username="admin", password="password")
             self.failUnlessEqual(response.status_code, 200)
-            obj = xobj.parse(response.content)
-            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
-            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            obj = etree.fromstring(response.content)
+            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
+            self.failUnlessEqual(metadata.xpath('./sm:displayName/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrName])
+            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrDescr])
 
     def testSpawnAction(self):
         # can we launch the job>?
@@ -610,8 +617,8 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         response = self._post(url, testsxml.system_assimilator_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.system_event.event_type.id,
+        obj = etree.fromstring(response.content)
+        self.failUnlessEqual(obj.find('event_type').attrib['id'],
             'http://testserver/api/v1/inventory/event_types/12')
 
 class InventoryTestCase(XMLTestCase):
@@ -1777,7 +1784,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
-        self.failUnlessEqual(x.system.network_address.pinned, "False")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "false")
 
     def testPostSystemNetworkPinned(self):
         """
@@ -1796,7 +1803,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
-        self.failUnlessEqual(x.system.network_address.pinned, "True")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "true")
 
     def testPutSystemNetworkUnpinned(self):
         models.System.objects.all().delete()
@@ -2063,7 +2070,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "blah1")
-        self.failUnlessEqual(x.system.network_address.pinned, "True")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "true")
 
     def testGetSystems(self):
         system = self._saveSystem()
@@ -2556,15 +2563,8 @@ class SystemsTestCase(XMLTestCase):
         response = self._get('inventory/systems/3/system_log/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        content = []
-        # Just remove lines with dates in them, it's easier to test for now.
-        for line in response.content.split('\n'):
-            if 'entry_date' in line or \
-               'will be enabled on' in line:
-                continue
-            else:
-                content.append(line)
-        self.assertXMLEquals('\n'.join(content), testsxml.system_log_xml)
+        self.assertXMLEquals(response.content, testsxml.system_log_xml,
+                ignoreNodes=['entry_date'])
 
     def testGetSystemHasHostInfo(self):
         system = self.newSystem(name="mgoblue")
@@ -2637,9 +2637,8 @@ class SystemsTestCase(XMLTestCase):
   %(survey)s
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.boot_uuid, bootUuid)
@@ -2667,9 +2666,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.event_uuid, eventUuid)
@@ -2706,15 +2704,14 @@ class SystemsTestCase(XMLTestCase):
 
     def testDedupByEventUuid(self):
         system, xml = self._setupDedupEventUuid()
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         # We should have loaded the old one
         self.failUnlessEqual(system.pk, model.pk)
         self.failUnlessEqual(model.name, 'blippy')
         # Catch the case of synthetic fields not being converted to
         # unicode (xobj types confuse database drivers)
-        self.failUnlessEqual(type(model.event_uuid), unicode)
+        self.failUnlessEqual(type(model.event_uuid), str)
 
         # Fetch system, make sure we have a survey for it
         system = self.mgr.addSystem(model)
@@ -2811,9 +2808,8 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """ % params
 
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
 
         # We should have loaded the old one
         self.failUnlessEqual(model.pk, system0.pk)
@@ -2874,9 +2870,8 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """ % params
 
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
         self.failUnlessEqual(model.current_state.name, "mothballed")
 
@@ -2929,10 +2924,9 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
         from mint.django_rest.rbuilder import modellib
-        model = models.System.objects.load_from_object(xobjmodel, request=None,
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None,
             flags=modellib.Flags(save=False))
         self.failUnlessEqual(model.pk, system.pk)
 
@@ -2944,9 +2938,8 @@ class SystemsTestCase(XMLTestCase):
         # Now set jobUuid to be correct
         params['jobUuid'] = jobUuid
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         # We still expect nothing to be updated, since the event_uuid is wrong
@@ -2957,9 +2950,8 @@ class SystemsTestCase(XMLTestCase):
         # Now set eventUuid to be correct
         params['eventUuid'] = eventUuid
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         job = jobmodels.Job.objects.get(pk=job.pk)
@@ -2993,9 +2985,8 @@ class SystemsTestCase(XMLTestCase):
         statusDetail = params['statusDetail'] = "status detail 432"
 
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         job = jobmodels.Job.objects.get(pk=job.pk)
@@ -3030,9 +3021,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model._ssl_client_certificate, sslClientCert)
@@ -3064,9 +3054,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.agent_port, agentPort)
         self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
             model.to_xml())

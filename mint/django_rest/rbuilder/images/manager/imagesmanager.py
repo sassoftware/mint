@@ -323,19 +323,19 @@ class ImagesManager(basemanager.BaseManager):
         targetImages = getattr(obj, 'target_images', None)
         if targetImages is None:
             return
-        targetImages = getattr(targetImages, 'target_image', None)
-        if targetImages is None:
-            return
-        if not isinstance(targetImages, list):
-            targetImages = [ targetImages ]
-        for targetImage in targetImages:
-            targetId = targetImage.target.id
+        for targetImage in targetImages.iterchildren('target_image'):
+            targetIds = targetImage.xpath('target/@id')
+            if not targetIds:
+                continue
+            targetId = targetIds[0]
             match = urlresolvers.resolve(targetId)
             if not match:
                 continue
             targetId = match.kwargs['target_id']
             target = tgtmodels.Target.objects.get(target_id=targetId)
-            img = targetImage.image
+            img = targetImage.find('image')
+            if img is None:
+                continue
             timgModel = self.mgr.addTargetImage(target, img)
             tgtmodels.TargetImagesDeployed.objects.create(target=target,
                 target_image_id=timgModel.target_internal_id,
@@ -386,8 +386,9 @@ class ImagesManager(basemanager.BaseManager):
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
 
         installedSizeAttrName =  'attributes.installed_size'
+        Etree = models.modellib.Etree
         if files.attributes is not None:
-            installedSize = getattr(files.attributes, 'installed_size', None)
+            installedSize = Etree.findBasicChild(files.attributes, 'installed_size')
         else:
             installedSize = None
         if installedSize is None:
@@ -402,7 +403,7 @@ class ImagesManager(basemanager.BaseManager):
         return self.getImageBuildFiles(imageId)
 
     def _addImageToRepository(self, imageId, metadata):
-        metadataDict = self.mgr.restDb.imageMgr.getMetadataDict(metadata)
+        metadataDict = metadata.asDict()
         # Find the stage for this image, we need the label to commit to
         buildLabels = projmodels.Stage.objects.filter(
                 images__image_id=imageId).values_list(

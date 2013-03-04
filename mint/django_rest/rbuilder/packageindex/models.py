@@ -41,10 +41,12 @@ class Package(modellib.XObjIdModel):
     trailing_version = modellib.SyntheticField()
 
     def serialize(self, *args, **kwargs):
-        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        etreeModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
         trailingLabel = \
             versions.VersionFromString(self.version).trailingLabel().asString()
-        xobjModel.trailing_label = trailingLabel
-        if xobjModel.version:
-            xobjModel.trailing_version = xobjModel.version.split("/")[-1]
-        return xobjModel 
+        modellib.Node('trailing_label', parent=etreeModel, text = trailingLabel)
+        version = etreeModel.find('version')
+        if version is not None and version.text:
+            modellib.Node('trailing_version', parent=etreeModel,
+                    text = version.text.split("/")[-1])
+        return etreeModel
