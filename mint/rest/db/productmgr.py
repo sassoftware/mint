@@ -318,6 +318,9 @@ class ProductManager(manager.Manager):
         if self.auth.userId is not None:
             self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
+        cu.execute("""UPDATE querysets_queryset SET tagged_date = NULL
+            WHERE resource_type = 'project_branch_stage'
+            OR resource_type = 'project'""")
 
         return productId
 

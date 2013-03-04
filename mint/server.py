@@ -47,6 +47,7 @@ from mint.reports import MintReport
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 from mint.rest import errors as rest_errors
+from mint.scripts import repository_sync
 
 from conary import conarycfg
 from conary import versions
@@ -736,6 +737,11 @@ class MintServer(object):
         self.db.commit()
 
         self._generateConaryRcFile()
+        sync = repository_sync.SyncTool(self.cfg, self.db)
+        try:
+            sync.syncReposByFQDN(fqdn)
+        except:
+            log.traceback("Error synchronizing repository branches")
         return projectId
 
     @typeCheck(int)
