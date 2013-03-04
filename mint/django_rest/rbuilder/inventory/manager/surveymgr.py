@@ -14,7 +14,6 @@ from mint.django_rest import timeutils
 from mint.lib import uuid
 from conary import versions
 from lxml import etree
-from xobj import xobj
 from datetime import datetime, timedelta
 from django.db.models import F
 

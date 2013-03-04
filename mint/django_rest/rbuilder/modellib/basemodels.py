@@ -404,7 +404,6 @@ class BaseManager(models.Manager):
 
             # Handle xml fields
             elif isinstance(field, XMLField):
-                subelementTag = val.tag
                 # Grab the first child, rename it as the main field
                 for subelement in val.iterchildren():
                     val = etree.tostring(subelement, pretty_print=False, xml_declaration=False)
