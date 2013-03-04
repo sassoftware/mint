@@ -50,6 +50,7 @@ Copyright (c) 2006-2009 rPath, Inc.
         }
 
     </style>
+    <script type="text/javascript" src="${makeUrl('/static/javascript/constants.js')}?v=25" />
     <script type="text/javascript" src="${makeUrl('/rbasetup/static/javascript/firstTimeSetup.js')}?v=1" />
 </head>
 
