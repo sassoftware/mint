@@ -60,6 +60,7 @@ install: default-install
 	install -D -m0755 chrootcache.tmpwatch $(DESTDIR)/etc/cron.daily/chrootcache.tmpwatch
 	install -D -m0755 rbuilder.init $(DESTDIR)/etc/rc.d/init.d/rbuilder
 	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-authn
+	install -D -m0755 rbuilder-credstore.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-credstore
 	# anaconda
 	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
 	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/

@@ -21,6 +21,7 @@ rbuilder_dirs = {
     'config':                       (0775, ('root', 'apache')),
     'cscache':                      (0775, ('root', 'apache')),
     'data':                         (0775, ('root', 'apache')),
+    'data/credstore':               (0770, ('credstore', 'credstore')),
     'diffcache':                    (0775, ('root', 'apache')),
     'entitlements':                 (0775, ('root', 'apache')),
     'finished-images':              (0775, ('root', 'apache')),
@@ -194,6 +195,8 @@ class rBuilderProduct(CPackageRecipe):
 
         r.Transient(r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
         r.Config(exceptions=r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
+
+        r.User('credstore', 205, homedir='/srv/rbuilder/data/credstore')
 
         # rBuilder pieces need to work together with the same version
         r.ComponentProvides('%(version)s')
