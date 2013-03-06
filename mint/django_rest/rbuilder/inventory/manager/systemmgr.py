@@ -2016,9 +2016,12 @@ class SystemManager(basemanager.BaseManager):
         self._setSystemTargetCredentials(system, targetSystem)
         if not existingSystems:
             t1 = time.time()
-            self.scheduleSystemDetectMgmtInterfaceEvent(system)
-            log.info("    Scheduling action completed in %.2f seconds" %
-                (time.time() - t1, ))
+            try:
+                self.scheduleSystemDetectMgmtInterfaceEvent(system)
+                log.info("    Scheduling action completed in %.2f seconds" %
+                    (time.time() - t1, ))
+            except errors.InvalidNetworkInformation:
+                pass
         log.info("  Importing system %s (%s) completed in %.2f seconds" %
             (system.target_system_id, system.target_system_name,
                 time.time() - t0))
