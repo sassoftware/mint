@@ -2665,7 +2665,7 @@ survey_output_xml = """
         <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
           <description>Type-R</description>
           <name>jkl</name>
-          <version>7</version>
+          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
           <architecture>ia64</architecture>
           <signature>X</signature>
           <rpm_package_info>
@@ -3132,7 +3132,7 @@ survey_input_xml_template = """
         <conary_package_info>
           <description>Type-R</description>
           <name>jkl</name>
-          <version>7</version>
+          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
           <architecture>ia64</architecture>
           <signature>X</signature>
           <rpm_package_info id="1">
@@ -3210,7 +3210,7 @@ survey_output_xml2 = """
           <version>5</version>
         </rpm_package_info>
         <signature>X</signature>
-        <version>7</version>
+        <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
       </conary_package_info>
       <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
       <is_top_level>True</is_top_level>

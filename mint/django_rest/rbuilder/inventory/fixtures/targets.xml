@@ -81,32 +81,32 @@ field2:dHdvZm9ydGhlc291bA==</field>
   </object>
   <object pk="1" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">2</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">1</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
   <object pk="2" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">2</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">1</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">3</field>
   </object>
   <object pk="3" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">3</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2000</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">2</field>
   </object>
   <object pk="4" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">3</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">3</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2000</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">3</field>
   </object>
   <object pk="5" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">1</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">4</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2001</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
   <object pk="5" model="targets.targetusercredentials">
     <field to="targets.target" name="target" rel="ManyToOneRel">2</field>
-    <field to="users.users" name="user" rel="ManyToOneRel">4</field>
+    <field to="users.users" name="user" rel="ManyToOneRel">2001</field>
     <field to="targets.targetcredentials" name="target_credentials" rel="ManyToOneRel">1</field>
   </object>
 </django-objects>

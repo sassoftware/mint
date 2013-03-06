@@ -114,7 +114,7 @@ class SurveyTests(XMLTestCase):
         )
         rpm_package.save()
         conary_package = survey_models.ConaryPackageInfo(
-            name = 'jkl', version = '7', flavor = 'orange',
+            name = 'jkl', version = '/cny.tv@lnx:1/1234.5:7-1-1', flavor = 'orange',
             description = 'Type-R', revision = '8',
             architecture = 'ia64', signature = 'X',
             rpm_package_info = rpm_package
@@ -4251,12 +4251,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         for (targetType, targetName, userName, systems) in self._targets:
             self.drivers.append(self.Driver(targetType, targetName, userName,
                 systems))
-        # Set the db version
-        from mint.db import schema
-        v = rbuildermodels.DatabaseVersion(
-            version=schema.RBUILDER_DB_VERSION.major,
-            minor=schema.RBUILDER_DB_VERSION.minor)
-        v.save()
 
         zone = self.localZone
 

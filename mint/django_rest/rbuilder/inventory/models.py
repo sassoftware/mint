@@ -403,6 +403,7 @@ class System(modellib.XObjIdModel):
 
     class Meta:
         db_table = 'inventory_system'
+        ordering = [ 'system_id' ]
 
     view_name = 'System'
 
@@ -1070,6 +1071,7 @@ class ManagementNode(System):
 
     class Meta:
         db_table = 'inventory_zone_management_node'
+        ordering = [ 'system_id' ]
     _xobj = xobj.XObjMetadata(
                 tag = 'management_node',
                 attributes = {'id':str})

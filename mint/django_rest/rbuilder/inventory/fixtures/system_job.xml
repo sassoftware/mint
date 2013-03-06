@@ -26,22 +26,22 @@
     <field to="jobs.jobtype" name="job_type" rel="ManyToOneRel">1</field>
   </object>
   <object pk="1" model="inventory.systemjob">
-    <field to="jobs.system" name="system" rel="ManyToOneRel">1</field>
+    <field to="jobs.system" name="system" rel="ManyToOneRel">2</field>
     <field to="jobs.job" name="job" rel="ManyToOneRel">1</field>
     <field name="event_uuid">uuid1</field>
   </object>
   <object pk="2" model="inventory.systemjob">
-    <field to="jobs.system" name="system" rel="ManyToOneRel">1</field>
+    <field to="jobs.system" name="system" rel="ManyToOneRel">2</field>
     <field to="jobs.job" name="job" rel="ManyToOneRel">2</field>
     <field name="event_uuid">uuid2</field>
   </object>
   <object pk="3" model="inventory.systemjob">
-    <field to="jobs.system" name="system" rel="ManyToOneRel">1</field>
+    <field to="jobs.system" name="system" rel="ManyToOneRel">2</field>
     <field to="jobs.job" name="job" rel="ManyToOneRel">3</field>
     <field name="event_uuid">uuid3</field>
   </object>
   <object pk="4" model="inventory.systemjob">
-    <field to="jobs.system" name="system" rel="ManyToOneRel">1</field>
+    <field to="jobs.system" name="system" rel="ManyToOneRel">2</field>
     <field to="jobs.job" name="job" rel="ManyToOneRel">4</field>
     <field name="event_uuid">uuid4</field>
   </object>
