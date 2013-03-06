@@ -10,9 +10,11 @@ ROOT_URLCONF = 'mint.django_rest.urls_local'
 # Override individual options
 DEBUG = True
 DATABASES['default'].update(
-    ENGINE = 'django.db.backends.sqlite3',
-    NAME = os.environ.get('MINT_LOCAL_DB', os.path.realpath('../mint-local.db')),
-    TEST_NAME =  os.path.realpath('../test-mint-local.db'),
+    ENGINE = 'django.db.backends.postgresql_psycopg2',
+    USER = 'testutils',
+    PORT = '',
+    NAME = os.environ.get('MINT_LOCAL_DB', 'test'),
+    TEST_NAME =  'test',
 )
 
 AUTHENTICATION_BACKENDS = (

@@ -10,6 +10,8 @@ import tempfile
 import urllib
 import urlparse
 
+from testutils import sqlharness
+
 from collections import namedtuple
 
 from conary import dbstore
@@ -41,45 +43,47 @@ from testrunner import testcase
 # from mint_test import mint_rephelp
 MINT_PROJECT_DOMAIN = 'rpath.local2'
 
+class Database(sqlharness.RepositoryDatabase):
+    def createSchema(self):
+        db = self.connect()
+        schema.loadSchema(db)
+        db.commit()
+
+class SQLHarness(sqlharness.PostgreSQLServer):
+    bindir = "/opt/postgresql-9.2/bin"
+
 class TestRunner(DjangoTestSuiteRunner):
+    HARNESS_DB = None
+    FIXTURE_PATH = None
 
-    DB_DUMP = tempfile.NamedTemporaryFile(
-        prefix="mint-django-fixture-", delete=False).name
-
-    def setup_databases(self, **kwargs):
+    def setup_databases(self, *args, **kwargs):
         "Called by django's testsuite"
+        # We don't care about a lot of the complexities in
+        # DjangoTestSuiteRunner
         return self._setupDatabases(**kwargs)
+
+    def teardown_databases(self, *args, **kwargs):
+        if not self.HARNESS_DB:
+            return
+        self.HARNESS_DB.stop()
+        self.__class__.HARNESS_DB = None
 
     @classmethod
     def _setupDatabases(cls, **kwargs):
-        # We don't care about a lot of the complexities in
-        # DjangoTestSuiteRunner
         conn = cls.getConnection()
-        dbname = conn.settings_dict['TEST_NAME']
-        # XXX sqlite only for now
-        util.removeIfExists(dbname)
-        db = dbstore.connect(dbname, 'sqlite')
-        schema.loadSchema(db)
-        db.commit()
-        db.close()
         oldDbName = conn.settings_dict['NAME']
-        conn.settings_dict['NAME'] = dbname
+        if cls.HARNESS_DB is None:
+            harness = SQLHarness(path=None, dbClass=Database)
+            conn.settings_dict['USER'] = harness.user
+            conn.settings_dict['PORT'] = harness.port
+            db = harness.createDB(conn.settings_dict['TEST_NAME'])
+            db.createSchema()
+            cls.HARNESS_DB = db
+            cls.FIXTURE_PATH = os.path.join(cls.HARNESS_DB.harness.path, "fixture")
+            cls.HARNESS_DB.dumpSchema(cls.FIXTURE_PATH)
         # Test connection
         conn.cursor()
-        cls._sqlite_dump(dbname, cls.DB_DUMP)
         return ([(conn, oldDbName, True)], [])
-
-    @classmethod
-    def _sqlite_dump(cls, srcfile, dstfile):
-        util.execute("sqlite3 '%s' .dump > '%s'" % (srcfile, dstfile))
-
-    @classmethod
-    def _sqlite_restore(cls, srcfile, dstfile):
-        tfile = util.AtomicFile(dstfile)
-        cmd = "sqlite3 '%s' < '%s'" % (tfile.name, srcfile)
-        util.execute(cmd)
-        util.removeIfExists(dstfile + '.journal')
-        tfile.commit()
 
     @classmethod
     def getConnection(cls):
@@ -89,16 +93,12 @@ class TestRunner(DjangoTestSuiteRunner):
 
     @classmethod
     def setupFixture(cls):
-        s = os.stat(cls.DB_DUMP)
-        if s.st_size == 0:
-            # DB not set up yet
-            cls._setupDatabases()
-        else:
-            conn = cls.getConnection()
-            dbName = conn.settings_dict['TEST_NAME']
-            cls._sqlite_restore(cls.DB_DUMP, dbName)
-            # This will force a re-init
-            conn.close()
+        cls.HARNESS_DB.clearSchema()
+        cls.HARNESS_DB.loadSchemaDump(cls.FIXTURE_PATH)
+
+    @classmethod
+    def teardownFixture(cls):
+        pass
 
 class XMLTestCase(TestCase, testcase.MockMixIn):
     ImageFile = namedtuple('ImageFile', 'title url size sha1')
@@ -112,22 +112,58 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         "Called by django's testsuite"
         alias = DEFAULT_DB_ALIAS
         TestRunner.setupFixture()
-        # Test connection
-        conn = TestRunner.getConnection()
-        conn.cursor()
+        if not hasattr(self, 'fixtures'):
+            self.fixtures = []
+        self.fixtures.insert(0, 'initial_data')
+        # We use only one db, and we don't need to flush it
+        call_command('loaddata', *self.fixtures,
+                **dict(verbosity=0, database=alias))
+
+    def _fixture_setupP2(self):
+        "Called by django's testsuite"
+        alias = DEFAULT_DB_ALIAS
+        TestRunner.setupFixture()
+        # We use only one db, and we don't need to flush it
         call_command('loaddata', 'initial_data',
-            **dict(verbosity=0, database=alias))
+                **dict(verbosity=0, database=alias))
         if hasattr(self, 'fixtures'):
             call_command('loaddata', *self.fixtures,
-                **dict(verbosity=0, database=alias))
+                    **dict(verbosity=0, database=alias))
+
+    def _fixture_setupP1(self):
+        TestRunner.setupFixture()
+        origFixtures = None
+        if hasattr(self, 'fixtures'):
+            origFixtures = self.fixtures
+        self.fixtures = [ 'initial_data' ]
+        TestCase._fixture_setup(self)
+        if origFixtures is not None:
+            self.fixtures = origFixtures
+            TestCase._fixture_setup(self)
+        else:
+            del self.fixtures
+
+    def _fixture_setupP(self):
+        TestRunner.setupFixture()
+        if not hasattr(self, 'fixtures'):
+            self.fixtures = []
+        if self.fixtures[0] != 'initial_data':
+            self.fixtures.insert(0, 'initial_data')
+        TestCase._fixture_setup(self)
+
+    def _fixture_teardown(self):
+        TestCase._fixture_teardown(self)
+        TestRunner.teardownFixture()
 
     def _getMintConfig(self):
         connection = TestRunner.getConnection()
 
         cfg = mintconfig.MintConfig()
         cfg.siteHost = 'localhost.localdomain'
-        cfg.dbDriver = 'sqlite'
-        cfg.dbPath = connection.settings_dict['TEST_NAME']
+        cfg.dbDriver = 'postgresql'
+        _d = connection.settings_dict
+        cfg.dbPath = "%s@%s:%s/%s" % (_d['USER'], _d['HOST'], _d['PORT'],
+                _d['TEST_NAME'])
         cfg.projectDomainName = MINT_PROJECT_DOMAIN
         cfg.namespace = 'ns'
         cfg.authUser = 'auth_user_abcdefg'
@@ -317,6 +353,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         return img
 
     def _addRequestAuth(self, username=None, password=None, jobToken=None, **extra):
+        extra['mint.authToken'] = (username, password)
         if username:
             type, password = self._authHeader(username, password)
             extra[type] = password

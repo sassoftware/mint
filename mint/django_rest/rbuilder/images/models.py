@@ -107,6 +107,7 @@ class ImageMetadata(modellib.XObjIdModel):
 class Image(modellib.XObjIdModel):
     class Meta:
         db_table = u'builds'
+        ordering = [ 'image_id' ]
 
     view_name ='Image'
 

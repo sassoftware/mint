@@ -130,7 +130,7 @@
   </object>
   <object pk="2" model="projects.member">
     <field to="projects.project" name="project" rel="ManyToOneRel">2</field>
-    <field to="users.user" name="user" rel="ManyToOneRel">2</field>
+    <field to="users.user" name="user" rel="ManyToOneRel">1</field>
     <field type="SmallIntegerField" name="level">2</field>
   </object>
   <object pk="3" model="projects.member">

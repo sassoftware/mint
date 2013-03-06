@@ -14,6 +14,7 @@ from conary.lib import util
 
 from django.db import connection, connections
 from django.db import models
+from django.db.models.base import ModelBase
 from django.db.models import fields as djangofields
 from django.db.models.fields import related
 from django.db.models.signals import post_init, post_save
@@ -984,7 +985,7 @@ class XObjModel(models.Model):
     manager on a model with our BaseManager.  Implements get_absolute_url on
     all models.  Adds ability to serialize a model to xml using xobj.
     """
-    class __metaclass__(models.Model.__metaclass__):
+    class __metaclass__(ModelBase):
         """
         Metaclass for all models.  
         Sets the _xobjClass attribute on the class, and consolidates _xobj
@@ -993,7 +994,7 @@ class XObjModel(models.Model):
         overwritten.
         """
         def __new__(cls, name, bases, attrs):
-            ret = models.Model.__metaclass__.__new__(cls, name, bases, attrs)
+            ret = ModelBase.__new__(cls, name, bases, attrs)
             # Create the xobj class for this model
             underscoreName = mintutils.Transformations.strToUnderscore(
                 name[0].lower() + name[1:])

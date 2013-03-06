@@ -95,7 +95,7 @@ class BaseRbuilderManager(object):
         if DB['ENGINE'].endswith('sqlite3'):
             self.cfg.dbPath = DB['NAME']
         else:
-            self.cfg.dbPath = '%s:%s/%s' % (DB['HOST'], DB['PORT'], DB['NAME'])
+            self.cfg.dbPath = '%s@%s:%s/%s' % (DB['USER'], DB['HOST'], DB['PORT'], DB['NAME'])
 
     def getMintDatabase(self):
         return database.Database(self.cfg)
