@@ -56,11 +56,12 @@ class TestRunner(DjangoTestSuiteRunner):
     HARNESS_DB = None
     FIXTURE_PATH = None
 
-    def setup_databases(self, *args, **kwargs):
+    @classmethod
+    def setup_databases(cls, *args, **kwargs):
         "Called by django's testsuite"
         # We don't care about a lot of the complexities in
         # DjangoTestSuiteRunner
-        return self._setupDatabases(**kwargs)
+        return cls._setupDatabases(**kwargs)
 
     def teardown_databases(self, *args, **kwargs):
         if not self.HARNESS_DB:
@@ -93,6 +94,9 @@ class TestRunner(DjangoTestSuiteRunner):
 
     @classmethod
     def setupFixture(cls):
+        if cls.HARNESS_DB is None:
+            # Invoked through rbuilder's test runner
+            cls.setup_databases()
         cls.HARNESS_DB.clearSchema()
         cls.HARNESS_DB.loadSchemaDump(cls.FIXTURE_PATH)
 
