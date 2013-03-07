@@ -26,7 +26,6 @@ except ValueError:
     pass
 from webunit import webunittest
 
-from mint.web import hooks
 from mint.db import builds
 from mint.db import jobs
 import mint.db.database
@@ -908,10 +907,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         self.mintServer = server.MintServer(self.mintCfg)
 
         self.db = self.mintServer.db
-
-        # reset some caches
-        hooks.repNameCache = {}
-        hooks.domainNameCache = {}
 
     def tearDown(self):
         mock.unmockAll()
