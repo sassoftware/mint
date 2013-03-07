@@ -27,9 +27,6 @@ from mint.scripts.cred_server import CredServerFactory
 
 
 class Options(usage.Options):
-    optFlags = [
-            ('init', 'i', None),
-            ]
     optParameters = [
             ('keydir', 'k', '/srv/rbuilder/data/credstore', 'Path to credential keystore', str),
             ('socket', 's', '/tmp/mintcred.sock', 'Path to UNIX socket', str),
@@ -49,7 +46,7 @@ class ServiceMaker(object):
         except OSError, err:
             if err.errno != errno.ENOENT:
                 raise
-        factory = CredServerFactory(options['keydir'], init=options['init'])
+        factory = CredServerFactory(options['keydir'], init=True)
         return ta_internet.UNIXServer(path, factory, mode=0660)
 
 

@@ -163,6 +163,8 @@ then
     service rmake-node start
     service mcp-dispatcher start
     service jobmaster start
+    service rbuilder-authn restart
+    service rbuilder-credstore restart
 
     # Create initial platforms
     echo Updating platforms ...
@@ -173,9 +175,6 @@ then
 
     # Start cron back (RBL-7973)
     service crond start
-
-    # Restart the authentication service
-    service rbuilder-authn restart
 fi
 
 # Shut down postgres if chrooted

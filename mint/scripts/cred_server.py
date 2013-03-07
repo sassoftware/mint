@@ -41,6 +41,14 @@ class AESStore(object):
 
     def __init__(self, keypath, init=False):
         if init and not os.path.exists(keypath):
+            procs = 0
+            with open('/proc/mounts', 'r') as fobj:
+                for line in fobj:
+                    line = line.split()
+                    if len(line) > 2 and line[1] == '/proc':
+                        procs += 1
+            if procs != 1:
+                raise RuntimeError("Cowardly refusing to generate keys while chrooted")
             with AtomicFile(keypath) as fobj:
                 with open('/dev/random',  'rb') as devrandom:
                     fobj.write(devrandom.read(self.ckey_size + self.hkey_size))
