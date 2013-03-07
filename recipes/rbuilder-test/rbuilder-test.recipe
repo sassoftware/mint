@@ -29,6 +29,7 @@ class rBuilderTest(TestPackageRecipe):
         'python-devel',
         'rapa:python',
         'rapa-plugin-rPath',
+        'rapa-test:lib',
         'util-linux-ng',
         'python-webunit',
         'python-reportlab',
