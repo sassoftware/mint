@@ -323,7 +323,8 @@ class Controller(object):
         self.password = password
 
     def call(self, method, uri, body=None, convert=False, headers=None):
-        request = self.RequestFactory(method, uri, body=body)
+        request = self.RequestFactory(method, uri, body=body,
+                username=self.username, password=self.password)
         request._convert = convert
 
         if self.username:
@@ -340,14 +341,19 @@ class Controller(object):
     def convert(self, type, request, object):
         return converter.toText(type, object, self.controller, request)
 
+class WebRequest(object):
+    def __init__(self, authToken):
+        self.environ = { 'mint.authToken' : authToken, }
+
 class MockRequest(request.Request):
     def __init__(self, method, uri, username=None, admin=False,
-                 body=None):
+                 body=None, password=None):
         self.method = method
         self.uri = uri
         self.extension = None
         self.body = body
-        request.Request.__init__(self, None, '/api')
+        authToken = (username, password)
+        request.Request.__init__(self, WebRequest(authToken), '/api')
 
     def _setProperties(self):
         self.headers = CaselessDict()
