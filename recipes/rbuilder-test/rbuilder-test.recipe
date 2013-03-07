@@ -3,7 +3,7 @@
 # All rights reserved
 #
 
-loadSuperClass('testpackage=testbits.rb.rpath.com@rpl:1')
+loadSuperClass('testpackage')
 class rBuilderTest(TestPackageRecipe):
     name = 'rbuilder-test'
     version = '5.0'
