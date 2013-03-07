@@ -20,6 +20,7 @@
 scriptname=`basename $0`
 servicename=credsrv
 user=credstore
+sock_group=apache
 pidfile=/var/run/${scriptname}.pid
 rundir=/var/lib/twisted-taps/${scriptname}
 logfile=/var/log/rbuilder/${scriptname}.log
@@ -46,7 +47,7 @@ result=0
 case "$1" in
     start)
         echo -n "Starting ${scriptname}: twistd"
-        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile --uid=$user --gid=$user $servicename
+        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile --uid=$user --gid=$user $servicename --gid=$sock_group
         result=$?
         if [ "$result" -eq 0 ]
         then

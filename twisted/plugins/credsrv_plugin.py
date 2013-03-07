@@ -16,6 +16,7 @@
 
 
 import errno
+import grp
 import os
 from twisted.application import internet as ta_internet
 from twisted.application import service
@@ -30,7 +31,25 @@ class Options(usage.Options):
     optParameters = [
             ('keydir', 'k', '/srv/rbuilder/data/credstore', 'Path to credential keystore', str),
             ('socket', 's', '/tmp/mintcred.sock', 'Path to UNIX socket', str),
+            ('gid', 'g', None, 'Group that should own the UNIX socket', str),
             ]
+
+
+class UNIXServer(ta_internet.UNIXServer):
+
+    def __init__(self, *args, **kwargs):
+        self.gid = kwargs.pop('gid', None)
+        ta_internet.UNIXServer.__init__(self, *args, **kwargs)
+
+    def _getPort(self):
+        port = ta_internet.UNIXServer._getPort(self)
+        if self.gid is not None:
+            try:
+                gid = int(self.gid)
+            except ValueError:
+                gid = grp.getgrnam(self.gid).gr_gid
+            os.chown(port.port, os.getuid(), gid)
+        return port
 
 
 class ServiceMaker(object):
@@ -47,7 +66,7 @@ class ServiceMaker(object):
             if err.errno != errno.ENOENT:
                 raise
         factory = CredServerFactory(options['keydir'], init=True)
-        return ta_internet.UNIXServer(path, factory, mode=0660)
+        return UNIXServer(path, factory, mode=0660, gid=options['gid'])
 
 
 serviceMaker = ServiceMaker()
