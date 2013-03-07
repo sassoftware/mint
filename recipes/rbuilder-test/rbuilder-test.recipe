@@ -33,6 +33,7 @@ class rBuilderTest(TestPackageRecipe):
         'util-linux-ng',
         'python-webunit',
         'python-reportlab',
+        'rbuilder-hostsfile',
         'restlib:python',
         'testutils:runtime',
         'testutils:python',
