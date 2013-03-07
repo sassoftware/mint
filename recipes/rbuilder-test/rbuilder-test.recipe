@@ -13,7 +13,6 @@ class rBuilderTest(TestPackageRecipe):
 
     buildRequires = [
         'rbuilder',
-        'rbuilder-sources', # stripped .py files
 
         'chkconfig:runtime',
         'conary-repository:python', 
