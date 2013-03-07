@@ -46,7 +46,7 @@ result=0
 case "$1" in
     start)
         echo -n "Starting ${scriptname}: twistd"
-        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile --user=$user --group=$user $servicename
+        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile --uid=$user --gid=$user $servicename
         result=$?
         if [ "$result" -eq 0 ]
         then
