@@ -50,7 +50,7 @@ class AESStore(object):
             if procs != 1:
                 raise RuntimeError("Cowardly refusing to generate keys while chrooted")
             with AtomicFile(keypath) as fobj:
-                with open('/dev/random',  'rb') as devrandom:
+                with open('/dev/urandom',  'rb') as devrandom:
                     fobj.write(devrandom.read(self.ckey_size + self.hkey_size))
         with open(keypath, 'rb') as fobj:
             self.key = fobj.read()
