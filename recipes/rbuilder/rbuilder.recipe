@@ -201,6 +201,8 @@ class rBuilderProduct(CPackageRecipe):
         # rBuilder pieces need to work together with the same version
         r.ComponentProvides('%(version)s')
 
+        r.Requires('python-pgsql:python',
+                   '%(sitepkg)s/mint/config.pyc')
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
