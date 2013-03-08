@@ -18,7 +18,6 @@ from mint import builds
 from mint import buildtypes
 from mint import jobstatus
 from mint import helperfuncs
-from mint import notices_callbacks
 from mint import urltypes
 from mint.image_gen.upload import client as iup_client
 from mint.lib import data
@@ -38,7 +37,6 @@ class ImageManager(manager.Manager):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
 
-        # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''
             SELECT
                 p.hostname,
@@ -51,8 +49,7 @@ class ImageManager(manager.Manager):
                     b.stageName AS stage, b.output_trove,
                 pr.timePublished,
                 pr.name AS release,
-                cr_user.username AS creator, up_user.username AS updater,
-                ami_data.value AS amiId
+                cr_user.username AS creator, up_user.username AS updater
 
             FROM Builds b
                 JOIN Projects p USING ( projectId )
@@ -64,8 +61,6 @@ class ImageManager(manager.Manager):
                     b.productVersionId = pv.productVersionId )
                 LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
                 LEFT JOIN Users up_user ON ( b.updatedBy = up_user.userId )
-                LEFT JOIN BuildData ami_data ON (
-                    b.buildId = ami_data.buildId AND ami_data.name = 'amiId' )
 
             WHERE hostname = ? AND troveVersion IS NOT NULL
             %(where)s
@@ -287,12 +282,6 @@ class ImageManager(manager.Manager):
 
     def deleteImageFilesForProduct(self, fqdn, imageId):
         cu = self.db.cursor()
-        # Grab the AMI ID, if there is one
-        cu.execute("""SELECT value FROM BuildData
-                      WHERE buildId=? AND name = 'amiId'""", imageId)
-        imageName = cu.fetchone()
-        if imageName:
-            imageName = imageName[0]
         cu.execute('''SELECT url FROM BuildFiles
                      JOIN BuildFilesUrlsMap USING(fileId)
                      JOIN FilesUrls USING(urlId)
@@ -310,7 +299,7 @@ class ImageManager(manager.Manager):
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
         # Grab the build type
         imageType = self._getImageType(imageId)
-        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+        self.publisher.notify('ImageRemoved', imageId, None, imageType)
 
     def _getImageType(self, imageId):
         cu = self.db.cursor()
@@ -509,7 +498,6 @@ class ImageManager(manager.Manager):
 
     def finalImageProcessing(self, imageId, status):
         self._postFinished(imageId, status)
-        self._createNotices(imageId, status)
 
     class UploadCallback(object):
         def __init__(self, manager, imageId):
@@ -548,76 +536,12 @@ class ImageManager(manager.Manager):
         finally:
             self.db.djMgr.leaveTransactionManagement()
 
-        imageType = self._getImageType(imageId)
-        if imageType != buildtypes.AMI:
-            # for now we only have to do something special for AMIs
-            return
-        log.info("Finishing AMI image")
-        # Fetch the image path
-        cu = self._getImageFiles(imageId)
-        uploadCallback = self.UploadCallback(self, imageId)
-        for row in cu:
-            url = row[0]
-            if not os.path.exists(url):
-                continue
-            log.info("Uploading bundle")
-            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
-                url, callback = uploadCallback.callback)
-            self._setStatus(imageId, message = "Registering AMI")
-            log.info("Registering AMI for %s/%s", bucketName,
-                manifestName)
-            projectId = self._getProjectForImage(imageId)
-            getEC2AccountNumbersForProjectUsers = self.db.db.projectUsers.getEC2AccountNumbersForProjectUsers
-            writers, readers = getEC2AccountNumbersForProjectUsers(projectId)
-            amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
-                bucketName, manifestName, readers = readers, writers = writers)
-            log.info("Registered AMI %s for %s", amiId,
-                manifestPath)
-            self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
-                data.RDT_STRING)
-            self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
-                manifestPath, data.RDT_STRING)
-            self.db.commit()
-
     def _getProjectForImage(self, imageId):
         sql = "SELECT projectId FROM Builds WHERE buildId = ?"
         cu = self.db.cursor()
         cu.execute(sql, imageId)
         row = cu.fetchone()
         return row[0]
-
-    def _createNotices(self, imageId, status):
-        sql = """
-            SELECT Projects.hostname, ProductVersions.name, Users.username,
-                   Builds.name, Builds.buildType, BuildData.value AS amiId
-              FROM Builds
-              JOIN Projects USING ( projectId )
-         LEFT JOIN ProductVersions ON
-                (Builds.productVersionId = ProductVersions.productVersionId)
-         LEFT JOIN Users ON ( Builds.createdBy = Users.userId )
-         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
-                                 BuildData.name = 'amiId' )
-             WHERE Builds.buildId = ?
-        """
-        cu = self.db.cursor()
-        cu.execute(sql, imageId)
-        row = cu.fetchone()
-        projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
-        imageType = buildtypes.typeNamesMarketing.get(imageType)
-
-        failed = (status.code != jobstatus.FINISHED)
-
-        if amiId is not None:
-            notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
-            imageFiles = [ amiId ]
-        else:
-            notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
-            imageFiles = [ (x[0], self.getDownloadUrl(x[1]))
-                for x in self._getImageFiles(imageId) ]
-
-        method = (failed and notices.notify_error) or notices.notify_built
-        method(imageName, imageType, time.time(), projectName, projectVersion,
-            imageFiles)
 
     def getDownloadUrl(self, fileId):
         downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%d"
@@ -635,22 +559,6 @@ class ImageManager(manager.Manager):
                AND FilesUrls.urlType = ?
         """, imageId, urltypes.LOCAL)
         return cu
-
-    def _getImageInfoForNotices(self, imageId, status):
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT Projects.name, Projects.version, Users.username,
-                   Builds.buildType,
-                   BuildData.value AS amiId,
-              FROM Builds
-              JOIN Projects USING (projectId)
-              JOIN Users ON (Builds.createdBy = Users.userId)
-         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
-                                 BuildData.name = 'amiId' )
-             WHERE Builds.buildId = ?
-        """, imageId)
-        # XXX FIXME: add notices
-        return
 
     def setFilesForImage(self, fqdn, imageId, files):
         hostname = fqdn.split('.')[0]

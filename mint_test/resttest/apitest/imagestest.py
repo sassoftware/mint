@@ -735,15 +735,5 @@ class ImagesTest(restbase.BaseRestTest):
         url = 'products/testproject/images/1/status'
         resp = client.call('PUT', url, data, headers=headers)[1]
 
-        store = notices_store.createStore(
-            os.path.join(self.mintCfg.dataPath, 'notices'), username)
-        notice = [ x for x in store.enumerateStoreUser('builder') ][0]
-        contents = notice.content
-        contents = re.sub('Created On:&lt;/b&gt; .*</desc',
-            'Created On:&lt;/b&gt; @CREATED-ON@</desc', contents)
-        contents = re.sub('<date>.*</date>',
-            '<date>@DATE@</date>', contents)
-        self.failUnlessEqual(contents, """\
-<item><title>Image `Image 1' failed to build (testproject version 1.0)</title><description>&lt;b&gt;Appliance Name:&lt;/b&gt; testproject&lt;br/&gt;&lt;b&gt;Appliance Major Version:&lt;/b&gt; 1.0&lt;br/&gt;&lt;b&gt;Image Type:&lt;/b&gt; VMware(R) Workstation/Fusion Virtual Appliance&lt;br/&gt;&lt;b&gt;Created On:&lt;/b&gt; @CREATED-ON@</description><date>@DATE@</date><category>error</category><guid>/api/users/adminuser/notices/contexts/builder/1</guid></item>""")
 
 testsetup.main()

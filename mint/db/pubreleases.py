@@ -98,23 +98,3 @@ class PublishedReleasesTable(database.KeyedTable):
                 ORDER BY timePublished ASC
             """, projectId)
         return [x[0] for x in cu.fetchall()]
-
-    def getAMIBuildsForPublishedRelease(self, pubReleaseId):
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT pr.pubReleaseId,
-                   COALESCE(pr.timePublished,0) != 0 as isPublished,
-                   p.hidden as isPrivate,
-                   bd.value as amiId,
-                   p.projectId as projectId
-            FROM PublishedReleases pr
-                 JOIN Projects p
-                 ON p.projectId = pr.projectId
-                 JOIN Builds b
-                 ON b.pubReleaseId = pr.pubReleaseId
-                 JOIN BuildData bd
-                 ON bd.buildId = b.buildId
-            WHERE bd.name = 'amiId'
-              AND pr.pubReleaseId = ?
-            """, pubReleaseId)
-        return cu.fetchall()

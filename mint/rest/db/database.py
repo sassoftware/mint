@@ -2,12 +2,10 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 import decorator
-import logging
 
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
-from conary.deps import deps
 
 from mint import jobstatus
 from mint import mint_error
@@ -18,9 +16,7 @@ from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
-from mint.rest.db import awshandler
 from mint.rest.db import capsulemgr
-from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
 from mint.rest.db import pkimgr
@@ -141,17 +137,11 @@ class Database(DBInterface):
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
-        self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         self.reposShim = reposdb.RepositoryManager(cfg, db._db)
         if subscribers is None:
             subscribers = []
-            # Email notifications we have no longer make sense.  See
-            # http://mingle.eng.rpath.com/projects/rbuilder/cards/959 for more
-            # information.
-            # subscribers.append(emailnotifier.EmailNotifier(cfg, self, auth))
-            subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
 

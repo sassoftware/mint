@@ -26,23 +26,6 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
                 ttype, ttype + " description", buildTypeId)
         db.commit()
 
-    def testCancelUserAccount(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createUser('developer')
-        self.assertRaises(mint_error.LastAdmin, db.cancelUserAccount, 'admin')
-        self.createUser('owner')
-        self.setDbUser(db, 'owner')
-        self.createProduct('foo', db=db)
-        self.createProduct('foo2', db=db)
-        db.cancelUserAccount('owner')
-        self.assertRaises(errors.UserNotFound, db.getUser, 'owner')
-        self.createUser('owner')
-        assert(not db.listMembershipsForUser('owner').members)
-        self.setDbUser(db, 'owner')
-        self.createProduct('foo3', developers=['developer'], db=db)
-        self.assertRaises(mint_error.LastOwner, db.cancelUserAccount, 'owner')
-
     def testMakeAdmin(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -96,19 +79,8 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
                 userName, dict(userData = "cde"))
 
         userId = db.userMgr.getUserId(userName)
-
-        userKeys = []
-        def setUserKey(*args):
-            userKeys.append(args)
-        db.awsMgr.amiPerms.setUserKey = setUserKey
-
-        # Grr. mint_rephelp's openMintDatabase will convert the subscribers
-        # arg (by default None) to an empty list, which won't subscribe awsMgr
-        # to the publisher
-        db.publisher.subscribe(db.awsMgr)
         db.userMgr.cancelUserAccount(userName)
 
-        self.failUnlessEqual(userKeys, [(userId, None, None)])
         # User no longer exists
         self.failUnlessRaises(errors.UserNotFound,
             db.userMgr.getUserId, userName)
