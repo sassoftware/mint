@@ -364,6 +364,7 @@ class BuildFiles(modellib.Collection):
 class BuildFile(modellib.XObjIdModel):
     class Meta:
         db_table = 'buildfiles'
+        ordering = [ 'file_id' ]
 
     _xobj_explicit_accessors = set()
     _xobj = xobj.XObjMetadata(tag='file')

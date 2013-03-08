@@ -42,6 +42,12 @@ class ImagesTestCase(RbacEngine):
             user_name='janephoo', full_name='Jane Phoo', email='janephoo@noreply.com')
         user2.save()
 
+        jobUuids = [
+                '7be3373b-38f4-4048-9e30-dce87d8529c9',
+                'c4610ef0-f937-4af3-a8f8-8665451ab416',
+                '540bb963-a655-4c49-bab5-a40c9d67ac28',
+        ]
+
         for i in range(3):
             # make project
             proj = self.addProject("foo%s" % i, domainName='eng.rpath.com')
@@ -64,7 +70,7 @@ class ImagesTestCase(RbacEngine):
             stage.save()
             # images
             image = models.Image(
-                project=proj, _image_type=10, job_uuid='1',
+                project=proj, _image_type=10, job_uuid=jobUuids[i],
                 name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                 trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
@@ -716,9 +722,10 @@ class ImagesTestCase(RbacEngine):
 
         self.failUnlessEqual(response.status_code, 200)
         obj = xobj.parse(response.content)
+        # sha1 is char(40), so we need to pad with whitespaces
         self.failUnlessEqual(
             [(x.title, x.sha1) for x in obj.files.file],
-            [(x['title'], x['sha1']) for x in fileContentList])
+            [(x['title'], x['sha1'].ljust(40)) for x in fileContentList])
 
         self.failUnlessEqual(
                 [ (x[0][:4], x[0][4].keys(), x[1]) for x in createSourceTroveCallArgs ],
@@ -1034,7 +1041,7 @@ class ImagesTestCase(RbacEngine):
                 ('stop_job', (u'0xDEADBEEF',), {}),
             ])
 
-        response = self._get('jobs/%s' % jobId, user="admin", password="password")
+        response = self._get('jobs/%s' % jobId, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.assertEquals(doc.job.status_text, "Done")

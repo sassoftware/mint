@@ -183,6 +183,9 @@ class BaseJobHandler(AbstractHandler):
 
     def create(self, job, extraArgs=None):
         self.extraArgs.update(extraArgs or {})
+        # Tentatively supply a jobUuid, to make sure we have a stable
+        # URL back to the job
+        job.job_uuid = str(uuid.uuid4())
         uuid_, rmakeJob = self.createRmakeJob(job)
         job.job_uuid = str(uuid_)
         job.setDefaultValues()
@@ -198,9 +201,6 @@ class BaseJobHandler(AbstractHandler):
         self.postCreateJob(job)
 
     def createRmakeJob(self, job):
-        # Tentatively supply a jobUuid, to make sure we have a stable
-        # URL back to the job
-        job.job_uuid = str(uuid.uuid4())
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
         method = self.getRepeaterMethod(cli, job)
         methodArgs, methodKwargs = self.getRepeaterMethodArgs(cli, job)

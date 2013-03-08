@@ -136,7 +136,7 @@ class Job(modellib.XObjIdModel):
     # The URL will contain the UUID, so there's no point in exposing job_id
     job_id = D(XObjHidden(models.AutoField(primary_key=True)),
         "the database id of the job")
-    job_uuid = D(models.CharField(max_length=64, unique=True),
+    job_uuid = D(APIReadOnly(models.CharField(max_length=64, unique=True)),
         "a UUID for job tracking purposes, must be unique")
     job_token = D(XObjHidden(APIReadOnly(
         models.CharField(max_length=64, null=True, unique=True))),
