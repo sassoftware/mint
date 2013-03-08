@@ -14,8 +14,6 @@ from testutils import sqlharness
 
 from collections import namedtuple
 
-from conary import dbstore
-from conary.lib import util
 from smartform import descriptor as smartdesc
 from django.core.management import call_command
 from django.db import connections, DEFAULT_DB_ALIAS
@@ -50,9 +48,11 @@ class Database(sqlharness.RepositoryDatabase):
         db.commit()
 
 class SQLHarness(sqlharness.PostgreSQLServer):
-    bindir = "/opt/postgresql-9.2/bin"
+    pass
+
 
 class TestRunner(DjangoTestSuiteRunner):
+    HARNESS_BINDIR = '/opt/postgresql-9.2/bin'
     HARNESS_DB = None
     FIXTURE_PATH = None
 
@@ -74,6 +74,9 @@ class TestRunner(DjangoTestSuiteRunner):
         conn = cls.getConnection()
         oldDbName = conn.settings_dict['NAME']
         if cls.HARNESS_DB is None:
+            if cls.HARNESS_BINDIR not in os.environ['PATH']:
+                os.environ['PATH'] = '%s:%s' % (
+                        cls.HARNESS_BINDIR, os.environ['PATH'])
             harness = SQLHarness(path=None, dbClass=Database)
             conn.settings_dict['USER'] = harness.user
             conn.settings_dict['PORT'] = harness.port

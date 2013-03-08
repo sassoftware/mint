@@ -616,7 +616,7 @@ class SQLServerFixtureCache(FixtureCache):
         return os.path.join(self.harness.conn, dbName)
 
     def newMintCfg(self, name):
-        dbName = ("mf%s" % name).lower()
+        dbName = ("mf%s" % name).lower().replace('.', '__')
         self.keepDbs.append(dbName)
         db = self.harness.getDB(dbName)
 
