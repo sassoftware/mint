@@ -61,6 +61,7 @@ platformXmlTempl = """\
   <hidden>false</hidden>
   <mirrorPermission>true</mirrorPermission>
   <repositoryUrl href="http://localhost:8000/repos/localhost./api"/>
+  <upstreamUrl/>
   <contentSources href="http://localhost:8000/api/platforms/1/contentSources"/>
   <platformStatus href="http://localhost:8000/api/platforms/1/status"/>
   <contentSourceTypes href="http://localhost:8000/api/platforms/1/contentSourceTypes"/>

@@ -79,7 +79,7 @@ class AuthenticationCallback(object):
         if authToken:
             mintClient, mintAuth = self._checkAuth(authToken)
             request.auth = authToken
-        if not mintAuth:
+        if not mintAuth or not mintAuth.authorized:
             # No authentication was successful.
             request.auth = request.mintClient = request.mintAuth = None
             return
