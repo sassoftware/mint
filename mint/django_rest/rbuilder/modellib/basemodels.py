@@ -171,19 +171,16 @@ class BaseManager(models.Manager):
             keyFieldName = autoField.name
             keyFieldVal = getattr(model_inst, keyFieldName, None)
 
-        try:
-            if keyFieldVal:
-                loadedModel = self.get(pk=keyFieldVal)
-            elif model_inst.load_fields:   
-                loadedModel = self.get(**model_inst._load_fields_dict())
-            else:
-                return None, None
-            oldModel = loadedModel.serialize()
-            return oldModel, loadedModel
-        except exceptions.ObjectDoesNotExist:
+        if keyFieldVal is not None:
+            loadedModels = self.filter(pk=keyFieldVal)
+        elif model_inst.load_fields:   
+            loadedModels = self.filter(**model_inst._load_fields_dict())
+        else:
             return None, None
-        except exceptions.MultipleObjectsReturned:
+        if len(loadedModels) != 1:
             return None, None
+        oldModel = loadedModels[0].serialize()
+        return oldModel, loadedModels[0]
 
     def _load(self, model_inst, etreeModel, withReadOnly=False):
         """
@@ -1243,10 +1240,6 @@ class XObjModel(models.Model):
         try:
             relative_url = urlresolvers.reverse(bits[0], None, *bits[1:3])
         except urlresolvers.NoReverseMatch:
-            try:
-                relative_url = urlresolvers.reverse(bits[0], None, None)
-            except:
-                pass
             return None
 
         # Use the request to build an absolute url.
