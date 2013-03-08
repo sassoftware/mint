@@ -65,7 +65,7 @@ class AuthTests(XMLTestCase):
         self.assertEquals(authClient.args, [('test-rce1341', password)])
 
 class SurveyTests(XMLTestCase):
-    fixtures = ['users']
+    fixtures = ['targetusers']
 
     def setUp(self):
         XMLTestCase.setUp(self)
