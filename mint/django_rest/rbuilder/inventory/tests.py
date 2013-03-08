@@ -1488,7 +1488,7 @@ class NetworksTestCase(XMLTestCase):
         self.failUnlessEqual(net.network_id, network3.network_id)
 
 class SystemsTestCase(XMLTestCase):
-    fixtures = ['system_job', 'targets']
+    fixtures = ['system_job', 'targetusers', 'targets']
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -2431,7 +2431,7 @@ class SystemsTestCase(XMLTestCase):
         self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
 
         response = self._put(url,
             data=testsxml.configuration_put_xml,
@@ -2488,7 +2488,7 @@ class SystemsTestCase(XMLTestCase):
         self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
 
         response = self._get('inventory/systems/%s/configuration_descriptor' % \
             system.pk,
@@ -2610,13 +2610,15 @@ class SystemsTestCase(XMLTestCase):
 
         # Create a job
         cu = connection.cursor()
-        now = self.mgr.sysMgr.now()
+        import time
+        now = time.time()
         cu.execute("""
             INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
                 created, modified)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING job_id""",
             [ bootUuid, 1, 1, 1, now, now])
-        jobId = cu.lastrowid
+        jobId = cu.fetchone()[0]
 
         # Pretend that this job launched 2 systems (the way ec2 can do)
         cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
@@ -4171,7 +4173,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
-    fixtures = ['users', 'targets']
+    fixtures = ['targetusers', 'targets']
 
     class Driver(object):
         def __init__(self, cloudType, cloudName, userId, instances):
