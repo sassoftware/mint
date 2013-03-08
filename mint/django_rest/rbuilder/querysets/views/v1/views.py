@@ -56,7 +56,7 @@ class QuerySetsService(BaseQuerySetService):
         return self.mgr.getQuerySets() 
 
     @access.admin
-    @requires('query_set', load=False, save=False)
+    @requires('query_set', load=True, save=True)
     @return_xml
     def rest_POST(self, request, query_set):
         return self.mgr.addQuerySet(query_set, request._authUser)
