@@ -115,20 +115,22 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         creds = self._getTargetCredentialsForUser(target, user)
         if creds is None:
             return None
-        return mintdata.unmarshalTargetUserCredentials(creds.credentials)
+        return mintdata.unmarshalTargetUserCredentials(self.cfg, creds.credentials)
 
     @exposed
     def getTargetCredentialsForCurrentUser(self, target):
         creds = self._getTargetCredentialsForCurrentUser(target)
         if creds is None:
             return None
-        return mintdata.unmarshalTargetUserCredentials(creds.credentials)
+        return mintdata.unmarshalTargetUserCredentials(self.cfg, creds.credentials)
 
     @exposed
     def getTargetAllUserCredentials(self, target):
         ret = []
         for creds in self._getTargetAllUserCredentials(target):
-            ret.append((creds.target_credentials_id, mintdata.unmarshalTargetUserCredentials(creds.credentials)))
+            creds = mintdata.unmarshalTargetUserCredentials(self.cfg,
+                    creds.credentials)
+            ret.append((creds.target_credentials_id, creds))
         return ret
 
     @exposed
@@ -152,7 +154,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def setTargetUserCredentials(self, target, credentials):
-        data = mintdata.marshalTargetUserCredentials(credentials)
+        data = mintdata.marshalTargetUserCredentials(self.cfg, credentials)
         tcred, created = models.TargetCredentials.objects.get_or_create(
             credentials=data)
         oldTUCreds = models.TargetUserCredentials.objects.filter(target=target,

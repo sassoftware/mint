@@ -276,6 +276,7 @@ class MintConfig(conarycfg.ConfigFile):
     launchWaitTime = (CfgInt, 1200,
                         "The number of seconds to wait for a launched system's network information to become available")
     surveyMaxAge = (CfgInt, 30, "The number of days after which a removable survey is deleted")
+    encryptCredentials = (CfgBool, False)
 
     # inventory - configuration
     inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")

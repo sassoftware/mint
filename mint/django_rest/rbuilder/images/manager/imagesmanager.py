@@ -204,7 +204,8 @@ class ImagesManager(basemanager.BaseManager):
             user__target_user_credentials__target__target_type__name = 'ec2',
             user__target_user_credentials__target__name = 'aws').values_list('level', 'user__target_user_credentials__target_credentials__credentials')
         for level, creds in vals:
-            val = datatypes.unmarshalTargetUserCredentials(creds).get('accountId')
+            val = datatypes.unmarshalTargetUserCredentials(self.cfg, creds
+                    ).get('accountId')
             if val is None:
                 continue
             if level <= 1:

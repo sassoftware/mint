@@ -279,7 +279,8 @@ class BuildsTable(database.KeyedTable):
                     if value == '-':
                         value = 'Unknown'
                     elif value:
-                        value = data.unmarshalTargetUserCredentials(value)
+                        value = data.unmarshalTargetUserCredentials(self.cfg,
+                                value)
                         value = value.get('accountId')
                     # Keep the old interface for getAllBuildsByType
                     key = 'awsAccountNumber'

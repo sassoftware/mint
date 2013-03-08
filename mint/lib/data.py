@@ -127,13 +127,14 @@ def _getCredClient():
     return cred_client.CredentialsClient()
 
 
-def marshalTargetUserCredentials(creds):
+def marshalTargetUserCredentials(cfg, creds):
     value = marshalGenericData(creds)
-    wrapped = _getCredClient().wrap(value)
-    return wrapped
+    if cfg and cfg.encryptCredentials:
+        value = _getCredClient().wrap(value)
+    return value
 
 
-def unmarshalTargetUserCredentials(creds):
+def unmarshalTargetUserCredentials(cfg, creds):
     if creds.startswith('{'):
         creds = _getCredClient().unwrap(creds)
     return unmarshalGenericData(creds)

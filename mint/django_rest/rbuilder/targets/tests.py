@@ -106,7 +106,7 @@ class BaseTargetsTest(RbacEngine):
         for i in range(2):
             creds = dict(username="username-%s" % i, password="password-%s" % i)
             targetCredentials.append(models.TargetCredentials.objects.create(
-                credentials=mintdata.marshalTargetUserCredentials(creds)))
+                credentials=mintdata.marshalTargetUserCredentials(None, creds)))
 
         u0 = user
         u1 = self.intern_user

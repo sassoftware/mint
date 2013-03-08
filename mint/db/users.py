@@ -302,8 +302,8 @@ class UsersTable(database.KeyedTable):
             """
         cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
-        return [ (x[0], data.unmarshalTargetUserCredentials(x[1]).get('accountId'))
-            for x in results ]
+        return [ (x[0], data.unmarshalTargetUserCredentials(self.cfg, x[1]
+            ).get('accountId')) for x in results ]
 
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """

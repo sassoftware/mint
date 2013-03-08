@@ -802,7 +802,7 @@ class ProjectUsersTable(database.DatabaseTable):
                AND target_types.name = ?
                AND Targets.name = ?""", projectId, 'ec2', 'aws')
         for isWriter, creds in cu.fetchall():
-            val = mintdata.unmarshalTargetUserCredentials(creds).get('accountId')
+            val = mintdata.unmarshalTargetUserCredentials(None, creds).get('accountId')
             if val is None:
                 continue
             if isWriter:

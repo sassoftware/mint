@@ -159,7 +159,7 @@ class TargetConversion(object):
     def _setTargetCredentialsForUser(self, targetId, userId, credentials):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
-        data = mintdata.marshalTargetUserCredentials(credentials)
+        data = mintdata.marshalTargetUserCredentials(self.cfg, credentials)
         cu.execute("""
             INSERT INTO TargetUserCredentials (targetId, userId, credentials)
             VALUES (?, ?, ?)""", targetId, userId, data)
