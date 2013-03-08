@@ -621,7 +621,9 @@ class System(modellib.XObjIdModel):
         # 'order by ip_address nulls last', the workaround is to
         # fabricate a column that is sorted by first.
         q = self.networks.extra(select=dict(null1="ip_address is null"))
-        for nw in q.order_by('null1', 'ip_address'):
+        # If two networks have the same ip address (or lack thereof),
+        # then fall back to primary key ordering
+        for nw in q.order_by('null1', 'ip_address', 'network_id'):
             key = (nw.ip_address or nw.dns_name)
             if nw.pinned:
                 if not pinnedFound:
@@ -1163,6 +1165,7 @@ class Network(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
+        ordering = [ 'network_id' ]
 
     _xobj = xobj.XObjMetadata(
                 tag='network',
