@@ -128,9 +128,9 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
     def getTargetAllUserCredentials(self, target):
         ret = []
         for creds in self._getTargetAllUserCredentials(target):
-            creds = mintdata.unmarshalTargetUserCredentials(self.cfg,
+            credsDict = mintdata.unmarshalTargetUserCredentials(self.cfg,
                     creds.credentials)
-            ret.append((creds.target_credentials_id, creds))
+            ret.append((creds.target_credentials_id, credsDict))
         return ret
 
     @exposed

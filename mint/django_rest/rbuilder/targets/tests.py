@@ -1047,7 +1047,7 @@ ZcY7o9aU
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%s/descriptors/refresh_images" %  target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],

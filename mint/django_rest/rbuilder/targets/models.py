@@ -230,6 +230,7 @@ class Credentials(modellib.Collection):
 class TargetCredentials(modellib.XObjModel):
     class Meta:
         db_table = u'targetcredentials'
+        ordering = [ 'target_credentials_id' ]
     target_credentials_id = models.AutoField(primary_key=True,
         db_column="targetcredentialsid")
     credentials = D(models.TextField(null=False, unique=True),
@@ -275,6 +276,7 @@ class TargetImage(modellib.XObjModel):
     """
     class Meta:
         db_table = "target_image"
+        ordering = [ "target_image_id" ]
 
     _xobj_explicit_accessors = set()
 
@@ -318,6 +320,7 @@ class TargetSystem(modellib.XObjModel):
 class TargetDeployableImage(modellib.XObjModel):
     class Meta:
         db_table = "target_deployable_image"
+        ordering = [ "target_deployable_image_id" ]
 
     target_deployable_image_id = models.AutoField(primary_key=True)
     target = D(models.ForeignKey(Target, related_name='target_deployable_images'),
