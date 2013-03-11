@@ -64,7 +64,40 @@ class AuthTests(XMLTestCase):
 
         self.assertEquals(authClient.args, [('test-rce1341', password)])
 
-class SurveyTests(XMLTestCase):
+class ConfigDescriptorMixIn(object):
+    def _mockConfigDescriptorCache(self):
+        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
+        descr = self._getConfigDescriptor()
+        mockGetDescriptor = lambda x, y: descr
+        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+        return descr
+
+    def _getConfigDescriptor(self):
+
+        vhost = descriptor.ConfigurationDescriptor()
+        vhost.setId("apache-configuration/vhost")
+        vhost.setRootElement('vhost')
+        vhost.setDisplayName('Virtual Host Configuration')
+        vhost.addDescription('Virtual Host Configuration')
+        vhost.addDataField('serverName', type="str", required=True,
+            descriptions="Virtual Host Name")
+        vhost.addDataField('documentRoot', type="str", required=True,
+            descriptions="Virtual Host Document Root") 
+
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setId("Some-ID")
+        descr.setDisplayName('Ignored')
+        descr.addDescription('Ignored')
+        descr.setRootElement('ignored')
+
+        descr.addDataField('vhosts', type=descr.ListType(vhost),
+            required=True, descriptions="Virtual Hosts",
+            constraints=[dict(constraintName='uniqueKey', value="serverName"),
+                dict(constraintName="minLength", value=1)])
+        return descr
+
+
+class SurveyTests(ConfigDescriptorMixIn, XMLTestCase):
     fixtures = ['targetusers']
 
     def setUp(self):
@@ -235,6 +268,7 @@ class SurveyTests(XMLTestCase):
 
     def test_survey_post(self):
 
+        self._mockConfigDescriptorCache()
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)
@@ -262,7 +296,7 @@ install needle
         # We should have top level items
         self.assertEquals(sorted(x.trove_spec
             for x in sys.desired_top_level_items.all()),
-            ['jkl=7[orange]'])
+            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
 
         # Config and Update actions should be disabled
         system_url = url = "inventory/systems/%s" % system.system_id
@@ -339,7 +373,7 @@ install needle
         topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
         self.assertEquals(sorted(x.trove_spec
                 for x in topLevelItemMgr.filter(system=sys)),
-            ['jkl=7[orange]'])
+            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
 
         response = self._get("inventory/surveys/1234/diffs/99999",
             username = 'admin', password='password')
@@ -1487,7 +1521,7 @@ class NetworksTestCase(XMLTestCase):
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
-class SystemsTestCase(XMLTestCase):
+class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
     fixtures = ['system_job', 'targetusers', 'targets']
 
     def setUp(self):
@@ -2503,37 +2537,6 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(descr.getDisplayName(), 'Configuration Descriptor')
         self.assertEquals(descr.getRootElement(), 'configuration')
 
-    def _mockConfigDescriptorCache(self):
-        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-        descr = self._getConfigDescriptor()
-        mockGetDescriptor = lambda x, y: descr
-        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
-        return descr
-
-    def _getConfigDescriptor(self):
-
-        vhost = descriptor.ConfigurationDescriptor()
-        vhost.setId("apache-configuration/vhost")
-        vhost.setRootElement('vhost')
-        vhost.setDisplayName('Virtual Host Configuration')
-        vhost.addDescription('Virtual Host Configuration')
-        vhost.addDataField('serverName', type="str", required=True,
-            descriptions="Virtual Host Name")
-        vhost.addDataField('documentRoot', type="str", required=True,
-            descriptions="Virtual Host Document Root") 
-
-        descr = descriptor.ConfigurationDescriptor()
-        descr.setId("Some-ID")
-        descr.setDisplayName('Ignored')
-        descr.addDescription('Ignored')
-        descr.setRootElement('ignored')
-
-        descr.addDataField('vhosts', type=descr.ListType(vhost),
-            required=True, descriptions="Virtual Hosts",
-            constraints=[dict(constraintName='uniqueKey', value="serverName"),
-                dict(constraintName="minLength", value=1)])
-        return descr
-
     def testGetSystemLogAuth(self):
         """
         Ensure requires auth but not admin
@@ -2733,6 +2736,7 @@ class SystemsTestCase(XMLTestCase):
             ])
 
     def testDedupByEventUuidPUT(self):
+        self._mockConfigDescriptorCache()
         system, xml = self._setupDedupEventUuid()
         url = 'inventory/systems/%s' % system.system_id
         headers = { 'X-rBuilder-Event-UUID' :

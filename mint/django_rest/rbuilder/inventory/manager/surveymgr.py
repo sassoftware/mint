@@ -189,13 +189,6 @@ class SurveyManager(basemanager.BaseManager):
         return survey_models.modellib.Etree.findBasicChild(obj, child, default=default)
 
     @classmethod
-    def _u(cls, obj):
-        """ ensure obj is cast to unicode """
-        if obj is None:
-            return None
-        return unicode(obj)
-
-    @classmethod
     def _i(cls, obj):
         """ ensure obj is cast to an integer """
         if obj is None or str(obj) == '' or str(obj) == 'None':
@@ -269,21 +262,21 @@ class SurveyManager(basemanager.BaseManager):
         # a regular node position keeps track of a pseudo-XPath like
         # path
 
-        if type(xvalues) == list:
-            for i, elt in enumerate(xvalues):
+        if isinstance(xvalues, (etree._Comment, etree._ProcessingInstruction)):
+            return
+        if xvalues.attrib.get("list", "").lower() == "true":
+            for i, elt in enumerate(xvalues.iterchildren()):
                 newPosition = "%s/%d" % (position, i)
                 # recurse down each item in the list
                 self.xwalk(elt, newPosition, results)
-        else:
-            eltNames = xvalues._xobj.elements
-            if len(eltNames) == 0:
-                # it's a leaf node, record the xobj element found at this path
-                results.append([position, xvalues])
-            else:
-                # recurse on children of the element
-                for eltName in eltNames:
-                    newPosition = "%s/%s" % (position, eltName)
-                    self.xwalk(getattr(xvalues, eltName), newPosition, results)
+            return
+        if len(xvalues) == 0:
+            # it's a leaf node, record the xobj element found at this path
+            results.append([position, xvalues.text])
+            return
+        for elt in xvalues:
+            newPosition = "%s/%s" % (position, elt.tag)
+            self.xwalk(elt, newPosition, results)
 
     def _saveShreddedValues(self, survey, xvalues, valueType):
         ''' store config elements in the database so they are searchable, even if they are not surfaced this way '''
@@ -292,7 +285,6 @@ class SurveyManager(basemanager.BaseManager):
             return
         results = []
         # find all leaf nodes of the xvalues tag
-        return "XXX FIXME"
         self.xwalk(xvalues, "", results)
         for x in results:
            (path, value) = x
