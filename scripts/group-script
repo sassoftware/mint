@@ -30,9 +30,17 @@ die() {
     exit 1
 }
 
-# If not chrooted, stop cron, to prevent bad things from happening while we're
-# migrating (RBL-7973)
-[ -e /var/lock/subsys/crond ] && service crond stop
+# Stop all ancillary services
+# crond is included so nothing fails during the migration (cf RBL-7973)
+services="rmake3 rmake3-node rmake-messagebus rmake rmake-node mcp-dispatcher jobmaster rbuilder-authn rbuilder-credstore crond"
+reversed=$(echo "$services" | sed -e 's/ /\n/g' | tac)
+for name in $reversed
+do
+    if [ -e /var/lock/subsys/$name ]
+    then
+        /sbin/service $name stop
+    fi
+done
 
 # Pause nginx and shutdown gunicorn
 [ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
@@ -139,32 +147,13 @@ then
     touch "$PLATFORMS_FILE"
 fi
 
-### Extra Steps
-
-# Restart rMake after update + cert generation. This also straightens things out
-# for the first update after the messagebus was split.
-#   -- 5.0.0 - 2008-12-01
-#   -- 5.5.0 - 2009-11-09
 if [ "x$is_chrooted" == "x" ]
 then
-    # Stop everything
-    service jobmaster condstop
-    service mcp-dispatcher condstop
-    [ -e /var/lock/subsys/rmake-node ] && service rmake-node stop
-    service rmake stop
-    service rmake-messagebus condstop
-    [ -e /var/lock/subsys/rmake3-node ] && service rmake3-node stop
-    [ -e /var/lock/subsys/rmake3 ] && service rmake3 stop
-    # Start everything
-    service rmake3 start
-    service rmake3-node start
-    service rmake-messagebus start
-    service rmake start
-    service rmake-node start
-    service mcp-dispatcher start
-    service jobmaster start
-    service rbuilder-authn restart
-    service rbuilder-credstore restart
+    # Start ancillary services
+    for name in $services
+    do
+        /sbin/service $name start
+    done
 
     # Create initial platforms
     echo Updating platforms ...
@@ -172,9 +161,6 @@ then
 
     echo Updating branch/stage information ...
     $scriptdir/repository-sync
-
-    # Start cron back (RBL-7973)
-    service crond start
 fi
 
 # Shut down postgres if chrooted
