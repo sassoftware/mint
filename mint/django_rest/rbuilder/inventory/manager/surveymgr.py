@@ -739,10 +739,10 @@ class SurveyManager(basemanager.BaseManager):
         for xmodel in xwindows_services:
             xinfo = xmodel.find('windows_service_info')
             info, created = survey_models.WindowsServiceInfo.objects.get_or_create(
-                name = self._findSimple(xinfo, 'name'),
+                name = self._findSimple(xinfo, 'name', ''),
                 display_name = self._findSimple(xinfo, 'display_name'),
-                type = self._findSimple(xinfo, 'type'),
-                handle = self._findSimple(xinfo, 'handle'),
+                type = self._findSimple(xinfo, 'type', ''),
+                handle = self._findSimple(xinfo, 'handle', ''),
                 _required_services = self._findSimple(xinfo, 'required_services', '')
             )
             autostart = (self._findSimple(xmodel, 'autostart', 'false') != 'false')

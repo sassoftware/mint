@@ -1317,16 +1317,14 @@ class SystemManager(basemanager.BaseManager):
             setattr(credentials, k, v)
         return credentials
 
-    @classmethod
-    def unmarshalCredentials(cls, credentialsString):
-        creds = mintdata.unmarshalGenericData(credentialsString)
+    def unmarshalCredentials(self, credentialsString):
+        creds = mintdata.unmarshalCredentials(self.cfg, credentialsString)
         # Keys should be strings, not unicode
         creds = dict((str(k), v) for (k, v) in creds.iteritems())
         return creds
 
-    @classmethod
-    def marshalCredentials(cls, credentialsDict):
-        return mintdata.marshalGenericData(credentialsDict)
+    def marshalCredentials(self, credentialsDict):
+        return mintdata.marshalCredentials(self.cfg, credentialsDict)
 
     def _systemOrId(self, system_or_id):
         '''Allow input of systems or system ids'''

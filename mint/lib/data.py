@@ -109,8 +109,9 @@ def marshalGenericData(genericDataDict):
     if not genericDataDict:
         return ""
     # Newline-separated fields
-    data = '\n'.join("%s:%s" % (k, base64.b64encode(v))
-        for (k, v) in sorted(genericDataDict.iteritems()))
+    data = '\n'.join(["%s:%s" % (k, base64.b64encode(v))
+        for (k, v) in sorted(genericDataDict.iteritems())
+        if v is not None])
     return data
 
 def unmarshalGenericData(genericData):
@@ -127,14 +128,16 @@ def _getCredClient():
     return cred_client.CredentialsClient()
 
 
-def marshalTargetUserCredentials(cfg, creds):
+def marshalCredentials(cfg, creds):
     value = marshalGenericData(creds)
     if cfg and cfg.encryptCredentials:
         value = _getCredClient().wrap(value)
     return value
+marshalTargetUserCredentials = marshalCredentials
 
 
-def unmarshalTargetUserCredentials(cfg, creds):
+def unmarshalCredentials(cfg, creds):
     if creds.startswith('{'):
         creds = _getCredClient().unwrap(creds)
     return unmarshalGenericData(creds)
+unmarshalTargetUserCredentials = unmarshalCredentials
