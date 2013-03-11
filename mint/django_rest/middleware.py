@@ -448,7 +448,7 @@ class FlashErrorCodeMiddleware(BaseMiddleware):
     def _process_response(self, request, response):
         isFlash = False
         try:
-            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION')
+            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION') or request._meta.get('HTTP_X_WRAP_RESPONSE_CODES')
         except:
              # test code mocking things weirdly?
              pass

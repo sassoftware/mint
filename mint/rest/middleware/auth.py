@@ -116,7 +116,7 @@ class AuthenticationCallback(object):
                 error = 'maintenance-mode'
 
             # Flex can't get headers from error responses in Firefox
-            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers
 
             if not getattr(request, 'contentType', None):
                 request.contentType = 'text/plain'
@@ -157,7 +157,7 @@ class AuthenticationCallback(object):
                     return None
                 else:
                     # TODO: new way is to wrap these as XML faults and return 200 to Flash
-                    if 'HTTP_X_FLASH_VERSION' in request.headers:
+                    if 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers:
                         return Response('Unauthorized', status=403)
                     return Response(status=401,
                              headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
@@ -167,7 +167,7 @@ class AuthenticationCallback(object):
         # require authentication
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
-            if 'HTTP_X_FLASH_VERSION' in request.headers:
+            if 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers:
                 # TODO: new way is to wrap these as XML faults and return 200 to Flash
                 return Response('Unauthorized', status=403)
             return Response(status=401,
