@@ -10,10 +10,8 @@ except ImportError:
 
 import logging
 import sys
-import time
 import traceback
 
-from django import http
 from django.http import HttpResponse
 
 from mint import logerror
