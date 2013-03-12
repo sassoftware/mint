@@ -1767,8 +1767,8 @@ ZcY7o9aU
                     for tdi in imgfile.target_deployable_images.all() ]
                 for imgfile in img.files.order_by('file_id') ],
             [[
-                ('Target Name vmware', 'target-internal-id-04'),
                 (targetX.name, None),
+                ('Target Name vmware', 'target-internal-id-04'),
             ]]
         )
 

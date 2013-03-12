@@ -779,7 +779,7 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
               JOIN BuildFilesUrlsMap AS bfum ON (imgf.fileId = bfum.fileId)
               JOIN FilesUrls AS fu ON (bfum.urlId = fu.urlId)
              WHERE img.buildType = %s
-             ORDER BY tti.target_id, tti.file_id
+             ORDER BY tti.target_id, tti.file_id, tti.target_image_id nulls last
         """
         cu.execute(query, [ buildtypes.VMWARE_ESX_IMAGE ])
         todelete = []
