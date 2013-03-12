@@ -2,12 +2,6 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-try:
-    # The mod_python version is more efficient, so try importing it first.
-    from mod_python.util import parse_qsl # pyflakes=ignore
-except ImportError:
-    from cgi import parse_qsl # pyflakes=ignore
-
 import logging
 import sys
 import traceback
