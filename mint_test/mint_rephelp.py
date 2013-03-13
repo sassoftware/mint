@@ -622,8 +622,8 @@ class RestDBMixIn(object):
                            troveName=troveName, troveVersion=troveVersion,
                            troveFlavor=troveFlavor,
                            outputTrove=outputTrove)
-        db.createImage(hostname, img, buildData)
-        return img.imageId
+        imageId = db.imageMgr.createImage(hostname, img, buildData)
+        return imageId
 
     def setImageFiles(self, db, hostname, imageId, imageFiles=None):
         if imageFiles is None:
