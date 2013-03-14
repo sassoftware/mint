@@ -190,7 +190,8 @@ class TargetManager(manager.Manager):
         """, targetType, userName)
         userCreds = {}
         for targetName, creds in cu:
-            userCreds[targetName] = mintdata.unmarshalTargetUserCredentials(creds)
+            userCreds[targetName] = mintdata.unmarshalTargetUserCredentials(
+                    self.cfg, creds)
         targetConfig = self.getConfiguredTargetsByType(targetType)
         ret = []
         for targetName, cfg in sorted(targetConfig.items()):
@@ -217,7 +218,8 @@ class TargetManager(manager.Manager):
         """, targetType)
         ret = []
         for targetName, creds, credsId, userName, userId in cu:
-            userCredentials = mintdata.unmarshalTargetUserCredentials(creds)
+            userCredentials = mintdata.unmarshalTargetUserCredentials(self.cfg,
+                    creds)
             targetCfg = targetConfigs.get(targetName)
             if targetCfg is None:
                 continue
@@ -311,7 +313,7 @@ class TargetManager(manager.Manager):
         self._deleteTargetCredentials(targetId, userId)
         cu = self.db.cursor()
         # Newline-separated credential fields
-        data = mintdata.marshalTargetUserCredentials(credentials)
+        data = mintdata.marshalTargetUserCredentials(self.cfg, credentials)
         targetCredentialsId = self._getCredentialsId(cu, data)
         if targetCredentialsId is None:
             cu.execute("INSERT INTO TargetCredentials (credentials) VALUES (?)",
@@ -357,7 +359,7 @@ class TargetManager(manager.Manager):
         row = cu.fetchone()
         if not row:
             return {}
-        return mintdata.unmarshalTargetUserCredentials(row[0])
+        return mintdata.unmarshalTargetUserCredentials(self.cfg, row[0])
 
     def _deleteTargetCredentials(self, targetId, userId):
         cu = self.db.cursor()

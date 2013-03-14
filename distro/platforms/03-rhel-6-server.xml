@@ -3,4 +3,5 @@
   <platformName>Red Hat Enterprise Linux 6</platformName>
   <abstract>false</abstract>
   <configurable>false</configurable>
+  <upstream_url>https://devrepos.unx.sas.com/conary/</upstream_url>
 </platform>

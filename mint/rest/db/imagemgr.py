@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
@@ -11,16 +11,11 @@ from xobj import xobj
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
-from conary.lib.log import FORMATS
-from rpath_repeater import client as repeater_client
 
 from mint import builds
 from mint import buildtypes
-from mint import jobstatus
 from mint import helperfuncs
-from mint import notices_callbacks
 from mint import urltypes
-from mint.image_gen.upload import client as iup_client
 from mint.lib import data
 from mint.rest import errors
 from mint.rest.db import manager
@@ -38,7 +33,6 @@ class ImageManager(manager.Manager):
         hostname = fqdn.split('.')[0]
         cu = self.db.cursor()
 
-        # TODO: pull amiId out of here and move into builddata dict ASAP
         sql = '''
             SELECT
                 p.hostname,
@@ -51,8 +45,7 @@ class ImageManager(manager.Manager):
                     b.stageName AS stage, b.output_trove,
                 pr.timePublished,
                 pr.name AS release,
-                cr_user.username AS creator, up_user.username AS updater,
-                ami_data.value AS amiId
+                cr_user.username AS creator, up_user.username AS updater
 
             FROM Builds b
                 JOIN Projects p USING ( projectId )
@@ -64,8 +57,6 @@ class ImageManager(manager.Manager):
                     b.productVersionId = pv.productVersionId )
                 LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
                 LEFT JOIN Users up_user ON ( b.updatedBy = up_user.userId )
-                LEFT JOIN BuildData ami_data ON (
-                    b.buildId = ami_data.buildId AND ami_data.name = 'amiId' )
 
             WHERE hostname = ? AND troveVersion IS NOT NULL
             %(where)s
@@ -287,12 +278,6 @@ class ImageManager(manager.Manager):
 
     def deleteImageFilesForProduct(self, fqdn, imageId):
         cu = self.db.cursor()
-        # Grab the AMI ID, if there is one
-        cu.execute("""SELECT value FROM BuildData
-                      WHERE buildId=? AND name = 'amiId'""", imageId)
-        imageName = cu.fetchone()
-        if imageName:
-            imageName = imageName[0]
         cu.execute('''SELECT url FROM BuildFiles
                      JOIN BuildFilesUrlsMap USING(fileId)
                      JOIN FilesUrls USING(urlId)
@@ -310,7 +295,7 @@ class ImageManager(manager.Manager):
         cu.execute('''DELETE FROM BuildFiles WHERE buildId=?''', imageId)
         # Grab the build type
         imageType = self._getImageType(imageId)
-        self.publisher.notify('ImageRemoved', imageId, imageName, imageType)
+        self.publisher.notify('ImageRemoved', imageId, None, imageType)
 
     def _getImageType(self, imageId):
         cu = self.db.cursor()
@@ -406,83 +391,6 @@ class ImageManager(manager.Manager):
                                         commit=False)
         return buildId
 
-    def updateImage(self, fqdn, image):
-        if image.metadata is None:
-            return
-        hostname = fqdn.split('.')[0]
-        imageId = image.imageId
-        metadata = self.getMetadataDict(image.metadata)
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT b.output_trove
-            FROM Builds b
-            JOIN Projects p ON p.projectId = b.projectId
-            WHERE b.buildId = ?
-            AND p.hostname = ?
-            """, imageId, hostname)
-        oldTup, = self.db._getOne(cu, errors.ImageNotFound, imageId)
-        name, version, flavor = trovetup.TroveSpec.fromString(oldTup)
-        version = versions.VersionFromString(version)
-        if flavor is None:
-            flavor = deps.Flavor()
-        oldTup = trovetup.TroveTuple(name, version, flavor)
-        nvf = self.db.productMgr.reposMgr.updateKeyValueMetadata(
-                [(oldTup, metadata)], admin=True)[0]
-        cu.execute("UPDATE Builds SET output_trove = ? WHERE buildId = ?",
-                nvf.asString(), imageId)
-        msg = "Updated image committed as %s=%s/%s" % (nvf.name,
-                nvf.version.trailingLabel(),
-                nvf.version.trailingRevision())
-        log.info(msg)
-        self._getImageLogger(hostname, imageId).info(msg)
-
-    def getUploaderClient(self):
-        rcli = repeater_client.RepeaterClient()
-        return iup_client.UploadClient(rcli.client)
-
-    def uploadImageFiles(self, hostname, image, outputToken=None):
-        if not image.files.files:
-            return None
-        rcli = repeater_client.RepeaterClient
-        relPath="/api/products/%s/images/%s/" % (hostname, image.imageId)
-        imageURL = rcli.URL(
-                scheme='http',
-                host='localhost',
-                path=relPath,
-                unparsedPath=relPath,
-                headers={'X-rBuilder-OutputToken' : outputToken},
-                )
-        uploadPath = "/uploadBuild/%s/" % (image.imageId, )
-        headers = { 'X-rBuilder-OutputToken' : outputToken }
-        fileList = []
-        for fileItem in image.files.files:
-            if not fileItem.urls:
-                continue
-            srcurl = fileItem.urls[0].url
-            fileName = os.path.basename(fileItem.fileName)
-            uPath = uploadPath + fileName
-            url = rcli.makeUrl(srcurl)
-            destination = rcli.URL(scheme="http", host="localhost",
-                path=uPath, unparsedPath=uPath, headers=headers)
-            # Convert fields to unicode, we don't want to send xobj strings
-            # over the wire
-            ifile = rcli.ImageFile(
-                title=self._u(fileItem.fileName),
-                file_name=self._u(fileItem.fileName),
-                url=url, destination=destination)
-            fileList.append(ifile)
-        if not fileList:
-            return None
-        metaDict = self.getMetadataDict(image.metadata)
-        imodel = rcli.Image(name=self._u(image.name), metadata=metaDict,
-            architecture=self._u(image.architecture), files=fileList)
-
-        uploadClient = self.getUploaderClient()
-        uuid, job = uploadClient.downloadImages(imodel, imageURL)
-        cu = self.db.cursor()
-        cu.execute("UPDATE builds SET job_uuid = ? WHERE buildId = ?",
-                str(uuid), image.imageId)
-
     @classmethod
     def _u(cls, obj):
         if obj is None:
@@ -501,123 +409,12 @@ class ImageManager(manager.Manager):
         row = self.db._getOne(cu, errors.ImageNotFound, imageId)
         return models.ImageStatus(row)
 
-    def setImageStatus(self, imageId, status):
-        cu = self.db.cursor()
-        cu.execute("""UPDATE Builds SET status = ?, statusMessage = ?
-                WHERE buildId = ?""", status.code, status.message, imageId)
-        return self.getImageStatus(imageId)
-
-    def finalImageProcessing(self, imageId, status):
-        self._postFinished(imageId, status)
-        self._createNotices(imageId, status)
-
-    class UploadCallback(object):
-        def __init__(self, manager, imageId):
-            self.manager = manager
-            self.imageId = imageId
-
-        def callback(self, fileName, fileIdx, fileTotal,
-                currentFileBytes, totalFileBytes, sizeCurrent, sizeTotal):
-            # Nice percentages
-            if sizeTotal == 0:
-                sizeTotal = 1024
-            pct = sizeCurrent * 100.0 / sizeTotal
-            message = "Uploading bundle: %d%%" % (pct, )
-            self.manager._setStatus(self.imageId, message = message)
-            log.info("Uploading %s (%s/%s): %.1f%%, %s/%s",
-                fileName, fileIdx, fileTotal, pct, sizeCurrent, sizeTotal)
-
-    def _setStatus(self, imageId, code = jobstatus.RUNNING, message = ''):
-        status = models.ImageStatus()
-        status.set_status(code, message)
-        self.db.setVisibleImageStatus(imageId, status)
-
-    def _postFinished(self, imageId, status):
-        if status.code != jobstatus.FINISHED:
-            return
-        self.db.db.auth_tokens.removeTokenByImage(imageId)
-        self.db.commit()
-
-        try:
-            self.db.djMgr.enterTransactionManagement()
-            self.db.djMgr.finishImageBuild(imageId)
-            self.db.djMgr.commit()
-        except:
-            self.db.djMgr.rollback()
-            raise
-        finally:
-            self.db.djMgr.leaveTransactionManagement()
-
-        imageType = self._getImageType(imageId)
-        if imageType != buildtypes.AMI:
-            # for now we only have to do something special for AMIs
-            return
-        log.info("Finishing AMI image")
-        # Fetch the image path
-        cu = self._getImageFiles(imageId)
-        uploadCallback = self.UploadCallback(self, imageId)
-        for row in cu:
-            url = row[0]
-            if not os.path.exists(url):
-                continue
-            log.info("Uploading bundle")
-            bucketName, manifestName = self.db.awsMgr.amiPerms.uploadBundle(
-                url, callback = uploadCallback.callback)
-            self._setStatus(imageId, message = "Registering AMI")
-            log.info("Registering AMI for %s/%s", bucketName,
-                manifestName)
-            projectId = self._getProjectForImage(imageId)
-            getEC2AccountNumbersForProjectUsers = self.db.db.projectUsers.getEC2AccountNumbersForProjectUsers
-            writers, readers = getEC2AccountNumbersForProjectUsers(projectId)
-            amiId, manifestPath = self.db.awsMgr.amiPerms.registerAMI(
-                bucketName, manifestName, readers = readers, writers = writers)
-            log.info("Registered AMI %s for %s", amiId,
-                manifestPath)
-            self.db.db.buildData.setDataValue(imageId, 'amiId', amiId,
-                data.RDT_STRING)
-            self.db.db.buildData.setDataValue(imageId, 'amiManifestName,',
-                manifestPath, data.RDT_STRING)
-            self.db.commit()
-
     def _getProjectForImage(self, imageId):
         sql = "SELECT projectId FROM Builds WHERE buildId = ?"
         cu = self.db.cursor()
         cu.execute(sql, imageId)
         row = cu.fetchone()
         return row[0]
-
-    def _createNotices(self, imageId, status):
-        sql = """
-            SELECT Projects.hostname, ProductVersions.name, Users.username,
-                   Builds.name, Builds.buildType, BuildData.value AS amiId
-              FROM Builds
-              JOIN Projects USING ( projectId )
-         LEFT JOIN ProductVersions ON
-                (Builds.productVersionId = ProductVersions.productVersionId)
-         LEFT JOIN Users ON ( Builds.createdBy = Users.userId )
-         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
-                                 BuildData.name = 'amiId' )
-             WHERE Builds.buildId = ?
-        """
-        cu = self.db.cursor()
-        cu.execute(sql, imageId)
-        row = cu.fetchone()
-        projectName, projectVersion, imageCreator, imageName, imageType, amiId = row
-        imageType = buildtypes.typeNamesMarketing.get(imageType)
-
-        failed = (status.code != jobstatus.FINISHED)
-
-        if amiId is not None:
-            notices = notices_callbacks.AMIImageNotices(self.cfg, imageCreator)
-            imageFiles = [ amiId ]
-        else:
-            notices = notices_callbacks.ImageNotices(self.cfg, imageCreator)
-            imageFiles = [ (x[0], self.getDownloadUrl(x[1]))
-                for x in self._getImageFiles(imageId) ]
-
-        method = (failed and notices.notify_error) or notices.notify_built
-        method(imageName, imageType, time.time(), projectName, projectVersion,
-            imageFiles)
 
     def getDownloadUrl(self, fileId):
         downloadUrlTemplate = "https://%s%sdownloadImage?fileId=%d"
@@ -635,22 +432,6 @@ class ImageManager(manager.Manager):
                AND FilesUrls.urlType = ?
         """, imageId, urltypes.LOCAL)
         return cu
-
-    def _getImageInfoForNotices(self, imageId, status):
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT Projects.name, Projects.version, Users.username,
-                   Builds.buildType,
-                   BuildData.value AS amiId,
-              FROM Builds
-              JOIN Projects USING (projectId)
-              JOIN Users ON (Builds.createdBy = Users.userId)
-         LEFT JOIN BuildData ON (Builds.buildId = BuildData.buildId AND
-                                 BuildData.name = 'amiId' )
-             WHERE Builds.buildId = ?
-        """, imageId)
-        # XXX FIXME: add notices
-        return
 
     def setFilesForImage(self, fqdn, imageId, files):
         hostname = fqdn.split('.')[0]
@@ -688,62 +469,7 @@ class ImageManager(manager.Manager):
             cu.execute("""INSERT INTO BuildFilesUrlsMap (
                     fileId, urlId) VALUES ( ?, ? )""",
                     fileId, urlId)
-
-        if files.metadata is not None:
-            self._addImageToRepository(hostname, imageId, files.metadata)
-
         return self.listFilesForImage(hostname, imageId)
-
-    @classmethod
-    def getMetadataDict(cls, metadata):
-        if metadata is None:
-            return None
-        metadataDict = {}
-        for name, value in metadata.__dict__.items():
-            if name.startswith('_'):
-                continue
-            metadataDict[name] = str(value)
-        return metadataDict
-
-    def _addImageToRepository(self, hostname, imageId, metadata):
-        metadataDict = self.getMetadataDict(metadata)
-        # Fetch file paths
-        cu = self._getImageFiles(imageId)
-        filePaths = [ row[0] for row in cu ]
-        img = self.getImageForProduct(hostname, imageId)
-        productMgr = self.db.productMgr
-        # We need the product's fqdn
-        product = productMgr.getProduct(hostname)
-        fqdn = product.repositoryHostname
-        pd = productMgr.getProductVersionDefinition(fqdn, img.version)
-        buildLabel = pd.getLabelForStage(img.stage)
-
-        factoryName = "rbuilder-image"
-        troveName = "image-%s" % hostname
-        troveVersion = imageId
-        RegularFile = self.db.reposShim.RegularFile
-        streamMap = dict((os.path.basename(x),
-            RegularFile(contents=file(x), config=False)) for x in filePaths)
-        try:
-            nvf = productMgr.reposMgr.createSourceTrove(fqdn, troveName,
-                buildLabel,
-                troveVersion, streamMap, changeLogMessage="Image imported",
-                factoryName=factoryName, admin=True,
-                metadata=metadataDict)
-        except Exception, e:
-            self._setStatus(imageId, code=jobstatus.FAILED,
-                message="Commit failed: %s" % (e, ))
-            log.error("Error: %s", e)
-            raise
-        else:
-            cu = self.db.cursor()
-            cu.execute("UPDATE Builds SET output_trove = ? WHERE buildId = ?",
-                    nvf.asString(), imageId)
-            msg = "Image committed as %s=%s/%s" % (nvf.name,
-                    nvf.version.trailingLabel(),
-                    nvf.version.trailingRevision())
-            log.info(msg)
-            self._getImageLogger(hostname, imageId).info(msg)
 
     def getAllImagesByType(self, imageType):
         images = self.db.db.builds.getAllBuildsByType(imageType,
@@ -799,12 +525,3 @@ class ImageManager(manager.Manager):
             img['files'] = imageFileData
             img['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
-
-    def _getImageLogger(self, hostname, imageId):
-        fileObj = self.db.fileMgr.openImageFile(
-                hostname, imageId, 'build.log', 'a')
-        handler = logging.StreamHandler(fileObj)
-        handler.setFormatter(FORMATS['apache'])
-        log = logging.Logger('image')
-        log.addHandler(handler)
-        return log

@@ -14,7 +14,6 @@ install: pyfiles-install default-install
 
 comments:
 	@echo COMMENTS
-	PYTHONPATH=../.. python manage_local.py gencomments
 
 clean: default-clean
 

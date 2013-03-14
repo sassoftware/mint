@@ -37,7 +37,7 @@ class ErrorCallback(object):
         else:
             tbString = None
             text = [message + '\n']
-        isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+        isFlash = 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers
         if not getattr(request, 'contentType', None):
             request.contentType = 'text/xml'
             request.responseType = 'xml'
@@ -63,7 +63,7 @@ class ErrorCallback(object):
                 'headers_in'        : request.headers,
                 'request_params'    : request.GET,
                 'post_params'       : request.POST,
-                'remote'            : '[%s]:%d' % request.remote[:2],
+                'remote'            : request.remote,
                 }
         try:
             logerror.logErrorAndEmail(self.controller.cfg, e_type, e_value,

@@ -117,7 +117,7 @@ class ProductTest(restbase.BaseRestTest):
         self.assertBlobEquals(resp,
              exp % dict(port = 8000, server = 'localhost'))
 
-    def testCreateProduct(self):
+    def testCreateProduct2(self):
         productShortName = "foobar"
         uriTemplate = 'products'
         uri = uriTemplate
@@ -132,26 +132,6 @@ class ProductTest(restbase.BaseRestTest):
                 headers={'HTTP_X_FLASH_VERSION': '1'})
         self.failUnlessEqual(response.status, 403)
 
-
-    def testAuthPacket(self):
-        username = 'foo'
-        password = 'bar'
-        productShortName = "foobar"
-        uriTemplate = 'products'
-        uri = uriTemplate
-        db = self.openMintDatabase(createRepos=False)
-        client = self.getRestClient(username=None)
-        
-        msg = "Your authentication header could not be decoded"
-        data = newProduct1 % dict(shortname = "foobar",
-            hostname = "foobar", name = "foobar appliance")
-        auth = 'Basic ' + base64.b64encode(
-                    username + ':' + password)[1:]
-                    
-        err = self.assertRaises(resterrors.AuthHeaderError, 
-                                    client.call,'POST', 'products', 
-                                    data, headers={'Authorization': auth})
-        self.failUnlessEqual(str(err), msg)
 
 newProduct1 = """
 <product>

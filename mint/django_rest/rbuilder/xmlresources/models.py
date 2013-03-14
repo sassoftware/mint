@@ -21,11 +21,6 @@ class XmlResource(modellib.XObjIdModel):
     def __unicode__(self):
         return self.hostname
 
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-
-        return xobjModel
-    
 class XmlResourceStatusErrors(modellib.XObjIdModel):
     
     class Meta:

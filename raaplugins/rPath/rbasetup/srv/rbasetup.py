@@ -77,15 +77,15 @@ class rBASetup(rAASrvPlugin):
         This, of course, assumes that Apache is running (a good assumption).
         """
         try:
-            retval = os.system("/sbin/service httpd graceful")
+            retval = os.system("/sbin/service gunicorn reload")
             if retval != 0:
-                log.error("Failed to gracefully restart Apache (error: %d)" , retval)
+                log.error("Failed to gracefully restart gunicorn (error: %d)" , retval)
                 return False
         except Exception, e:
-            log.error("Failed to gracefully restart Apache (reason: %s)", str(e))
+            log.error("Failed to gracefully restart gunicorn (reason: %s)", str(e))
             return False
 
-        log.info("Successful graceful restart of Apache")
+        log.info("Successful graceful restart of gunicorn")
         return True
 
     def _setupRMake(self, mintcfg):

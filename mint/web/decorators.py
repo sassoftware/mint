@@ -1,7 +1,17 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All rights reserved
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 import inspect
@@ -31,7 +41,7 @@ def weak_signature_call(_func, *args, **kwargs):
 
 def requiresHttps(func):
     def requiresHttpsWrapper(self, *args, **kwargs):
-        if self.req.subprocess_env.get('HTTPS', 'off') != 'on' and self.cfg.SSL:
+        if self.req.scheme == 'http' and self.cfg.SSL:
             raise mint_error.PermissionDenied
         else:
             return weak_signature_call(func, self, *args, **kwargs)
@@ -39,42 +49,6 @@ def requiresHttps(func):
     requiresHttpsWrapper.__wrapped_func__ = func
     return requiresHttpsWrapper
 
-
-def _makeURL(schema, req, configuredHost):
-    """
-    Redirect C{req} to its HTTP/HTTPS counterpart (C{schema}). If
-    C{configuredHost} has a port, that will be used to build the host part of
-    the URL.
-    """
-    newHost = req.hostname.rsplit(':', 1)[0]
-    if ':' in configuredHost:
-        newHost += ':' + configuredHost.split(':')[-1]
-    return '%s://%s%s' % (schema, newHost, req.unparsed_uri)
-
-
-def redirectHttp(func):
-    def redirectHttpWrapper(self, *args, **kwargs):
-        if (self.req.subprocess_env.get('HTTPS', 'off') != 'off' and
-                self.cfg.SSL):
-            return self._redirect(_makeURL('http', self.req,
-                self.cfg.siteDomainName))
-        else:
-            return weak_signature_call(func, self, *args, **kwargs)
-
-    redirectHttpWrapper.__wrapped_func__ = func
-    return redirectHttpWrapper
-
-def redirectHttps(func):
-    def redirectHttpsWrapper(self, *args, **kwargs):
-        if (self.req.subprocess_env.get('HTTPS', 'off') != 'on' and
-                self.cfg.SSL):
-            return self._redirect(_makeURL('https', self.req,
-                self.cfg.secureHost))
-        else:
-            return weak_signature_call(func, self, *args, **kwargs)
-
-    redirectHttpsWrapper.__wrapped_func__ = func
-    return redirectHttpsWrapper
 
 def requiresAdmin(func):
     def requiresAdminWrapper(self, *args, **kwargs):

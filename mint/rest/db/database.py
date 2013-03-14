@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 import decorator
-import logging
 
 from conary import versions
 from conary.conaryclient import cmdline
 from conary.dbstore import sqllib
-from conary.deps import deps
 
 from mint import jobstatus
 from mint import mint_error
@@ -18,9 +16,7 @@ from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
-from mint.rest.db import awshandler
 from mint.rest.db import capsulemgr
-from mint.rest.db import emailnotifier
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
 from mint.rest.db import pkimgr
@@ -141,17 +137,11 @@ class Database(DBInterface):
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
-        self.awsMgr = awshandler.AWSHandler(cfg, self, auth)
         self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
         self.reposShim = reposdb.RepositoryManager(cfg, db._db)
         if subscribers is None:
             subscribers = []
-            # Email notifications we have no longer make sense.  See
-            # http://mingle.eng.rpath.com/projects/rbuilder/cards/959 for more
-            # information.
-            # subscribers.append(emailnotifier.EmailNotifier(cfg, self, auth))
-            subscribers.append(self.awsMgr)
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
 
@@ -675,27 +665,6 @@ class Database(DBInterface):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.getImageStatus(imageId)
 
-    def setImageStatus(self, hostname, imageId, imageToken, status):
-        self.auth.requireImageToken(hostname, imageId, imageToken)
-        if status.isFinal:
-            try:
-                # This method is not running in a single transaction, since it
-                # may want to update the status
-                self._finalImageProcessing(imageId, status)
-            except:
-                self.rollback()
-                self._holdCommits = False
-                self.cancelImageBuild(imageId)
-                raise
-        return self.setVisibleImageStatus(imageId, status)
-
-    def _finalImageProcessing(self, imageId, status):
-        self.imageMgr.finalImageProcessing(imageId, status)
-
-    @commitafter
-    def setVisibleImageStatus(self, imageId, status):
-        return self.imageMgr.setImageStatus(imageId, status)
-
     @commitafter
     def cancelImageBuild(self, imageId):
         """Only set the status if it's a non-terminal state"""
@@ -712,30 +681,9 @@ class Database(DBInterface):
                 asResponse)
 
     @readonly
-    def appendImageFile(self, hostname, imageId, fileName, imageToken, data):
-        self.auth.requireImageToken(hostname, imageId, imageToken)
-        return self.fileMgr.appendImageFile(hostname, imageId, fileName,
-                data)
-
-    @commitafter
-    def deleteImageForProduct(self, hostname, imageId):
-        self.auth.requireProductDeveloper(hostname)
-        return self.imageMgr.deleteImageForProduct(hostname, imageId)
-
-    @commitafter
-    def deleteImageFilesForProduct(self, hostname, imageId):
-        self.auth.requireProductDeveloper(hostname)
-        return self.imageMgr.deleteImageFilesForProduct(hostname, imageId)
-
-    @readonly
     def listFilesForImage(self, hostname, imageId):
         self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.listFilesForImage(hostname, imageId)
-
-    @commitafter
-    def setFilesForImage(self, hostname, imageId, imageToken, files):
-        self.auth.requireImageToken(hostname, imageId, imageToken)
-        return self.imageMgr.setFilesForImage(hostname, imageId, files)
 
     def getPlatformContentErrors(self, contentSourceName, instanceName):
         return self.capsuleMgr.getIndexerErrors(contentSourceName, instanceName)
@@ -748,25 +696,6 @@ class Database(DBInterface):
             errorId, resourceError):
         return self.capsuleMgr.updateIndexerError(contentSourceName,
             instanceName, errorId, resourceError)
-
-    @commitafter
-    def createImage(self, hostname, image, buildData=None):
-        self.auth.requireProductDeveloper(hostname)
-        imageId =  self.imageMgr.createImage(hostname, image, buildData)
-        image.imageId = imageId
-        return imageId
-
-    @commitafter
-    def uploadImageFiles(self, hostname, image, outputToken=None):
-        self.auth.requireProductDeveloper(hostname)
-        self.imageMgr.uploadImageFiles(hostname, image,
-            outputToken=outputToken)
-        return image
-
-    @commitafter
-    def updateImage(self, hostname, image):
-        self.auth.requireProductDeveloper(hostname)
-        self.imageMgr.updateImage(hostname, image)
 
     @commitafter
     def createUser(self, username, password, fullName, email, 

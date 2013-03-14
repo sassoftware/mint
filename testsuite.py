@@ -66,9 +66,6 @@ def setup():
 
     pathManager.addExecPath('MCP_PATH')
 
-    pathManager.addExecPath('RAA_PATH')
-    pathManager.addExecPath('RAA_TEST_PATH')
-    
     pathManager.addExecPath('REPODATA_PATH')
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('REPEATER_PATH')
@@ -98,10 +95,6 @@ def setup():
     pathManager.addResourcePath('MINT_ARCHIVE_PATH',
             path=os.path.join(mintTestPath, 'mint_test/mint_archive'))
 
-    mintPlugins = pathManager.addExecPath('MINT_RAA_PLUGINS_PATH')
-    defaultPlugins = pathManager.getPath('RAA_PATH')
-    pathManager.addExecPath('RAA_PLUGINS_PATH', [defaultPlugins, mintPlugins])
-
    # if we're running with COVERAGE_DIR, we'll start covering now
     from conary.lib import coveragehook
 
@@ -114,10 +107,9 @@ def setup():
 
 
 def getCoverageDirs(handler, environ):
-    mintDir = pathManager.getPath('MINT_PATH')
-    return [ os.path.join(mintDir, 'mint'),
-             os.path.join(mintDir, 'raaPlugins/rPath') 
-             ]
+    import mint
+    return [os.path.dirname(os.path.abspath(mint.__file__))]
+
 
 def getExcludePaths(handler, environ):
     return ['test', 'scripts']

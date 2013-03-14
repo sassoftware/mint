@@ -1,19 +1,24 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-
-import base64
-from conary.lib import util
-
-from mod_python import Cookie
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 from restlib.response import Response
 from mint import maintenance
 from mint import shimclient
 from mint.rest.api import models
 from mint.rest.modellib import converter
-from mint.rest import errors
-from conary.repository.netrepos.netauth import ValidPasswordToken
 
 
 # Decorator for public (unauthenticated) methods/functions
@@ -59,55 +64,6 @@ class AuthenticationCallback(object):
         self.db = db
         self.controller = controller
 
-    def getAuth(self, request):
-        if not 'Authorization' in request.headers:
-            return None
-        arr = request.headers['Authorization'].split(' ', 1)
-        if len(arr) != 2:
-            return None
-        authType, user_pass = arr
-        if authType != 'Basic':
-            return None
-        try:
-            user_name, password = base64.decodestring(user_pass).split(':', 1)
-            password = util.ProtectedString(password)
-            return (user_name, password)
-        except:
-            raise errors.AuthHeaderError
-
-    def getCookieAuth(self, request):
-        # the pysid cookie contains the session reference that we can use to
-        # look up the proper credentials
-        # we need the underlying request object since restlib doesn't
-        # have support for cookies yet.
-        cfg = self.cfg
-        req = request._req
-        anonToken = ('anonymous', 'anonymous')
-        try:
-            cookies = Cookie.get_cookies(req, Cookie.Cookie)
-        except:
-            cookies = {}
-        if 'pysid' not in cookies:
-            return None
-
-        sid = cookies['pysid'].value
-
-        sessionClient = shimclient.ShimMintClient(cfg,
-                (cfg.authUser, cfg.authPass), db=self.db.db.db)
-
-        from mint.session import SqlSession
-        session = SqlSession(req, sessionClient,
-            sid = sid,
-            timeout = 86400,
-            lock = False)
-        authToken = session.get('authToken', None)
-        if authToken and authToken[1] == '':
-            # Pre-authenticated session
-            authToken = (authToken[0], ValidPasswordToken)
-            return authToken
-        # Discard old password-containing sessions to force a fresh login
-        return None
-
     def _checkAuth(self, authToken):
         mintClient = shimclient.ShimMintClient(self.cfg, authToken,
                 db=self.db.db.db)
@@ -116,30 +72,14 @@ class AuthenticationCallback(object):
             return mintClient, mintAuth
         return None, None
 
-
     def processRequest(self, request):
-        # Determine authentication.  We have two mechanisms
-        # for checking authentication.
-        # If someone has a good basic auth information but a bad
-        # cookie, we want to let them through and then update
-        # their cookie.
-        # If they have a good cookie but bad auth information,
-        # we want to let them through as well.
-        # basic auth overrides cookie if they are both provided.
         mintClient = None
         mintAuth = None
-        cookieToken = None
-        basicToken = self.getAuth(request)
-        if basicToken:
-            mintClient, mintAuth = self._checkAuth(basicToken)
-            request.auth = basicToken
-        if not mintAuth:
-            cookieToken = self.getCookieAuth(request)
-            if cookieToken:
-                mintClient, mintAuth = self._checkAuth(cookieToken)
-                request.auth = cookieToken
-
-        if not mintAuth:
+        authToken = request._req.environ['mint.authToken'][:2]
+        if authToken:
+            mintClient, mintAuth = self._checkAuth(authToken)
+            request.auth = authToken
+        if not mintAuth or not mintAuth.authorized:
             # No authentication was successful.
             request.auth = request.mintClient = request.mintAuth = None
             return
@@ -176,7 +116,7 @@ class AuthenticationCallback(object):
                 error = 'maintenance-mode'
 
             # Flex can't get headers from error responses in Firefox
-            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers
+            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers
 
             if not getattr(request, 'contentType', None):
                 request.contentType = 'text/plain'
@@ -196,8 +136,11 @@ class AuthenticationCallback(object):
         if response:
             return response
 
-        if (getattr(viewMethod, 'internal', False)
-                and request.remote[0] != '127.0.0.1'):
+        remote = request.remote
+        if isinstance(remote, (list, tuple)):
+            remote = remote[0]
+        if getattr(viewMethod, 'internal', False) and remote not in (
+                '127.0.0.1', '::1', '::ffff:127.0.0.1'):
             # Request to an internal API from an external IP address
             return Response(status=404)
 
@@ -214,7 +157,7 @@ class AuthenticationCallback(object):
                     return None
                 else:
                     # TODO: new way is to wrap these as XML faults and return 200 to Flash
-                    if 'HTTP_X_FLASH_VERSION' in request.headers:
+                    if 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers:
                         return Response('Unauthorized', status=403)
                     return Response(status=401,
                              headers={'WWW-Authenticate' : 'Basic realm="rBuilder"'})
@@ -224,7 +167,7 @@ class AuthenticationCallback(object):
         # require authentication
         if (not getattr(viewMethod, 'public', False)
                 and request.mintAuth is None):
-            if 'HTTP_X_FLASH_VERSION' in request.headers:
+            if 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers:
                 # TODO: new way is to wrap these as XML faults and return 200 to Flash
                 return Response('Unauthorized', status=403)
             return Response(status=401,

@@ -169,8 +169,8 @@ class BaseService(resource.Resource):
         # they are not trustworthy.
         headerName = 'X-rPath-Repeater'
         headerValue = cls.getHeaderValue(request, headerName)
-        return (headerValue is None and
-            request.META['REMOTE_ADDR'] == '127.0.0.1')
+        return (headerValue is None and request.META['REMOTE_ADDR'] in (
+            '127.0.0.1', '::1', '::ffff:127.0.0.1'))
 
 class BaseAuthService(BaseService):
     def _auth_filter(self, request, access, kwargs):

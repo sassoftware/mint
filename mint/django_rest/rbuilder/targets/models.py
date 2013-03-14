@@ -19,6 +19,7 @@ XObjHidden = modellib.XObjHidden
 class TargetType(modellib.XObjIdModel):
     class Meta:
          db_table = 'target_types'
+    _xobj = xobj.XObjMetadata(tag='target_type')
 
     summary_view = [ 'name', 'description' ] 
 
@@ -124,11 +125,6 @@ class Target(modellib.XObjIdModel):
         self._setCredentialsValid()
         self.is_configured = (self.state != self.States.UNCONFIGURED)
 
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        return xobjModel
-        
-
     def _setCredentialsValid(self):
         if self._rbmgr is None:
             return
@@ -201,6 +197,7 @@ class TargetData(modellib.XObjModel):
 class TargetConfiguration(modellib.XObjIdModel):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(tag='target_configuration')
 
     view_name = 'TargetConfiguration'
     properties = []
@@ -208,11 +205,11 @@ class TargetConfiguration(modellib.XObjIdModel):
     def __init__(self, targetId):
         self.target_id = targetId
 
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjModel.serialize(self, request)
+    def serialize(self, request=None, **kwargs):
+        etreeModel = modellib.XObjModel.serialize(self, request, **kwargs)
         for k, v in self.properties:
-            setattr(xobjModel, k, v)
-        return xobjModel
+            modellib.Etree.Node(k, parent=etreeModel, text=v)
+        return etreeModel
 
     def get_url_key(self, *args, **kwargs):
         return [self.target_id]
@@ -233,6 +230,7 @@ class Credentials(modellib.Collection):
 class TargetCredentials(modellib.XObjModel):
     class Meta:
         db_table = u'targetcredentials'
+        ordering = [ 'target_credentials_id' ]
     target_credentials_id = models.AutoField(primary_key=True,
         db_column="targetcredentialsid")
     credentials = D(models.TextField(null=False, unique=True),
@@ -278,6 +276,7 @@ class TargetImage(modellib.XObjModel):
     """
     class Meta:
         db_table = "target_image"
+        ordering = [ "target_image_id" ]
 
     _xobj_explicit_accessors = set()
 
@@ -321,6 +320,7 @@ class TargetSystem(modellib.XObjModel):
 class TargetDeployableImage(modellib.XObjModel):
     class Meta:
         db_table = "target_deployable_image"
+        ordering = [ "target_deployable_image_id" ]
 
     target_deployable_image_id = models.AutoField(primary_key=True)
     target = D(models.ForeignKey(Target, related_name='target_deployable_images'),

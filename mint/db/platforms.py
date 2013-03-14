@@ -72,6 +72,7 @@ class PlatformsTable(database.KeyedTable):
                'abstract',
                'configurable',
                'hidden',
+               'upstream_url',
                ]
 
     def __init__(self, db, cfg):
@@ -89,7 +90,8 @@ class PlatformsTable(database.KeyedTable):
                 platforms.abstract,
                 platforms.configurable,
                 platforms.mode,
-                platforms.hidden
+                platforms.hidden,
+                platforms.upstream_url
             FROM
                 platforms
             ORDER BY

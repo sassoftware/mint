@@ -1,5 +1,17 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 import logging
@@ -7,26 +19,19 @@ import os
 import stat
 from urllib import unquote
 from mimetypes import guess_type
+from webob import exc as web_exc
 
 from mint import urltypes
 from mint import mint_error
 from mint import maintenance
 from mint import shimclient
 from mint.lib.unixutils import AtomicFile
-from mint.session import SqlSession
 
 from mint.web.fields import boolFields, intFields, strFields
 from mint.web.decorators import requiresAdmin
 from mint.web.decorators import requiresHttps
-from mint.web.decorators import redirectHttps
-from mint.web.decorators import redirectHttp
 from mint.web.webhandler import WebHandler
 from mint.web.webhandler import normPath
-from mint.web.webhandler import setCacheControl
-from mint.web.webhandler import HttpNotFound
-from mint.web.webhandler import HttpMethodNotAllowed
-from mint.web.webhandler import HttpForbidden
-from mint.web.webhandler import HttpBadRequest
 
 from conary.lib import digestlib
 from conary.lib import util
@@ -48,10 +53,10 @@ class SiteHandler(WebHandler):
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         if not callable(method):
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         return method
 
@@ -59,7 +64,7 @@ class SiteHandler(WebHandler):
     def pwCheck(self, auth, user, password):
         ret = 'false'
         if self.cfg.configured and (not self.cfg.SSL
-                or self.req.subprocess_env.get('HTTPS', 'off') != 'off'):
+                or self.req.scheme == 'https'):
             ret = str(bool(self.client.pwCheck(user, password))).lower()
         return """<auth valid="%s" />\n""" % ret
 
@@ -67,13 +72,11 @@ class SiteHandler(WebHandler):
                password = '', password2 = '',
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
-    @redirectHttp
     @strFields(page = "")
     @intFields(step = 1)
     def help(self, auth, page, step):
         self._redirect("http://docs.rpath.com")
 
-    @redirectHttps
     def logout(self, auth):
         self._clearAuth()
         self._redirectHttp()
@@ -103,31 +106,14 @@ class SiteHandler(WebHandler):
             if not auth.authorized:
                 raise mint_error.InvalidLogin
             else:
-                if auth.timeAccessed > 0:
-                    firstTimer = False
-                else:
-                    firstTimer = True
-
-                self._session_start(rememberMe)
                 self.session['authToken'] = (authToken[0], '')
-                self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
                 client.updateAccessedTime(auth.userId)
                 self.session.save()
 
                 self._redirectHttp()
         else:
-            raise HttpNotFound
-
-    def loginFailed(self, auth):
-        if isinstance(self.session, SqlSession):
-            c = self.session.make_cookie()
-            c.expires = 0
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            setCacheControl(self.req, strict=True)
-        return self._write('error', shortError = "Login Failed",
-            error = 'You cannot log in because your browser is blocking '
-            'cookies to this site.')
+            raise web_exc.HTTPNotFound()
 
     @intFields(fileId = 0, urlType = urltypes.LOCAL)
     def downloadImage(self, auth, fileId, urlType):
@@ -138,18 +124,18 @@ class SiteHandler(WebHandler):
                 fileId = int(cmds[1])
                 reqFilename = cmds[2]
         except ValueError:
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         # Screen out UrlTypes that are not visible, except for urltypes.LOCAL,
         # which is ALWAYS visible.
         if not (urlType == urltypes.LOCAL \
                 or urlType in self.cfg.visibleUrlTypes):
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         try:
             buildId, idx, title, fileUrls = self.client.getFileInfo(fileId)
         except mint_error.FileMissing:
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         # Special rules for handling the default case (urltypes.LOCAL):
         # If self.cfg.redirectUrlType is set AND that FileUrl exists,
@@ -180,10 +166,10 @@ class SiteHandler(WebHandler):
                 # Don't pass through bad filenames if they are specified in
                 # the request.
                 if reqFilename and os.path.basename(filename) != reqFilename:
-                    raise HttpNotFound
+                    raise web_exc.HTTPNotFound()
 
                 if not os.path.exists(filename):
-                    raise HttpNotFound
+                    raise web_exc.HTTPNotFound()
 
                 size = os.stat(filename)[stat.ST_SIZE]
                 if size >= (1024*1024) * 2047:
@@ -215,9 +201,8 @@ class SiteHandler(WebHandler):
         if redirectUrl:
             self._redirect(redirectUrl)
         else:
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
-    @redirectHttps
     def maintenance(self, auth, *args, **kwargs):
         mode = maintenance.getMaintenanceMode(self.cfg)
         if mode == maintenance.NORMAL_MODE:
@@ -271,12 +256,12 @@ class SiteHandler(WebHandler):
     def uploadBuild(self, auth):
         method = self.req.method.upper()
         if method != "PUT":
-            raise HttpMethodNotAllowed
+            raise web_exc.HTTPMethodNotAllowed(allow='PUT')
 
         client = shimclient.ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db)
 
-        buildId, fileName = self.req.uri.split("/")[-2:]
+        buildId, fileName = self.req.path_info.split("/")[-2:]
         build = client.getBuild(int(buildId))
         project = client.getProject(build.projectId)
 
@@ -284,9 +269,10 @@ class SiteHandler(WebHandler):
         # the hash we gave the slave in the first place.
         # this prevents slaves from overwriting arbitrary files
         # in the finished images directory.
-        outputToken = self.req.headers_in.get('X-rBuilder-OutputToken')
-        if outputToken != build.getDataValue('outputToken', validate = False):
-            raise HttpForbidden
+        if not auth.admin:
+            outputToken = self.req.headers.get('X-rBuilder-OutputToken')
+            if outputToken != build.getDataValue('outputToken', validate = False):
+                raise web_exc.HTTPForbidden()
 
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname,
                 str(buildId), fileName)
@@ -295,13 +281,13 @@ class SiteHandler(WebHandler):
         ctx = digestlib.sha1()
 
         try:
-            copied = util.copyfileobj(self.req, fObj, digest=ctx)
+            copied = util.copyfileobj(self.req.body_file, fObj, digest=ctx)
         except IOError, err:
             log.warning("IOError during upload of %s: %s", targetFn, str(err))
-            raise HttpBadRequest
+            raise web_exc.HTTPBadRequest()
 
-        if 'content-length' in self.req.headers_in:
-            expected = long(self.req.headers_in['content-length'])
+        if 'content-length' in self.req.headers:
+            expected = long(self.req.headers['content-length'])
             if copied != expected:
                 log.warning("Expected %d bytes but got %d bytes for "
                         "uploaded file %s; discarding", expected, copied,
@@ -309,8 +295,8 @@ class SiteHandler(WebHandler):
                 return ''
 
         # Validate SHA1 trailer (or header) if it is present.
-        if 'content-sha1' in self.req.headers_in:
-            expected = self.req.headers_in['content-sha1'].decode('base64')
+        if 'content-sha1' in self.req.headers:
+            expected = self.req.headers['content-sha1'].decode('base64')
             actual = ctx.digest()
             if expected != actual:
                 log.warning("SHA-1 mismatch on uploaded file %s; "

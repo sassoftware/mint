@@ -26,7 +26,6 @@ from mint.lib import maillib
 from mint.lib import profile
 from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
-from mint import amiperms
 from mint import builds
 from mint import ec2
 from mint import helperfuncs
@@ -47,6 +46,7 @@ from mint.reports import MintReport
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 from mint.rest import errors as rest_errors
+from mint.scripts import repository_sync
 
 from conary import conarycfg
 from conary import versions
@@ -60,7 +60,6 @@ from conary.lib.http import request as cny_req
 from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
-from conary.repository.netrepos.netauth import ValidPasswordToken
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
@@ -253,19 +252,11 @@ class MintServer(object):
 
         try:
             try:
-                # check authorization
-
-                # grab authToken from a session id if passed a session id
-                # the session id from the client is a hmac-signed string
-                # containing the actual session id.
-                if isinstance(authToken, basestring):
-                    authToken = self._getCookieAuth(authToken)
-                    if not authToken:
-                        # Until the session is proven valid, assume anonymous
-                        # access -- we don't want a broken session preventing
-                        # anonymous access or logins.
-                        authToken = ('anonymous', 'anonymous')
-
+                if not authToken:
+                    # Until the session is proven valid, assume anonymous
+                    # access -- we don't want a broken session preventing
+                    # anonymous access or logins.
+                    authToken = ('anonymous', 'anonymous')
                 auth = self.users.checkAuth(authToken)
                 authToken = (authToken[0], '')
                 self.authToken = authToken
@@ -319,22 +310,6 @@ class MintServer(object):
             prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.reset()
-
-    def _getCookieAuth(self, pysid):
-        if len(pysid) != 32:
-            return None
-        d = self.sessions.load(pysid)
-        if not d:
-            return None
-        authToken = d.get('_data', []).get('authToken', None)
-        if not authToken:
-            return None
-        if authToken[1] == '':
-            # Pre-authenticated session
-            authToken = (authToken[0], ValidPasswordToken)
-            return authToken
-        # Discard old password-containing sessions to force a fresh login
-        return None
 
     def __getattr__(self, key):
         if key[0] != '_':
@@ -638,26 +613,6 @@ class MintServer(object):
                     ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
-    # project methods
-    def _buildEC2AuthToken(self):
-        amiData = self._getTargetData('ec2', 'aws', supressException = True)
-        at = ()
-        if amiData:
-            # make sure all the values are set
-            if not (amiData.get('ec2AccountId') and \
-                    amiData.get('ec2PublicKey') and\
-                    amiData.get('ec2PrivateKey')):
-                raise mint_error.EC2NotConfigured()
-            at = (amiData.get('ec2AccountId'),
-                    amiData.get('ec2PublicKey'),
-                    amiData.get('ec2PrivateKey'))
-
-        if not at:
-            raise mint_error.EC2NotConfigured()
-
-        return at
-
-
     @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool,
                str)
     @requiresCfgAdmin('adminNewProjects')
@@ -761,6 +716,11 @@ class MintServer(object):
         self.db.commit()
 
         self._generateConaryRcFile()
+        sync = repository_sync.SyncTool(self.cfg, self.db)
+        try:
+            sync.syncReposByFQDN(fqdn)
+        except:
+            log.traceback("Error synchronizing repository branches")
         return projectId
 
     @typeCheck(int)
@@ -963,8 +923,6 @@ class MintServer(object):
             project = projects.Project(self, projectId)
             self.db.transaction()
 
-            self.amiPerms.deleteMemberFromProject(userId, projectId)
-
             user = self.getUser(userId)
 
             if notify:
@@ -1103,7 +1061,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
-        self.amiPerms.hideProject(projectId)
 
         try:
             self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
@@ -1122,7 +1079,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise mint_error.PermissionDenied
 
-        self.amiPerms.unhideProject(projectId)
         self.projects.unhide(projectId)
         self._generateConaryRcFile()
         return True
@@ -1966,7 +1922,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             project = self.getProject(projectId)
             hostname = project.get('hostname')
         if self.req:
-            target = self.req.hostname
+            target = self.req.host
         else:
             target = self.cfg.siteHost
         return "http://%s%sproject/%s/build?id=%d" % (target,
@@ -2121,14 +2077,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         self.db.transaction()
         try:
-            try:
-                amiBuild, amiId = self.buildData.getDataValue(buildId, 'amiId')
-                if amiBuild:
-                    self.deleteAMI(amiId)
-            except mint_error.AMIInstanceDoesNotExist:
-                # We do not want to fail this operation in this case.
-                pass
-
             for filelist in self.getBuildFilenames(buildId):
                 fileUrlList = filelist['fileUrls']
                 for urlId, urlType, url in fileUrlList:
@@ -2176,20 +2124,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         self._filterBuildAccess(buildId)
         return self._deleteBuild(buildId, force=False)      
-
-    @typeCheck(str)
-    @requiresAuth
-    def deleteAMI(self, amiId):
-        """
-        Delete the given amiId from Amazon's S3 service.
-        @param amiId: the id of the ami to delete
-        @type amiId: C{str}
-        @return the ami id deleted
-        @rtype C{str}
-        """
-        authToken = self._buildEC2AuthToken()
-        s3Wrap = ec2.S3Wrapper(authToken, self.cfg.proxy.get('https'))
-        return s3Wrap.deleteAMI(amiId)
 
     @typeCheck(int, dict)
     @requiresAuth
@@ -2428,7 +2362,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            self.amiPerms.publishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
@@ -2493,7 +2426,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.transaction()
             result = self.publishedReleases.update(pubReleaseId, commit=False,
                                                    **valDict)
-            self.amiPerms.unpublishRelease(pubReleaseId)
         except:
             self.db.rollback()
             raise
@@ -2835,56 +2767,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return ret
 
-    @typeCheck(int, str, str, str)
-    def setBuildAMIDataSafe(self, buildId, outputToken, amiId, amiManifestName):
-        """
-        This call validates the outputToken as above.
-        """
-        if outputToken != \
-                self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise mint_error.PermissionDenied
-
-        self.buildData.setDataValue(buildId, 'amiId', amiId, data.RDT_STRING)
-        self.buildData.setDataValue(buildId, 'amiManifestName,',
-                amiManifestName, data.RDT_STRING)
-        self.buildData.removeDataValue(buildId, 'outputToken')
-
-        # Clear any pre-existing files (esp. failed build logs)
-        self._setBuildFilenames(buildId, [])
-
-        # Set AMI image permissions for build here
-        from mint.shimclient import ShimMintClient
-        authclient = ShimMintClient(self.cfg,
-                (self.cfg.authUser, self.cfg.authPass), self.db._db)
-
-        bld = authclient.getBuild(buildId)
-        project = authclient.getProject(bld.projectId)
-
-        # Get the list of AWSAccountNumbers for the projects members
-        writers, readers = self.projectUsers.getEC2AccountNumbersForProjectUsers(bld.projectId)
-
-        # Set up EC2 connection
-        authToken = self._buildEC2AuthToken()
-        ec2Wrap = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-
-        try:
-            if writers:
-                ec2Wrap.addLaunchPermissions(amiId, writers)
-        except mint_error.EC2Exception, e:
-            # This is a really lame way to handle this error, but until the jobslave can
-            # return a status of "built with warnings", then we'll have to go with this.
-            print >> sys.stderr, "Failed to add launch permissions for %s: %s" % (amiId, str(e))
-            sys.stderr.flush()
-
-        username = self.users.get(bld.createdBy)['username']
-        buildType = buildtypes.typeNamesMarketing.get(bld.buildType)
-
-        notices = notices_callbacks.AMIImageNotices(self.cfg, username)
-        notices.notify_built(bld.name, buildType, time.time(),
-            project.name, project.version, [ amiId ])
-
-        return True
-
     @typeCheck(int, list)
     @requiresAuth
     @private
@@ -3199,26 +3081,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildDict = self.builds.get(buildId)
         return { 'status': buildDict['status'],
                 'message': buildDict['statusMessage'] }
-
-    # session management
-    @private
-    def loadSession(self, sid):
-        return self.sessions.load(sid)
-
-    @private
-    def saveSession(self, sid, data):
-        self.sessions.save(sid, data)
-        return True
-
-    @private
-    def deleteSession(self, sid):
-        self.sessions.delete(sid)
-        return True
-
-    @private
-    def cleanupSessions(self):
-        self.sessions.cleanup()
-        return True
 
     ### Site reports ###
     @private
@@ -3888,8 +3750,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             sesH = sessionHandle
 
         # "upload" the data
-        pc.uploadData(sesH, info['filename'], info['tempfile'],
-                info['content-type'])
+        pc.uploadData(sesH, info['filename'], info['tempfile'], None)
         fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
 
         return sesH, fact, data
@@ -4369,116 +4230,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return {}
         return self.targetData.getTargetData(targetId)
 
-    @typeCheck(int)
-    @requiresAuth
-    def getEC2CredentialsForUser(self, userId):
-        """
-        Given a userId, returns a dict of credentials used for
-        Amazon EC2.
-        @param userId: a numeric rBuilder userId to operate on
-        @type  userId: C{int}
-        @return: a dictionary of EC2 credentials
-          - 'awsAccountNumber': the Amazon account ID
-          - 'awsPublicAccessKeyId': the public access key
-          - 'awsSecretAccessKey': the secret access key
-        @rtype: C{boolean}
-        @raises: C{ItemNotFound} if there is no such user
-        @raises: C{PermissionDenied} if requesting userId is either
-           an admin or isn't the same userId as the currently logged
-           in user.
-        """
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-
-        ret = dict()
-        for x in usertemplates.userPrefsAWSTemplate.keys():
-            ret[x] = ''
-        creds = self.restDb.targetMgr.getTargetCredentialsForUserId(
-            self.db.EC2TargetType, self.db.EC2TargetName, userId)
-        # Keep the interface similar
-        remap = [ ('accountId', 'awsAccountNumber'),
-            ('publicAccessKeyId', 'awsPublicAccessKeyId'),
-            ('secretAccessKey', 'awsSecretAccessKey') ]
-        ret.update((okey, creds.get(nkey, '')) for (nkey, okey) in remap)
-        return ret
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),), ((str, unicode),), bool)
-    @requiresAuth
-    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey, force):
-        """
-        Given a userId, update the set of EC2 credentials for a user.
-        @param userId: a numeric rBuilder userId to operate on
-        @type  userId: C{int}
-        @param awsAccountNumber: the Amazon account number
-        @type  awsAccountNumber: C{str}, numeric characters only, no dashes
-        @param awsPublicAccessKeyId: the public access key identifier
-        @type  awsPublicAccessKeyId: C{str}
-        @param awsSecretAccessKey: the secret access key
-        @type  awsSecretAccessKey: C{str}
-        @param force: do not validate the credentials
-        @type  force: C{bool}
-        @return: True if updated successfully, False otherwise
-        @rtype C{bool}
-        @raises: C{PermissionDenied} if requesting userId is either
-           an admin or isn't the same userId as the currently logged
-           in user.
-        """
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-        
-        # cleanup the data
-        accountNum = awsAccountNumber.strip().replace(' ','').replace('-','')
-        publicKey = awsPublicAccessKeyId.strip().replace(' ','')
-        secretKey = awsSecretAccessKey.strip().replace(' ','')
-        
-        newValues = dict(accountId=accountNum,
-                         publicAccessKeyId=publicKey,
-                         secretAccessKey=secretKey)
-
-        targetType = self.db.EC2TargetType
-        targetName = self.db.EC2TargetName
-
-        oldUserCreds = self.restDb.targetMgr.getTargetCredentialsForUserId(
-            targetType, targetName, userId)
-        oldAwsAccountNumber = oldUserCreds.get('accountId')
-
-        # Validate and add the credentials with EC2 if they're specified.
-        if awsAccountNumber or awsPublicAccessKeyId or awsSecretAccessKey:
-            if not force:
-                self.validateEC2Credentials((newValues['accountId'],
-                                             newValues['publicAccessKeyId'],
-                                             newValues['secretAccessKey']))
-        try:
-            self.db.transaction()
-            if not accountNum:
-                self.restDb.targetMgr.deleteTargetCredentialsForUserId(
-                    targetType, targetName, userId)
-            else:
-                self.restDb.targetMgr.setTargetCredentialsForUserId(
-                    targetType, targetName, userId, newValues)
-
-            self.amiPerms.setUserKey(userId, oldAwsAccountNumber,
-                                     newValues['accountId'])
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-            return True
-
-    @typeCheck(int)
-    @requiresAuth
-    def removeEC2CredentialsForUser(self, userId):
-        """
-        Given a userId, remove the set of EC2 credentials for a user.
-        @param userId: a numeric rBuilder userId to operate on
-        @type  userId: C{int}
-        @return: True if removed successfully, False otherwise
-        @rtype C{bool}
-        """
-        return self.setEC2CredentialsForUser(userId, '', '', '', True)
-
     @typeCheck(str)
     @requiresAuth
     def getAllBuildsByType(self, buildType):
@@ -4515,34 +4266,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             ret['filename'] = os.path.basename(fileNames[0])
         return ret
 
-    @typeCheck(int)
-    @requiresAuth
-    def getAMIBuildsForUser(self, userId):
-        """
-        Given a userId, give a list of dictionaries for each AMI build
-        that was created in a project that the user is a member of.
-        @param userId: the numeric userId of the rBuilder user
-        @type  userId: C{int}
-        @returns A list of dictionaries with the following members:
-           - amiId: the AMI identifier of the Amazon Machine Image
-           - projectId: the projectId of the project containing the build
-           - isPublished: 1 if the build is published, 0 otherwise
-           - level: the userlevel (see mint.userlevels) of the user
-               with respect to the containing project
-           - isPrivate: 1 if the containing project is private (hidden),
-               0 otherwise
-        @rtype: C{list} of C{dict} objects (see above)
-        @raises: C{PermissionDenied} if requesting userId is either
-           an admin or isn't the same userId as the currently logged
-           in user.
-        """
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-        # Check to see if the user even exists.
-        # This will raise ItemNotFound if the user doesn't exist
-        self.users.get(userId)
-        return self.users.getAMIBuildsForUser(userId)
-
     def getAvailablePlatforms(self):
         """
         Returns a list of available platforms and their names (descriptions).
@@ -4565,7 +4288,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db = mint.db.database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
-        self.amiPerms = amiperms.AMIPermissionsManager(self.cfg, self.db)
         self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
         global callLog
@@ -4575,8 +4297,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.callLog = callLog
 
         if self.req:
-            self.remoteIp = self.req.headers_in.get("X-Forwarded-For",
-                    self.req.connection.remote_ip)
+            self.remoteIp = self.req.client_addr
         else:
             self.remoteIp = "0.0.0.0"
 
@@ -4661,7 +4382,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:
-            hostname = self.req.hostname
+            hostname = self.req.host
         else:
             hostname = self.cfg.siteHost
         return "http://%s%sdownloadImage?fileId=%%d" % (hostname, self.cfg.basePath)

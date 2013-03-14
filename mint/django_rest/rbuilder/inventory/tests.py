@@ -2,8 +2,8 @@ import base64
 import cPickle
 import os
 import random
-from lxml import etree
 from xobj import xobj
+from lxml import etree
 from datetime import datetime, timedelta
 
 from smartform import descriptor
@@ -64,8 +64,41 @@ class AuthTests(XMLTestCase):
 
         self.assertEquals(authClient.args, [('test-rce1341', password)])
 
-class SurveyTests(XMLTestCase):
-    fixtures = ['users']
+class ConfigDescriptorMixIn(object):
+    def _mockConfigDescriptorCache(self):
+        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
+        descr = self._getConfigDescriptor()
+        mockGetDescriptor = lambda x, y: descr
+        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+        return descr
+
+    def _getConfigDescriptor(self):
+
+        vhost = descriptor.ConfigurationDescriptor()
+        vhost.setId("apache-configuration/vhost")
+        vhost.setRootElement('vhost')
+        vhost.setDisplayName('Virtual Host Configuration')
+        vhost.addDescription('Virtual Host Configuration')
+        vhost.addDataField('serverName', type="str", required=True,
+            descriptions="Virtual Host Name")
+        vhost.addDataField('documentRoot', type="str", required=True,
+            descriptions="Virtual Host Document Root") 
+
+        descr = descriptor.ConfigurationDescriptor()
+        descr.setId("Some-ID")
+        descr.setDisplayName('Ignored')
+        descr.addDescription('Ignored')
+        descr.setRootElement('ignored')
+
+        descr.addDataField('vhosts', type=descr.ListType(vhost),
+            required=True, descriptions="Virtual Hosts",
+            constraints=[dict(constraintName='uniqueKey', value="serverName"),
+                dict(constraintName="minLength", value=1)])
+        return descr
+
+
+class SurveyTests(ConfigDescriptorMixIn, XMLTestCase):
+    fixtures = ['targetusers']
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -114,7 +147,7 @@ class SurveyTests(XMLTestCase):
         )
         rpm_package.save()
         conary_package = survey_models.ConaryPackageInfo(
-            name = 'jkl', version = '7', flavor = 'orange',
+            name = 'jkl', version = '/cny.tv@lnx:1/1234.5:7-1-1', flavor = 'orange',
             description = 'Type-R', revision = '8',
             architecture = 'ia64', signature = 'X',
             rpm_package_info = rpm_package
@@ -235,6 +268,7 @@ class SurveyTests(XMLTestCase):
 
     def test_survey_post(self):
 
+        self._mockConfigDescriptorCache()
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)
@@ -262,7 +296,7 @@ install needle
         # We should have top level items
         self.assertEquals(sorted(x.trove_spec
             for x in sys.desired_top_level_items.all()),
-            ['jkl=7[orange]'])
+            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
 
         # Config and Update actions should be disabled
         system_url = url = "inventory/systems/%s" % system.system_id
@@ -339,7 +373,7 @@ install needle
         topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
         self.assertEquals(sorted(x.trove_spec
                 for x in topLevelItemMgr.filter(system=sys)),
-            ['jkl=7[orange]'])
+            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
 
         response = self._get("inventory/surveys/1234/diffs/99999",
             username = 'admin', password='password')
@@ -464,8 +498,8 @@ install needle
             testsxml2.two + "\n</system>")
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
-        doc = xobj.parse(response.content)
-        systemId = doc.system.system_id
+        doc = etree.fromstring(response.content)
+        systemId = doc.find('system_id').text
         # Make sure we got a survey
         system = models.System.objects.get(system_id=systemId)
         self.assertEquals(system.surveys.count(), 1)
@@ -566,13 +600,9 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         # do we see assimilate as a possible action?
         response = self._get('inventory/systems/%s' % self.system.pk, username="admin",
             password="password")
-        obj = xobj.parse(response.content)
-        # xobj hack: obj doesn't listify 1 element lists
-        # don't break tests if there is only 1 action
-        actions = obj.system.actions.action
-        if not isinstance(actions, list):
-           actions = [actions]
-        self.assertTrue(len(actions) == 5)
+        doc = etree.fromstring(response.content)
+        actions = doc.xpath('./actions/action')
+        self.assertEqual(len(actions), 5)
 
     def testFetchActionsDescriptor(self):
         descriptorTestData = [
@@ -584,17 +614,28 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
             url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
             response = self._get(url, username="admin", password="password")
             self.failUnlessEqual(response.status_code, 200)
-            obj = xobj.parse(response.content)
-            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
-            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            obj = etree.fromstring(response.content)
+            # We have namespaces, grumble...
+            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
+            self.assertEquals(metadata.xpath('./sm:displayName/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrName])
+            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrDescr])
             # make sure the same works with parameters
             url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
                 descriptorType)
             response = self._get(url, username="admin", password="password")
             self.failUnlessEqual(response.status_code, 200)
-            obj = xobj.parse(response.content)
-            self.failUnlessEqual(obj.descriptor.metadata.displayName, descrName)
-            self.failUnlessEqual(obj.descriptor.metadata.descriptions.desc, descrDescr)
+            obj = etree.fromstring(response.content)
+            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
+            self.failUnlessEqual(metadata.xpath('./sm:displayName/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrName])
+            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
+                namespaces=dict(sm=metadata.nsmap[None])),
+                [descrDescr])
 
     def testSpawnAction(self):
         # can we launch the job>?
@@ -610,8 +651,8 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
         response = self._post(url, testsxml.system_assimilator_xml,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(obj.system_event.event_type.id,
+        obj = etree.fromstring(response.content)
+        self.failUnlessEqual(obj.find('event_type').attrib['id'],
             'http://testserver/api/v1/inventory/event_types/12')
 
 class InventoryTestCase(XMLTestCase):
@@ -1480,8 +1521,8 @@ class NetworksTestCase(XMLTestCase):
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
-class SystemsTestCase(XMLTestCase):
-    fixtures = ['system_job', 'targets']
+class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
+    fixtures = ['system_job', 'targetusers', 'targets']
 
     def setUp(self):
         XMLTestCase.setUp(self)
@@ -1777,7 +1818,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
-        self.failUnlessEqual(x.system.network_address.pinned, "False")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "false")
 
     def testPostSystemNetworkPinned(self):
         """
@@ -1796,7 +1837,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "1.2.3.4")
-        self.failUnlessEqual(x.system.network_address.pinned, "True")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "true")
 
     def testPutSystemNetworkUnpinned(self):
         models.System.objects.all().delete()
@@ -2063,7 +2104,7 @@ class SystemsTestCase(XMLTestCase):
         xml = system.to_xml()
         x = xobj.parse(xml)
         self.failUnlessEqual(x.system.network_address.address, "blah1")
-        self.failUnlessEqual(x.system.network_address.pinned, "True")
+        self.failUnlessEqual(x.system.network_address.pinned.lower(), "true")
 
     def testGetSystems(self):
         system = self._saveSystem()
@@ -2424,7 +2465,7 @@ class SystemsTestCase(XMLTestCase):
         self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
 
         response = self._put(url,
             data=testsxml.configuration_put_xml,
@@ -2481,7 +2522,7 @@ class SystemsTestCase(XMLTestCase):
         self._mockConfigDescriptorCache()
 
         self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1' ]))
+            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
 
         response = self._get('inventory/systems/%s/configuration_descriptor' % \
             system.pk,
@@ -2495,37 +2536,6 @@ class SystemsTestCase(XMLTestCase):
         # Check the fields we unconditionally change on the way out
         self.assertEquals(descr.getDisplayName(), 'Configuration Descriptor')
         self.assertEquals(descr.getRootElement(), 'configuration')
-
-    def _mockConfigDescriptorCache(self):
-        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-        descr = self._getConfigDescriptor()
-        mockGetDescriptor = lambda x, y: descr
-        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
-        return descr
-
-    def _getConfigDescriptor(self):
-
-        vhost = descriptor.ConfigurationDescriptor()
-        vhost.setId("apache-configuration/vhost")
-        vhost.setRootElement('vhost')
-        vhost.setDisplayName('Virtual Host Configuration')
-        vhost.addDescription('Virtual Host Configuration')
-        vhost.addDataField('serverName', type="str", required=True,
-            descriptions="Virtual Host Name")
-        vhost.addDataField('documentRoot', type="str", required=True,
-            descriptions="Virtual Host Document Root") 
-
-        descr = descriptor.ConfigurationDescriptor()
-        descr.setId("Some-ID")
-        descr.setDisplayName('Ignored')
-        descr.addDescription('Ignored')
-        descr.setRootElement('ignored')
-
-        descr.addDataField('vhosts', type=descr.ListType(vhost),
-            required=True, descriptions="Virtual Hosts",
-            constraints=[dict(constraintName='uniqueKey', value="serverName"),
-                dict(constraintName="minLength", value=1)])
-        return descr
 
     def testGetSystemLogAuth(self):
         """
@@ -2556,15 +2566,8 @@ class SystemsTestCase(XMLTestCase):
         response = self._get('inventory/systems/3/system_log/',
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
-        content = []
-        # Just remove lines with dates in them, it's easier to test for now.
-        for line in response.content.split('\n'):
-            if 'entry_date' in line or \
-               'will be enabled on' in line:
-                continue
-            else:
-                content.append(line)
-        self.assertXMLEquals('\n'.join(content), testsxml.system_log_xml)
+        self.assertXMLEquals(response.content, testsxml.system_log_xml,
+                ignoreNodes=['entry_date'])
 
     def testGetSystemHasHostInfo(self):
         system = self.newSystem(name="mgoblue")
@@ -2610,13 +2613,15 @@ class SystemsTestCase(XMLTestCase):
 
         # Create a job
         cu = connection.cursor()
-        now = self.mgr.sysMgr.now()
+        import time
+        now = time.time()
         cu.execute("""
             INSERT INTO jobs (job_uuid, job_type_id, job_state_id, created_by,
                 created, modified)
-            VALUES (%s, %s, %s, %s, %s, %s)""",
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING job_id""",
             [ bootUuid, 1, 1, 1, now, now])
-        jobId = cu.lastrowid
+        jobId = cu.fetchone()[0]
 
         # Pretend that this job launched 2 systems (the way ec2 can do)
         cu.execute("INSERT INTO job_system (job_id, system_id) VALUES (%s, %s)",
@@ -2637,9 +2642,8 @@ class SystemsTestCase(XMLTestCase):
   %(survey)s
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.boot_uuid, bootUuid)
@@ -2667,9 +2671,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model.event_uuid, eventUuid)
@@ -2706,15 +2709,14 @@ class SystemsTestCase(XMLTestCase):
 
     def testDedupByEventUuid(self):
         system, xml = self._setupDedupEventUuid()
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         # We should have loaded the old one
         self.failUnlessEqual(system.pk, model.pk)
         self.failUnlessEqual(model.name, 'blippy')
         # Catch the case of synthetic fields not being converted to
         # unicode (xobj types confuse database drivers)
-        self.failUnlessEqual(type(model.event_uuid), unicode)
+        self.failUnlessEqual(type(model.event_uuid), str)
 
         # Fetch system, make sure we have a survey for it
         system = self.mgr.addSystem(model)
@@ -2734,6 +2736,7 @@ class SystemsTestCase(XMLTestCase):
             ])
 
     def testDedupByEventUuidPUT(self):
+        self._mockConfigDescriptorCache()
         system, xml = self._setupDedupEventUuid()
         url = 'inventory/systems/%s' % system.system_id
         headers = { 'X-rBuilder-Event-UUID' :
@@ -2811,9 +2814,8 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """ % params
 
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
 
         # We should have loaded the old one
         self.failUnlessEqual(model.pk, system0.pk)
@@ -2874,9 +2876,8 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """ % params
 
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
         self.failUnlessEqual(model.current_state.name, "mothballed")
 
@@ -2929,10 +2930,9 @@ class SystemsTestCase(XMLTestCase):
 </system>
 """
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
         from mint.django_rest.rbuilder import modellib
-        model = models.System.objects.load_from_object(xobjmodel, request=None,
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None,
             flags=modellib.Flags(save=False))
         self.failUnlessEqual(model.pk, system.pk)
 
@@ -2944,9 +2944,8 @@ class SystemsTestCase(XMLTestCase):
         # Now set jobUuid to be correct
         params['jobUuid'] = jobUuid
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         # We still expect nothing to be updated, since the event_uuid is wrong
@@ -2957,9 +2956,8 @@ class SystemsTestCase(XMLTestCase):
         # Now set eventUuid to be correct
         params['eventUuid'] = eventUuid
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         job = jobmodels.Job.objects.get(pk=job.pk)
@@ -2993,9 +2991,8 @@ class SystemsTestCase(XMLTestCase):
         statusDetail = params['statusDetail'] = "status detail 432"
 
         xml = xmlTempl % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.pk, system.pk)
 
         job = jobmodels.Job.objects.get(pk=job.pk)
@@ -3030,9 +3027,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
         self.failUnlessEqual(model._ssl_client_certificate, sslClientCert)
@@ -3064,9 +3060,8 @@ class SystemsTestCase(XMLTestCase):
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
-        obj = xobj.parse(xml)
-        xobjmodel = obj.system
-        model = models.System.objects.load_from_object(xobjmodel, request=None)
+        etreeModel = etree.fromstring(xml)
+        model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.agent_port, agentPort)
         self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
             model.to_xml())
@@ -4182,7 +4177,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
 
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
-    fixtures = ['users', 'targets']
+    fixtures = ['targetusers', 'targets']
 
     class Driver(object):
         def __init__(self, cloudType, cloudName, userId, instances):
@@ -4262,12 +4257,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         for (targetType, targetName, userName, systems) in self._targets:
             self.drivers.append(self.Driver(targetType, targetName, userName,
                 systems))
-        # Set the db version
-        from mint.db import schema
-        v = rbuildermodels.DatabaseVersion(
-            version=schema.RBUILDER_DB_VERSION.major,
-            minor=schema.RBUILDER_DB_VERSION.minor)
-        v.save()
 
         zone = self.localZone
 

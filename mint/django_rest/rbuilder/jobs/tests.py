@@ -207,7 +207,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         )
 
     def testCreateJobSystemScan(self):
-        topLevelGroup = "group-foo=/a@b:c/1-2-3"
+        topLevelGroup = "group-foo=/a@b:c/12345.67:1-2-3[is: x86_64]"
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
         system = self._saveSystem()
         system.save()
@@ -237,7 +237,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
         eventUuids = [ x.args[0].pop('eventUuid') for x in callList ]
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the system
         self.failUnlessEqual(
             [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
@@ -254,7 +254,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
-                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/12345.67:1-2-3[is: x86_64]'],
                         zone=system.managing_zone.name,
                         uuid=job.job_uuid,
                     ),
@@ -281,7 +281,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         callList = repClient.getCallList()
         eventUuids = [ x.args[0].pop('eventUuid') for x in callList[1:] ]
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         # Make sure the job is related to the system
         self.failUnlessEqual(
@@ -306,7 +306,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
                     ),
                     dict(
-                        desiredTopLevelItems = [u'group-foo=/a@b:c/1-2-3'],
+                        desiredTopLevelItems = [u'group-foo=/a@b:c/12345.67:1-2-3[is: x86_64]'],
                         zone=system.managing_zone.name,
                         uuid=job.job_uuid,
                     ),

@@ -206,6 +206,7 @@ class SystemState(modellib.XObjIdModel):
         db_table = 'inventory_system_state'
 
     _xobj = xobj.XObjMetadata(
+                tag = 'system_state',
                 attributes = {'id':str})
 
     UNMANAGED = "unmanaged"
@@ -402,6 +403,7 @@ class System(modellib.XObjIdModel):
 
     class Meta:
         db_table = 'inventory_system'
+        ordering = [ 'system_id' ]
 
     view_name = 'System'
 
@@ -409,7 +411,7 @@ class System(modellib.XObjIdModel):
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
         'managementnode', 'jobsystem_set', 'tags', 'surveys'])
-    _xobj_hidden_m2m = set()
+    _xobj_hidden_m2m = set(['jobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
                 attributes = {'id':str},
@@ -521,7 +523,7 @@ class System(modellib.XObjIdModel):
         "the descriptor of available fields to set system configuration "
         "parameters")
     network_address = D(NetworkAddress, "Network address for this system", short="System network address")
-    actions = D(modellib.SyntheticField(jobmodels.Actions),
+    actions = D(APIReadOnly(modellib.SyntheticField(jobmodels.Actions)),
         "actions available on the system")
     source_image = D(APIReadOnly(models.ForeignKey('images.Image', null=True,
          related_name='systems', on_delete=models.SET_NULL)),
@@ -538,7 +540,7 @@ class System(modellib.XObjIdModel):
         "the date the system was last modified", short="System modified date")
     latest_survey = modellib.DeferredForeignKey('inventory.Survey',
         null=True, related_name='+', on_delete=models.SET_NULL)
-    survey = D(XObjHidden(modellib.SyntheticField()),
+    survey = D(XObjHidden(modellib.SyntheticField(modellib.EtreeField)),
         "survey specified at registration time")
 
     # Note the camel-case here. It is intentional, this is a field sent
@@ -619,7 +621,9 @@ class System(modellib.XObjIdModel):
         # 'order by ip_address nulls last', the workaround is to
         # fabricate a column that is sorted by first.
         q = self.networks.extra(select=dict(null1="ip_address is null"))
-        for nw in q.order_by('null1', 'ip_address'):
+        # If two networks have the same ip address (or lack thereof),
+        # then fall back to primary key ordering
+        for nw in q.order_by('null1', 'ip_address', 'network_id'):
             key = (nw.ip_address or nw.dns_name)
             if nw.pinned:
                 if not pinnedFound:
@@ -647,8 +651,6 @@ class System(modellib.XObjIdModel):
         self.network_address = self.__class__.extractNetworkAddress(self)
 
     def createNetworks(self):
-        # * oldNetAddr is the state of the system in the db, before any
-        #   fields from the xobj model were copied
         # * self.network_address comes originally from the DB, and updated
         #   from the xobj model
         # * curNetAddr is the state of the network in the db, which may
@@ -662,10 +664,6 @@ class System(modellib.XObjIdModel):
 
         currentNw = self.__class__.extractNetworkToUse(self)
         curNetAddr = self.newNetworkAddress(currentNw)
-        if self.oldModel is None:
-            oldNetAddr = None
-        else:
-            oldNetAddr = getattr(self.oldModel, 'network_address', None)
         if self.network_address is None or curNetAddr == self.network_address:
             # This is calling the custom __eq__, and also covers
             # None==None
@@ -711,9 +709,16 @@ class System(modellib.XObjIdModel):
         if om is None:
             return True
         # This should also cover the empty string case
-        if not om.local_uuid or not om.generated_uuid:
+        if not self._text(om, 'local_uuid') or not self._text(om, 'generated_uuid'):
             return True
         return False
+
+    @classmethod
+    def _text(cls, etreeModel, field):
+        node = etreeModel.find(field)
+        if node is None:
+            return node
+        return node.text
 
     _RunningJobStateIds = None
     @property
@@ -783,22 +788,15 @@ class System(modellib.XObjIdModel):
         # no conary packages is super-unlikely :)
         return False
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, **kwargs):
 
         # hide some data in collapsed collections
         summarize = getattr(self, '_summarize', False)
 
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
+        self.network_address = self.__class__.extractNetworkAddress(self)
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
 
         if request:
-            class CredentialsHref(object):
-                _xobj = xobj.XObjMetadata(
-                            tag='credentials',
-                            attributes={'id':str})
-
-                def __init__(self, href):
-                    self.id = href
-
             class ConfigurationHref(object):
                 _xobj = xobj.XObjMetadata(
                             tag='configuration',
@@ -825,17 +823,15 @@ class System(modellib.XObjIdModel):
 
 
             if not summarize:
-                xobj_model.credentials = CredentialsHref(request.build_absolute_uri(
-                    '%s/credentials' % self.get_absolute_url(request)))
-
-                xobj_model.configuration = ConfigurationHref(request.build_absolute_uri(
-                    '%s/configuration' % self.get_absolute_url(request)))
-
-                xobj_model.configuration_descriptor = ConfigurationDescriptorHref(request.build_absolute_uri(
-                    '%s/configuration_descriptor' % self.get_absolute_url(request)))
-
-                xobj_model.surveys = SurveysHref(request.build_absolute_uri(
-                    '%s/surveys' % self.get_absolute_url(request)))
+                absUrl = self.get_absolute_url(request)
+                etreeModel.append(etreeModel.makeelement('credentials',
+                    id='%s/credentials' % absUrl))
+                etreeModel.append(etreeModel.makeelement('configuration',
+                    id='%s/configuration' % absUrl))
+                etreeModel.append(etreeModel.makeelement('configuration_descriptor',
+                    id='%s/configuration_descriptor' % absUrl))
+                etreeModel.append(etreeModel.makeelement('surveys',
+                    id='%s/surveys' % absUrl))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
@@ -871,10 +867,24 @@ class System(modellib.XObjIdModel):
         # old and busted slow way
         #
         if not summarize:
-            xobj_model.jobs = JobsHref(request, self)
+            self.serializeJobsHref(etreeModel, request)
+        return etreeModel
 
-        xobj_model.network_address = self.__class__.extractNetworkAddress(self)
-        return xobj_model
+    def serializeJobsHref(self, etreeModel, request):
+        baseUrl = self.get_absolute_url(request, view_name='SystemJobs')
+        et = etreeModel.makeelement('jobs', id=baseUrl)
+        etreeModel.append(et)
+
+        subelMap = [
+                ('queued_jobs', jobmodels.JobState.QUEUED),
+                ('completed_jobs', jobmodels.JobState.COMPLETED),
+                ('running_jobs', jobmodels.JobState.RUNNING),
+                ('failed_jobs', jobmodels.JobState.FAILED),
+        ]
+        for subelName, state in subelMap:
+            parents = [self, Cache.get(jobmodels.JobState, name=state)]
+            url = self.get_absolute_url(request, parents=parents, view_name='SystemJobStateJobs')
+            et.append(et.makeelement(subelName, id=url))
 
     @classmethod
     def extractNetworkToUse(cls, system):
@@ -1063,6 +1073,7 @@ class ManagementNode(System):
 
     class Meta:
         db_table = 'inventory_zone_management_node'
+        ordering = [ 'system_id' ]
     _xobj = xobj.XObjMetadata(
                 tag = 'management_node',
                 attributes = {'id':str})
@@ -1154,6 +1165,7 @@ class Network(modellib.XObjIdModel):
     class Meta:
         db_table = 'inventory_system_network'
         unique_together = (('system', 'dns_name', 'ip_address', 'ipv6_address'),)
+        ordering = [ 'network_id' ]
 
     _xobj = xobj.XObjMetadata(
                 tag='network',
@@ -1187,6 +1199,8 @@ class Network(modellib.XObjIdModel):
         return super(Network, self).save(*args, **kwargs)
 
 class SystemLog(modellib.XObjIdModel):
+    _xobj = xobj.XObjMetadata(
+                tag='system_log')
 
     class Meta:
         db_table = 'inventory_system_log'
@@ -1306,9 +1320,9 @@ class Trove(modellib.XObjIdModel):
         return "%s=%s" % (self.name, self.getVersion().asString())
 
     def serialize(self, *args, **kwargs):
-        xobj_model = modellib.XObjIdModel.serialize(self, *args, **kwargs)
-        xobj_model.is_top_level_item = True
-        return xobj_model
+        etreeModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
+        modellib.Etree.Node('is_top_level_item', parent=etreeModel, text='true')
+        return etreeModel
 
 class Version(modellib.XObjModel):
     serialize_accessors = False

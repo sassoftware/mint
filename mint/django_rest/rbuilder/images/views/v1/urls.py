@@ -26,7 +26,7 @@ urlpatterns = patterns('',
     # Digress for build_log
     URL(r'/(?P<image_id>\d+)/build_log/?$',
         imagesviews.BuildLogService(),
-        name='images.BuildLog'),
+        name='BuildLog'),
     URL(r'/(?P<image_id>\d+)/build_files/?$',
         imagesviews.ImageBuildFilesService(),
         name='BuildFiles',

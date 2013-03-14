@@ -198,12 +198,8 @@ class UsersManager(basemanager.BaseManager):
         if self.user:
             session.user = [ self.user ]
         else:
-            session.user = [ self._NoUser ]
+            session.user = [ models.modellib.Etree.Node("user") ]
         return session
-
-    class _UserClass(object):
-        _xobj = xobj.XObjMetadata(tag='user')
-    _NoUser = _UserClass()
 
     # def cancelUserAccount(self, username):
     #     user_id = self.getUserId(username)

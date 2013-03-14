@@ -1,0 +1,87 @@
+#!/bin/sh
+#  chkconfig: 345 60 40
+#  description: rBuilder credential store
+#
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+scriptname=`basename $0`
+servicename=credsrv
+user=credstore
+sock_group=apache
+pidfile=/var/run/${scriptname}.pid
+rundir=/var/lib/twisted-taps/${scriptname}
+logfile=/var/log/rbuilder/${scriptname}.log
+
+#  load init function library
+. /etc/rc.d/init.d/functions
+
+[ -r /etc/sysconfig/${scriptname} ] && . /etc/sysconfig/${scriptname}
+
+#  check for required files
+if [ ! -x /usr/bin/twistd ]
+then
+    echo "$0: Aborting, no /usr/bin/twistd found"
+    exit 0
+fi
+
+#  set up run directory if necessary
+if [ ! -d "${rundir}" ]
+then
+    mkdir -p "${rundir}"
+fi
+
+result=0
+case "$1" in
+    start)
+        echo -n "Starting ${scriptname}: twistd"
+        twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile --uid=$user --gid=$user $servicename --gid=$sock_group
+        result=$?
+        if [ "$result" -eq 0 ]
+        then
+            success
+            touch /var/lock/subsys/$scriptname
+        else
+            failure
+        fi
+        echo
+        ;;
+
+    stop)
+        echo -n "Stopping ${scriptname}: twistd"
+        killproc -p $pidfile $scriptname
+        result=$?
+        rm -f /var/lock/subsys/$scriptname
+        echo
+        ;;
+
+    restart)
+        "${0}" stop
+        "${0}" start
+        result=$?
+        ;;
+
+    status)
+        status -p $pidfile $scriptname
+        result=$?
+        ;;
+
+    *)
+        echo "Usage: ${0} {start|stop|restart|status}" >&2
+        result=1
+        ;;
+esac
+
+exit $result

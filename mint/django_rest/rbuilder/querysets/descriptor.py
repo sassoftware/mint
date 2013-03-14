@@ -46,7 +46,7 @@ class FilterDescriptor(modellib.XObjIdModel):
 
     def serialize(self, *args, **kwargs):
         self.id = self.get_absolute_url(*args, **kwargs)
-        return self
+        return super(FilterDescriptor, self).serialize(*args, **kwargs)
 
 class OperatorChoices(object):
     _xobj = xobj.XObjMetadata(tag='operator_choices')

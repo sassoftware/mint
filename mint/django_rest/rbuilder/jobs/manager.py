@@ -16,7 +16,6 @@ from django.db import IntegrityError, transaction
 from lxml import etree
 
 from conary import trovetup
-from xobj import xobj
 from smartform import descriptor as smartdescriptor
 
 from mint import buildtypes, jobstatus, urltypes
@@ -184,6 +183,9 @@ class BaseJobHandler(AbstractHandler):
 
     def create(self, job, extraArgs=None):
         self.extraArgs.update(extraArgs or {})
+        # Tentatively supply a jobUuid, to make sure we have a stable
+        # URL back to the job
+        job.job_uuid = str(uuid.uuid4())
         uuid_, rmakeJob = self.createRmakeJob(job)
         job.job_uuid = str(uuid_)
         job.setDefaultValues()
@@ -199,9 +201,6 @@ class BaseJobHandler(AbstractHandler):
         self.postCreateJob(job)
 
     def createRmakeJob(self, job):
-        # Tentatively supply a jobUuid, to make sure we have a stable
-        # URL back to the job
-        job.job_uuid = str(uuid.uuid4())
         cli = self.mgr.mgr.repeaterMgr.repeaterClient
         method = self.getRepeaterMethod(cli, job)
         methodArgs, methodKwargs = self.getRepeaterMethodArgs(cli, job)
@@ -240,8 +239,9 @@ class ResultsProcessingMixIn(object):
         job.save()
 
     def getJobResults(self, job):
-        results = getattr(job.results, self.ResultsTag, None)
-        return results
+        if job.results is None:
+            return None
+        return job.results.find(self.ResultsTag)
 
     def validateJobResults(self, job):
         jobState = modellib.Cache.get(models.JobState, pk=job.job_state_id)
@@ -278,9 +278,8 @@ class ResultsProcessingMixIn(object):
             self.handleErrorDefault(job, e)
             return None
 
-        # save the results from ramke to the DB
-        job.results = modellib.HrefFieldFromModel(resources)
-        if type(resources) != list:
+        # save the results from rmake to the DB
+        if not isinstance(resources, list):
             resources = [ resources ]
         for resource in resources:
             tag = resource._xobj.tag
@@ -293,6 +292,8 @@ class ResultsProcessingMixIn(object):
                 models.JobSurveyArtifact.objects.create(job=job, survey=resource)
             elif tag not in set(['target', 'system', 'preview']):
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
+        job.results = models.JobResults()
+        job.results.result = [ modellib.HrefFieldFromModel(x) for x in resources ]
         return resources[0]
 
     def _createTargetConfiguration(self, job, targetType):
@@ -326,18 +327,17 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         if isinstance(job.descriptor, smartdescriptor.ConfigurationDescriptor):
             # path for direct python API usage, such as target system import
             # not yet patched up for supplying descriptor data
-            descriptorDataXobj = job.descriptor_data
-            descriptorDataXml = xobj.toxml(descriptorDataXobj)
-            descriptor        = job.descriptor
+            descriptor = job.descriptor
             descriptorDataObj = None
-            descriptor        = self.getDescriptor(job.descriptor.id)
+            descriptor = self.getDescriptor(job.descriptor.id)
         else:
-            descriptorId       = job.descriptor.id
+            descriptorId = job.descriptor.attrib['id']
             # Strip the server-side portion
-            descriptorId       = urlparse.urlsplit(descriptorId).path
-            descriptorDataXobj = job.descriptor_data
-            descriptorDataXml  = xobj.toxml(descriptorDataXobj)
-            descriptor         = self.getDescriptor(descriptorId)
+            descriptorId = urlparse.urlsplit(descriptorId).path
+            descriptor = self.getDescriptor(descriptorId)
+
+        descriptorDataXml = modellib.Etree.tostring(job.descriptor_data,
+                xmlDeclaration=True, prettyPrint=False)
 
         # Save the original URL for the descriptor
         self._setDescriptorId(descriptorId, descriptor)
@@ -492,12 +492,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             targetId = job.target_jobs.all()[0].target_id
             self._setTarget(targetId)
-            if not hasattr(self.results, 'image'):
-                images = []
-            else:
-                images = self.results.image
-                if not isinstance(images, list):
-                    images = [ images ]
+            images = list(self.results.iterchildren('image'))
             self.mgr.mgr.updateTargetImages(self.target, images)
             return self.target
 
@@ -545,12 +540,7 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             targetId = job.target_jobs.all()[0].target_id
             self._setTarget(targetId)
-            if not hasattr(self.results, 'instance'):
-                systems = []
-            else:
-                systems = self.results.instance
-                if not isinstance(systems, list):
-                    systems = [ systems ]
+            systems = list(self.results.iterchildren('instance'))
             self.mgr.mgr.updateTargetSystems(self.target, systems)
             return self.target
 
@@ -702,19 +692,20 @@ class JobHandlerRegistry(HandlerRegistry):
             # image
             self.image = job.images.all()[0].image
 
-            systems = job.results.systems.system
-            if type(systems) != list:
-                systems = [ systems ]
-
+            systems = self.results.iterchildren('system')
 
             results = []
             for targetSystem in systems:
                 # System XML does not contain a target id, hence duplicate lookup
                 # we should fix this
-                target = targetmodels.Target.objects.get(name=targetSystem.targetName)
+                targetName = modellib.Etree.findBasicChild(
+                        targetSystem, 'targetName')
+                targetSystemId = modellib.Etree.findBasicChild(
+                        targetSystem, 'target_system_id')
+                target = targetmodels.Target.objects.get(name=targetName)
                 realSystem = inventorymodels.System.objects.get(
                     target = target,
-                    target_system_id = targetSystem.target_system_id
+                    target_system_id = targetSystemId,
                 )
                 # The system may not have network info yet, so don't try
                 # to do anything clever here (Mingle #1785)
@@ -941,7 +932,7 @@ class JobHandlerRegistry(HandlerRegistry):
             self.image.save()
 
         def _processJobResults(self, job):
-            imageId = getattr(self.results, 'id', None)
+            imageId = self.results.attrib.get('id', None)
             if imageId is None:
                 raise errors.InvalidData(msg = "missing imageId")
             imageId = int(os.path.basename(imageId))
@@ -1009,8 +1000,12 @@ class JobHandlerRegistry(HandlerRegistry):
             match = self.splitResourceId(descriptor.getId())
             systemId = int(match.kwargs['system_id'])
             self._setSystem(systemId)
-            survey = self.mgr.mgr.addSurveyForSystemFromXobj(
-                self.system.system_id, job.results.surveys)
+            # Grab the first survey
+            surveyEtree = self.results.find('survey')
+            if surveyEtree is None:
+                raise errors.InvalidData(msg = "Survey data not found")
+            survey = self.mgr.mgr.addSurveyForSystemFromEtree(
+                self.system.system_id, surveyEtree)
             return survey
 
         def handleError(self, job, exc):
@@ -1130,19 +1125,20 @@ class JobHandlerRegistry(HandlerRegistry):
             self.mgr.mgr.sysMgr.setObservedTopLevelItems(system, topLevelItems)
 
         @staticmethod
-        def _scrubTroveTup(val):
-            if isinstance(val, unicode):
-                val = val.encode('utf8')
-            if val == '':
+        def _scrubTroveTupNode(node):
+            if not node.text:
+                node.text = None
                 return ''
-            val = trovetup.TroveTuple(val)
-            return val.asString(withTimestamp=True)
+            val = trovetup.TroveTuple(node.text)
+            node.text = val.asString(withTimestamp=True)
+            return node.text
 
         def _processXml(self, job):
-            changes = job.results.preview
-            observed = changes.observed = self._scrubTroveTup(changes.observed)
-            desired = changes.desired = self._scrubTroveTup(changes.desired)
-            return xobj.toxml(changes), observed, desired
+            observed = [ self._scrubTroveTupNode(x)
+                    for x in self.results.iterchildren('observed') ]
+            desired= [ self._scrubTroveTupNode(x)
+                    for x in self.results.iterchildren('desired') ]
+            return modellib.Etree.tostring(self.results), observed, desired
 
         def _processJobResults(self, job):
             xml, observed, desired = self._processXml(job)
@@ -1151,8 +1147,8 @@ class JobHandlerRegistry(HandlerRegistry):
             preview.save()
             # both of these are only relevant to non-dry run and have meanings more overloaded than their names
             # so no reason to set desired prior to attempting the command
-            self._updateDesiredInstalledSoftware(system, job, [desired])
-            self._updateObservedInstalledSoftware(system, job, [observed])
+            self._updateDesiredInstalledSoftware(system, job, desired)
+            self._updateObservedInstalledSoftware(system, job, observed)
             return preview
 
     class SystemConfigure(DescriptorJobHandler):
@@ -1218,13 +1214,12 @@ class JobHandlerRegistry(HandlerRegistry):
             # Configuration jobs presently have no real result but return a
             # system with just UUIDs in it. Just return the current system
             # object.
-            try:
-                scriptOutput = self.results.scriptOutput
-                returnCode = int(scriptOutput.returnCode)
-                stdout = scriptOutput.stdout
-                stderr = scriptOutput.stderr
-            except AttributeError:
-                returnCode, stdout, stderr = 0, None, None
+            returnCode, stdout, stderr = 0, None, None
+            scriptOutput = self.results.find('scriptOutput')
+            if scriptOutput is not None:
+                returnCode = int(scriptOutput.find('returnCode').text)
+                stdout = scriptOutput.find('stdout').text
+                stderr = scriptOutput.find('stderr').text
             if stdout is not None:
                 try:
                     doc = etree.fromstring(str(stdout))

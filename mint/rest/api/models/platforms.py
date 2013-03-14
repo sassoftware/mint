@@ -157,6 +157,7 @@ class Platform(Model):
     hidden = fields.BooleanField()
     mirrorPermission = fields.BooleanField()
     repositoryUrl = _RepositoryUrlField()
+    upstream_url = fields.CharField()
     # contentSources = fields.ModelField(SourceRefs)
     contentSources = fields.UrlField('platforms.contentSources',
                                      ['platformId'])

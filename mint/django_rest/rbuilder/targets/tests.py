@@ -106,7 +106,7 @@ class BaseTargetsTest(RbacEngine):
         for i in range(2):
             creds = dict(username="username-%s" % i, password="password-%s" % i)
             targetCredentials.append(models.TargetCredentials.objects.create(
-                credentials=mintdata.marshalTargetUserCredentials(creds)))
+                credentials=mintdata.marshalTargetUserCredentials(None, creds)))
 
         u0 = user
         u1 = self.intern_user
@@ -592,7 +592,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/7")
+        self.failUnlessEqual(job.results.target.id, "http://testserver/api/v1/targets/7")
         self.failUnlessEqual(job.status_code, "200")
         self.failUnlessEqual(job.status_text, "Done")
 
@@ -691,7 +691,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.results.id,
+        self.failUnlessEqual(job.results.target.id,
             "http://testserver/api/v1/targets/%s" % target.target_id)
         self.failUnlessEqual(job.status_code, "200")
         self.failUnlessEqual(job.status_text, "Done")
@@ -831,7 +831,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.results.id, "http://testserver/api/v1/targets/1")
+        self.failUnlessEqual(job.results.target.id, "http://testserver/api/v1/targets/1")
 
     def testGetTargetConfiguration_ec2(self):
         config = dict([
@@ -937,7 +937,7 @@ ZcY7o9aU
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.results.id,
+        self.failUnlessEqual(job.results.target.id,
             "http://testserver/api/v1/targets/%s" % target.target_id)
 
         # Check credentials
@@ -1047,7 +1047,7 @@ ZcY7o9aU
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%s/descriptors/refresh_images" %  target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],
@@ -1476,7 +1476,7 @@ ZcY7o9aU
         ]
         systemModels = []
         for sdata in data:
-            xmodel = xobj.parse(instanceStanza % sdata).instance
+            xmodel = etree.fromstring(instanceStanza % sdata)
             systemModels.append(xmodel)
         self.mgr.updateTargetSystems(target, systemModels)
 
@@ -1619,7 +1619,7 @@ ZcY7o9aU
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         self.failUnlessEqual(obj.job.id, "http://testserver/api/v1/" + jobUrl)
-        self.failUnlessEqual(obj.job.results.id, "http://testserver/api/v1/images/1")
+        self.failUnlessEqual(obj.job.results.image.id, "http://testserver/api/v1/images/1")
 
         # Refresh image
         img = imgmodels.Image.objects.get(image_id=img.image_id)
@@ -1767,8 +1767,8 @@ ZcY7o9aU
                     for tdi in imgfile.target_deployable_images.all() ]
                 for imgfile in img.files.order_by('file_id') ],
             [[
-                ('Target Name vmware', 'target-internal-id-04'),
                 (targetX.name, None),
+                ('Target Name vmware', 'target-internal-id-04'),
             ]]
         )
 
@@ -1980,9 +1980,7 @@ ZcY7o9aU
 <job>
   <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
   <descriptor id="http://testserver/api/v1/targets/%(targetId)s/descriptors/deploy/file/%(buildFileId)s"/>
-  <descriptor_data>
-    <imageId>%(buildFileId)s</imageId>
-  </descriptor_data>
+  <descriptor_data><imageId>%(buildFileId)s</imageId></descriptor_data>
 </job>
 """
 
@@ -2036,7 +2034,7 @@ ZcY7o9aU
                 'size' : 102,
                 'baseFileName' : 'chater-foo-1-x86',
             },
-            'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data>\n  <imageId>%s</imageId>\n</descriptor_data>\n" % buildFileId,
+            'descriptorData': "<?xml version='1.0' encoding='UTF-8'?>\n<descriptor_data><imageId>%s</imageId></descriptor_data>" % buildFileId,
             'imageDownloadUrl': 'https://bubba.com/downloadImage?fileId=%s' % buildFileId,
             'imageFileUpdateUrl': 'http://localhost/api/v1/images/%s/build_files/%s' % (baseImg.image_id, buildFileId),
             'targetImageXmlTemplate': '<file>\n  <target_images>\n    <target_image>\n      <target id="/api/v1/targets/1"/>\n      %(image)s\n    </target_image>\n  </target_images>\n</file>',
@@ -2144,7 +2142,7 @@ ZcY7o9aU
             ])
         realCall = calls[-1]
         descriptorData = etree.tostring(etree.fromstring(descriptorData),
-            pretty_print=True, xml_declaration=True, encoding="UTF-8")
+            pretty_print=False, xml_declaration=True, encoding="UTF-8")
         self.failUnlessEqual(self._mungeDict(realCall.args[0]),
           {
             'imageFileInfo': {

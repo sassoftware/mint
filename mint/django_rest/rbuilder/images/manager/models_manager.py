@@ -29,3 +29,11 @@ class ImageTypeManager(basemodels.BaseManager):
             raise UnsupportedFilterArgumentsException('can only search by image_type_id, or pk')
         pk = int(pk if pk else image_type_id) # django casts everything to unicode, so cast back
         return self.model.fromImageTypeId(pk)
+
+class ImageMetadataManager(basemodels.BaseManager):
+    def load_from_object(self, etreeModel, request, flags=None):
+        model = self.model()
+        model._imageMetadata = metadata = {}
+        for node in etreeModel.iterchildren():
+            metadata[node.tag] = node.text
+        return model

@@ -719,24 +719,25 @@ class Collection(XObjIdModel):
                 prevIndex = 0
             self.previous_page = self.get_absolute_url(request, paged=True, startIndex= prevIndex)
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, tag=None):
+        if tag is None:
+            tag = self._xobj.tag
+        if not self.list_fields:
+            return XObjIdModel.serialize(self, request, tag=tag)
         # We only support one list field right now
-        if self.list_fields:
-            listField = self.list_fields[0]
-        else:
-            return XObjIdModel.serialize(self, request)
+        listField = self.list_fields[0]
 
         modelList = getattr(self, listField)
-        
+
         if request:
             modelList = self.filterBy(request, modelList)
             modelList = self.orderBy(request, modelList)
             self.paginate(request, listField, modelList)
 
-        xobj_model = XObjIdModel.serialize(self, request)
-        xobj_model.id = self._pagedId
-
-        return xobj_model
+        etreeModel = XObjIdModel.serialize(self, request, tag=tag)
+        if self._pagedId is not None:
+            etreeModel.attrib['id'] = self._pagedId
+        return etreeModel
 
 operatorMap = {}
 for mod_obj in sys.modules[__name__].__dict__.values():
