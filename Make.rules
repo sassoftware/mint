@@ -76,12 +76,6 @@ ifdef static_files
 	cp $(static_files) $(DESTDIR)$(STATICDEST)/
 endif
 
-cgi-install:
-ifdef cgi_files
-	mkdir -p $(DESTDIR)$(CGIDEST)
-	cp $(cgi_files) $(DESTDIR)$(CGIDEST)/
-endif
-
 kid-clean:
 
 ## DocBook files

@@ -3750,8 +3750,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             sesH = sessionHandle
 
         # "upload" the data
-        pc.uploadData(sesH, info['filename'], info['tempfile'],
-                info['content-type'])
+        pc.uploadData(sesH, info['filename'], info['tempfile'], None)
         fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
 
         return sesH, fact, data

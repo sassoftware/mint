@@ -46,16 +46,12 @@ generic_scripts = \
 	system-resolver			\
 	target-systems-import		\
 
-cgi_files =				\
-	fileupload.cgi			\
-	urldownloader.cgi
 
 override STATICDEST = /usr/share/rbuilder/scripts
-override CGIDEST = /srv/www/cgi-bin
 
 all: default-all $(generated_files)
 
-install: static-install cgi-install default-install
+install: static-install default-install
 
 clean: default-clean
 
