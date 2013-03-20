@@ -11,6 +11,7 @@ from xobj import xobj
 from conary import trovetup
 from conary import versions
 from conary.deps import deps
+from conary.lib.log import FORMATS
 
 from mint import builds
 from mint import buildtypes
@@ -525,3 +526,12 @@ class ImageManager(manager.Manager):
             img['files'] = imageFileData
             img['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
+
+    def _getImageLogger(self, hostname, imageId):
+        fileObj = self.db.fileMgr.openImageFile(
+                hostname, imageId, 'build.log', 'a')
+        handler = logging.StreamHandler(fileObj)
+        handler.setFormatter(FORMATS['apache'])
+        log = logging.Logger('image')
+        log.addHandler(handler)
+        return log
