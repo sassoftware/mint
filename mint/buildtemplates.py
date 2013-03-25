@@ -140,6 +140,12 @@ class vmMemory(IntegerOption):
     prompt = 'How many MB of RAM should be allocated when this virtual machine is started?'
     errordesc = "vmware memory"
 
+class vmCPUs(IntegerOption):
+    default = 1
+    prompt = 'How many virtual CPUs should be created when this virtual machine is started?'
+    errordesc = "vmware CPUs"
+
+
 class vmSnapshots(BooleanOption):
     default = False
     prompt = 'Allow snapshots to be created'
@@ -244,18 +250,21 @@ class RawFsTemplate(Template):
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'vmCPUs',
                  'installLabelPath', 'swapSize', 'natNetworking',
                  'diskAdapter', 'vmSnapshots', 'buildOVF10', 'platformName']
     id = buildtypes.VMWARE_IMAGE
 
 class VmwareESXImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'vmCPUs',
                  'installLabelPath', 'swapSize', 'natNetworking',
                  'vmSnapshots', 'buildOVF10', 'platformName']
     id = buildtypes.VMWARE_ESX_IMAGE
 
 class VmwareOvfImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'vmCPUs',
                  'installLabelPath', 'swapSize', 'natNetworking', 'vmSnapshots']
     id = buildtypes.VMWARE_OVF_IMAGE
 
