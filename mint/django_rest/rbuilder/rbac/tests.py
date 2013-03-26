@@ -634,6 +634,172 @@ class RbacEngineTests(RbacEngine):
         ))
 
 
+    def testGrantMatrixForNewRole(self):
+        # RCE-1444
+        role = models.RbacRole.objects.create(
+            name='guru',
+            created_by=usersmodels.User.objects.get(user_name='admin'),
+            modified_by=usersmodels.User.objects.get(user_name='admin'),
+            created_date=timeutils.now(),
+            modified_date=timeutils.now()
+        )
+        response = self._get("query_sets/%s/grant_matrix" %
+                self.targets_queryset.pk,
+            username='admin',
+            password='password'
+        )
+        self.assertEquals(response.status_code, 200)
+        # XXX misa: I am not sure if this output is right, but there was
+        # no test and the code is really horrible
+        self.assertXMLEquals(response.content, """\
+<roles count="4" end_index="3" filter_by="" full_collection="" id="http://testserver/api/v1/rbac/roles" limit="999999" next_page="0" num_pages="1" order_by="" per_page="4" previous_page="0" start_index="0">
+  <role>
+    <createresource_permission>
+      <description>Create Resource</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/5</matrix_permission_id>
+      <name>CreateResource</name>
+      <permission_id>5</permission_id>
+    </createresource_permission>
+    <description/>
+    <matrix_role_id>http://testserver/api/v1/rbac/roles/2</matrix_role_id>
+    <modmembers_permission>
+      <description>Modify Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/2</matrix_permission_id>
+      <name>ModMembers</name>
+      <permission_id>2</permission_id>
+    </modmembers_permission>
+    <modsetdef_permission>
+      <description>Modify Set Definition</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/4</matrix_permission_id>
+      <name>ModSetDef</name>
+      <permission_id>4</permission_id>
+    </modsetdef_permission>
+    <name>sysadmin</name>
+    <readmembers_permission>
+      <description>Read Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/1</matrix_permission_id>
+      <name>ReadMembers</name>
+      <permission_id>1</permission_id>
+    </readmembers_permission>
+    <readset_permission>
+      <description>Read Set</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/3</matrix_permission_id>
+      <name>ReadSet</name>
+      <permission_id>3</permission_id>
+    </readset_permission>
+    <role_id>2</role_id>
+  </role>
+  <role>
+    <createresource_permission>
+      <description>Create Resource</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/5</matrix_permission_id>
+      <name>CreateResource</name>
+      <permission_id>5</permission_id>
+    </createresource_permission>
+    <description/>
+    <matrix_role_id>http://testserver/api/v1/rbac/roles/3</matrix_role_id>
+    <modmembers_permission>
+      <description>Modify Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/2</matrix_permission_id>
+      <name>ModMembers</name>
+      <permission_id>2</permission_id>
+    </modmembers_permission>
+    <modsetdef_permission>
+      <description>Modify Set Definition</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/4</matrix_permission_id>
+      <name>ModSetDef</name>
+      <permission_id>4</permission_id>
+    </modsetdef_permission>
+    <name>developer</name>
+    <readmembers_permission>
+      <description>Read Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/1</matrix_permission_id>
+      <name>ReadMembers</name>
+      <permission_id>1</permission_id>
+    </readmembers_permission>
+    <readset_permission>
+      <description>Read Set</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/3</matrix_permission_id>
+      <name>ReadSet</name>
+      <permission_id>3</permission_id>
+    </readset_permission>
+    <role_id>3</role_id>
+  </role>
+  <role>
+    <createresource_permission>
+      <description>Create Resource</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/5</matrix_permission_id>
+      <name>CreateResource</name>
+      <permission_id>5</permission_id>
+    </createresource_permission>
+    <description/>
+    <matrix_role_id>http://testserver/api/v1/rbac/roles/4</matrix_role_id>
+    <modmembers_permission>
+      <description>Modify Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/2</matrix_permission_id>
+      <name>ModMembers</name>
+      <permission_id>2</permission_id>
+    </modmembers_permission>
+    <modsetdef_permission>
+      <description>Modify Set Definition</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/4</matrix_permission_id>
+      <name>ModSetDef</name>
+      <permission_id>4</permission_id>
+    </modsetdef_permission>
+    <name>intern</name>
+    <readmembers_permission>
+      <description>Read Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/1</matrix_permission_id>
+      <name>ReadMembers</name>
+      <permission_id>1</permission_id>
+    </readmembers_permission>
+    <readset_permission>
+      <description>Read Set</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/3</matrix_permission_id>
+      <name>ReadSet</name>
+      <permission_id>3</permission_id>
+    </readset_permission>
+    <role_id>4</role_id>
+  </role>
+  <role>
+    <createresource_permission>
+      <description>Create Resource</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/5</matrix_permission_id>
+      <name>CreateResource</name>
+      <permission_id>5</permission_id>
+    </createresource_permission>
+    <description/>
+    <matrix_role_id>http://testserver/api/v1/rbac/roles/8</matrix_role_id>
+    <modmembers_permission>
+      <description>Modify Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/2</matrix_permission_id>
+      <name>ModMembers</name>
+      <permission_id>2</permission_id>
+    </modmembers_permission>
+    <modsetdef_permission>
+      <description>Modify Set Definition</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/4</matrix_permission_id>
+      <name>ModSetDef</name>
+      <permission_id>4</permission_id>
+    </modsetdef_permission>
+    <name>guru</name>
+    <readmembers_permission>
+      <description>Read Member Resources</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/1</matrix_permission_id>
+      <name>ReadMembers</name>
+      <permission_id>1</permission_id>
+    </readmembers_permission>
+    <readset_permission>
+      <description>Read Set</description>
+      <matrix_permission_id>http://testserver/api/v1/rbac/permissions/3</matrix_permission_id>
+      <name>ReadSet</name>
+      <permission_id>3</permission_id>
+    </readset_permission>
+    <role_id>8</role_id>
+  </role>
+</roles>
+""")
+
     def testRbacDecoratorThroughView(self):
         # this tests the decorator in rbac_auth.py
         # disabling until error codes are appropriate

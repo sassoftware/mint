@@ -134,6 +134,7 @@ class RbacManager(basemanager.BaseManager):
                     count = len(dbroles),
                     end_index = len(dbroles) - 1,
                     limit = 999999,
+                    per_page = len(dbroles),
                     start_index = 0,
             ).items())
             if itemCount is not None:
@@ -145,7 +146,6 @@ class RbacManager(basemanager.BaseManager):
                         pk = E.findBasicChild(role, 'role_id'))
                 role.attrib.pop('id')
                 for ptype in PERMISSION_TYPES:
-                    xperm = None
                     permission_type = permissions[ptype]
                     ptypename = "%s_permission" % ptype.lower()
                     xperm = permission_type.serialize(request,
@@ -154,28 +154,19 @@ class RbacManager(basemanager.BaseManager):
                             parent=xperm,
                             text=xperm.attrib['id'])
                     xperm.attrib.pop('id')
-                    try:
-                        grant = models.RbacPermission.objects.get(
-                            queryset = qs,
-                            role = actual_role,
-                            permission = permission_type
-                        )
-
+                    grants = models.RbacPermission.objects.filter(
+                        queryset = qs,
+                        role = actual_role,
+                        permission = permission_type
+                    )
+                    if grants:
+                        grant = grants[0]
                         xgrant = grant.serialize(request, tag='grant')
                         for childName in ['modified_by', 'modified_date',
                                 'created_by', 'created_date', 'grant_id',
                                 'role', 'queryset', 'permissions']:
                             for child in xgrant.findall(childName):
                                 xgrant.remove(child)
-                        xperm.append(xgrant)
-                    except models.RbacPermission.DoesNotExist:
-                        # important: should NOT be saved
-                        grant = models.RbacPermission(
-                            queryset = qs,
-                            role = actual_role,
-                            permission = permission_type
-                        )
-                        xgrant = grant.serialize(request, tag='grant')
                         xperm.append(xgrant)
                     role.append(xperm)
 
