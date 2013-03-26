@@ -62,9 +62,8 @@ install: default-install
 	install -D -m0755 rbuilder-authn.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-authn
 	install -D -m0755 rbuilder-credstore.init $(DESTDIR)/etc/rc.d/init.d/rbuilder-credstore
 	# anaconda
-	install -D -m0644 anaconda_custom.py $(DESTDIR)/usr/share/anaconda/installclasses/rbuilder.py
-	install -D -m0644 welcome_gui.py $(DESTDIR)/usr/share/anaconda/
-	install -D -m0644 welcome_text.py $(DESTDIR)/usr/share/anaconda/
+	install -d -m0755 $(DESTDIR)/usr/share/anaconda
+	cp -a anaconda/* $(DESTDIR)/usr/share/anaconda/
 	# jabberd
 	mkdir -p $(DESTDIR)/usr/share/rbuilder/jabberd
 	chmod 0750 $(DESTDIR)/usr/share/rbuilder/jabberd
