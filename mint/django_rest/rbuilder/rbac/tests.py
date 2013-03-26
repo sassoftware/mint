@@ -636,7 +636,7 @@ class RbacEngineTests(RbacEngine):
 
     def testGrantMatrixForNewRole(self):
         # RCE-1444
-        role = models.RbacRole.objects.create(
+        models.RbacRole.objects.create(
             name='guru',
             created_by=usersmodels.User.objects.get(user_name='admin'),
             modified_by=usersmodels.User.objects.get(user_name='admin'),
