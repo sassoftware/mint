@@ -1165,7 +1165,8 @@ class XObjModel(models.Model):
         """
         if not etreeModel:
             etreeModel = self.serialize(request)
-        return etree.tostring(etreeModel)
+        return etree.tostring(etreeModel, pretty_print=True,
+                encoding="UTF-8", xml_declaration=True)
 
     def to_json(self, request=None, xobj_model=None):
         """
