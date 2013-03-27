@@ -362,8 +362,9 @@ class QuerySetManager(basemanager.BaseManager):
                 self.mgr.rollback()
             except:
                 pass
+            # Rolling back *should* drop the temporary table too
             raise exc[0], exc[1], exc[2]
-        finally:
+        else:
             cu.execute("DROP TABLE tmp_queryset_tags")    
 
     def _tagGeneric_internal(self, querySet, tagTableName, tagResourceField, 
