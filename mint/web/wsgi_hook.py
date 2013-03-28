@@ -59,6 +59,11 @@ class application(object):
     def __init__(self, environ, start_response):
         coveragehook.install()
         mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+        # gunicorn likes to umask(0) when daemonizing, so put back something
+        # reasonable if that's the case.
+        oldUmask = os.umask(022)
+        if oldUmask != 0:
+            os.umask(oldUmask)
         self.environ = environ
         try:
             self.req = self.requestFactory(environ)
