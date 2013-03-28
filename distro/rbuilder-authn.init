@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #  chkconfig: 345 30 50
 #  description: rBuilder external authentication service
@@ -6,7 +6,11 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-scriptname=`basename $0`
+scriptname=$(basename $0)
+if [ ${scriptname:0:1} = "S" -o ${scriptname:0:1} = "K" ]
+then
+    scriptname=${scriptname:3}
+fi
 servicename=authsrv
 pidfile=/var/run/rbuilder-authn.pid
 rundir=/var/lib/twisted-taps/rbuilder-authn/
@@ -33,7 +37,7 @@ fi
 result=0
 case "$1" in
     start)
-        echo -n "Starting rbuilder-authn: twistd"
+        echo -n "Starting rbuilder-authn:"
         twistd --pidfile=$pidfile --rundir=$rundir --logfile=$logfile $servicename
         result=$?
         if [ "$result" -eq 0 ]
@@ -47,7 +51,7 @@ case "$1" in
         ;;
 
     stop)
-        echo -n "Stopping rbuilder-authn: twistd"
+        echo -n "Stopping rbuilder-authn:"
         killproc -p $pidfile $scriptname
         result=$?
         rm -f /var/lock/subsys/$scriptname
