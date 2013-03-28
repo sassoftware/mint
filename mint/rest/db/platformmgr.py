@@ -371,6 +371,7 @@ class Platforms(object):
             label=platformLabel,
             enabled=int(platformModel.enabled or 0),
             projectId=projectId,
+            upstream_url=platformModel.upstream_url,
         )
 
         # isFromDisk is a field that's not exposed in the API, so treat it
@@ -388,7 +389,8 @@ class Platforms(object):
                       "exist: %s" % (platformLabel, e))
 
         platformModel.platformId = platformId
-        self._updateDatabasePlatformSources(platformModel, platformDef)
+        if platformDef:
+            self._updateDatabasePlatformSources(platformModel, platformDef)
         return platformId
 
     def _update(self, platformModel, platformDef):
@@ -405,7 +407,8 @@ class Platforms(object):
                 time_refreshed = current_timestamp
             WHERE platformId = ?"""
         cu.execute(sql, platformName, abstract, configurable, platformModel.upstream_url, platformId)
-        self._updateDatabasePlatformSources(platformModel, platformDef)
+        if platformDef:
+            self._updateDatabasePlatformSources(platformModel, platformDef)
         return platformId
 
     def _addComputedFields(self, platformModel):
@@ -1160,7 +1163,8 @@ class PlatformManager(manager.Manager):
         # Local or mirrored project is accessible
         return False
 
-    def _lookupFromRepository(self, platformLabel, createPlatDef):
+    def _lookupFromRepository(self, platform, createPlatDef):
+        platformLabel = platform
         if self.isOffline(platformLabel):
             return None
 
@@ -1233,7 +1237,10 @@ class PlatformManager(manager.Manager):
         if platform.isPlatform and createPlatDef:
             createPlatDef = False
 
-        pl = self._lookupFromRepository(platformLabel, createPlatDef)
+        if createPlatDef:
+            pl = self._lookupFromRepository(platform, createPlatDef)
+        else:
+            pl = None
 
         # Now save the platform
         cu = self.db.db.cursor()
