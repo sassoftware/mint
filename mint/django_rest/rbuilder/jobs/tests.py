@@ -199,7 +199,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         job = obj.job
         self.failUnlessEqual(job.descriptor.id, "http://testserver/api/v1/target_types/6/descriptor_create_target")
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
@@ -353,7 +353,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         system = invmodels.System.objects.get(system_id=system.system_id)
         self.assertEquals(system.has_running_jobs, True)
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         jobXml = """
 <job>
@@ -430,7 +430,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
 
         eventUuids = [ x.args[0].pop('eventUuid') for x in callList ]
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the system
         self.failUnlessEqual(
             [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
@@ -481,7 +481,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         callList = repClient.getCallList()
         eventUuids = [ x.args[0].pop('eventUuid') for x in callList[1:] ]
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         # Make sure the job is related to the system
         self.failUnlessEqual(
@@ -526,7 +526,7 @@ class JobCreationTest(BaseJobsTest, RepeaterMixIn):
         self.assertXMLEquals(response.content, """
 <fault><code>400</code><message>Unsupported management interface</message><traceback></traceback></fault>""")
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         dbsystem = system.__class__.objects.get(system_id=system.system_id)
         self.assertEquals(bool(dbsystem.has_active_jobs), True)
@@ -737,7 +737,7 @@ Some more errors here
         jobXml = self._createUpdateXml(system.system_id, topLevelGroup, str(dryRun).lower())
         job = self._postJob(jobXml, system.system_id)
 
-        dbjob = models.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         self._confirmRmakePost(payload, dbjob)
 
