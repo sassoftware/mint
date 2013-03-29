@@ -105,7 +105,7 @@ class PersistentCache(object):
             self._persist()
         return ret
 
-    def _refresh(self, key):
+    def _refresh(self, key, **kwargs):
         """
         Method to be implemented by sub classes for fetching data.
         """
@@ -131,7 +131,7 @@ class PersistentCache(object):
         if commit:
             self._persist()
 
-    def get(self, key):
+    def get(self, key, **kwargs):
         """
         Get the value for a given key.
         """
@@ -156,11 +156,11 @@ class PersistentCache(object):
                     # Negative cache is still fresh.
                     return None
 
-        return self.refresh(key)
+        return self.refresh(key, **kwargs)
 
-    def refresh(self, key):
+    def refresh(self, key, **kwargs):
         """
         Fetch data for a given key that is not in the cache.
         """
 
-        return self._update(key, self._refresh(key))
+        return self._update(key, self._refresh(key, **kwargs))

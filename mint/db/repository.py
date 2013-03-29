@@ -431,11 +431,11 @@ class RepositoryHandle(object):
         Return the "database tuple" for this project. Don't call this
         directly if you intend to open the database; use getReposDB().
         """
-        database = self._projectInfo['database']
-        if database is None:
+        if not self.hasDatabase:
             raise RuntimeError("Cannot open database for external project %r"
                     % (self.shortName,))
-        elif ' ' in database:
+        database = self._projectInfo['database'] or 'default'
+        if ' ' in database:
             # It's a connect string w/ driver and path
             driver, path = database.split(' ', 1)
         else:

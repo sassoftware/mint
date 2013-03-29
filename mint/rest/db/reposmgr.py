@@ -303,13 +303,12 @@ class RepositoryManager(manager.Manager):
         self._generateConaryrcFile()
 
     def getIncomingMirrorUrlByLabel(self, label):
-        try:
-            mirrorId = self.db.db.inboundMirrors.getIdByColumn(
-                    'sourceLabels', label)
-            mirror = self.db.db.inboundMirrors.get(mirrorId)
-            return mirror['sourceUrl']
-        except mint_error.ItemNotFound, e:
-            return []
+        mirrorId = self.db.db.inboundMirrors.getIdByHostname(
+                label.split('@')[0])
+        if not mirrorId:
+            return None
+        mirror = self.db.db.inboundMirrors.get(mirrorId)
+        return mirror['sourceUrl']
 
     def addExternalRepository(self, productId, hostname, domainname, url, 
                               authInfo, mirror=True):

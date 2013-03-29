@@ -230,7 +230,8 @@ class Platforms(object):
     def getPlatformModel(self, platform, withRepositoryLookups=True,
             withComputedFields=True):
         if withRepositoryLookups:
-            platformDef = self.platformCache.get(str(platform.label))
+            platformDef = self.platformCache.get(str(platform.label),
+                    platform=platform)
         else:
             platformDef = None
         self._updatePlatformFromPlatformDefinition(platform, platformDef)
@@ -239,7 +240,8 @@ class Platforms(object):
         return platform
 
     def _getPlatformTroveName(self, platform):
-        platformDef = self.platformCache.get(str(platform.label))
+        platformDef = self.platformCache.get(str(platform.label),
+                platform=platform)
         if not platformDef:
             return None
         srcTroves = [s for s in platformDef.getSearchPaths() \
@@ -417,11 +419,8 @@ class Platforms(object):
         # called when fetching a platform.
         if self.db.siteAuth:
             if platformModel.configurable:
-                # XXX this is a hack, we need the platform model passed to the
-                # platform cache somehow
-                self._platformModel = platformModel
-                mirrorPermission = self.platformCache.getMirrorPermission(platformModel.label)
-                del self._platformModel
+                mirrorPermission = self.platformCache.getMirrorPermission(
+                        platformModel.label, platform=platformModel)
             else:
                 mirrorPermission = False
             platformModel.mirrorPermission = mirrorPermission
@@ -705,11 +704,8 @@ class Platforms(object):
 
     def _getPlatformSourceStatus(self, platform):
         platStatus = models.PlatformSourceStatus()
-        # XXX this is a hack, we need the platform model passed to the
-        # platform cache somehow
-        self._platformModel = platform
-        valid, connected, message = self.platformCache.getStatus(platform.label)
-        del self._platformModel
+        valid, connected, message = self.platformCache.getStatus(
+                platform.label, platform=platform)
         platStatus.valid = valid
         platStatus.connected = connected
         platStatus.message = message
@@ -1269,7 +1265,8 @@ class PlatformManager(manager.Manager):
 
     def getPlatformImageTypeDefs(self, request, platformId):
         platform = self.platforms.getById(platformId)
-        platDef = self.platforms.platformCache.get(platform.label)
+        platDef = self.platforms.platformCache.get(platform.label,
+                platform=platform)
         from mint import buildtypes
         from mint.rest.api import productversion
         buildDefModels = []
@@ -1421,7 +1418,22 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def getReposMgr(self):
         return self.mgr().db.productMgr.reposMgr
 
-    def _getPlatDef(self, client, labelStr):
+    def _getPlatDef(self, labelStr, url=None):
+        reposMgr = self.getReposMgr()
+        client = reposMgr.getAdminClient()
+        if url:
+            fqdn = labelStr.split('@')[0]
+            if reposMgr.db.siteAuth:
+                entitlement = reposMgr.db.siteAuth.entitlementKey
+                if reposMgr.db.isOffline():
+                    # Remote will not be reachable
+                    return None
+            else:
+                entitlement = None
+            serverProxy = reposMgr.db.reposShim.getServerProxy(fqdn, url, None,
+                    [entitlement])
+            client.repos.c.cache[fqdn] = serverProxy
+
         try:
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
@@ -1442,66 +1454,51 @@ class PlatformDefCache(persistentcache.PersistentCache):
         platDef.label = labelStr
         return platDef
 
-    def _refresh(self, labelStr):
+    def _refresh(self, labelStr, platform=None):
         if isinstance(labelStr, tuple):
             if labelStr == self._mirrorKey(labelStr[1]):
-                return self._refreshMirrorPermission(labelStr[1], platform=None)
+                return self._refreshMirrorPermission(labelStr[1],
+                        platform=platform)
             if labelStr == self._statusKey(labelStr[1]):
-                return self._refreshStatus(labelStr[1], platform=None)
+                return self._refreshStatus(labelStr[1], platform=platform)
             raise Exception("XXX")
-        if self.mgr().isOffline(labelStr):
-            # Don't refresh if we're offline and would need to talk to a remote
-            # repository.
-            return None
         reposMgr = self.getReposMgr()
+        fqdn = labelStr.split('@')[0]
         try:
-            client = reposMgr.getAdminClient()
-            platDef = self._getPlatDef(client, labelStr)
-            return platDef
-        except proddef.ProductDefinitionTroveNotFoundError, e:
-            # Need to look at inboundmirrors table to get the sourceurl 
-            # for the platform so that we bypass the local repo.
-            sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
-            host = labelStr.split('@')[0]
-
-            if not sourceUrl:
-                # Try going straight to the platform label
-                sourceUrl = "https://%s/conary/" % host
-
+            handle = reposMgr.db.reposShim.getRepositoryFromFQDN(fqdn)
+        except errors.ProductNotFound:
+            handle = None
+        # If there's a project already configured then use that first.
+        if handle:
             try:
-                if reposMgr.db.siteAuth:
-                    entitlement = reposMgr.db.siteAuth.entitlementKey
-                    if reposMgr.db.isOffline():
-                        # Remote will not be reachable
-                        return None
-                else:
-                    entitlement = None
-                serverProxy = reposMgr.db.reposShim.getServerProxy(host,
-                    sourceUrl, None, [entitlement])
-                client.repos.c.cache[host] = serverProxy
-                platDef = self._getPlatDef(client, labelStr)
+                platDef = self._getPlatDef(labelStr)
                 return platDef
-            except (proddef.ProductDefinitionTroveNotFoundError,
-                    reposErrors.InsufficientPermission):
-                log.info("Platform %s is not accessible because "
-                        "it is not entitled.", labelStr)
-                return None
-            except:
-                log.exception("Failed to lookup platform definition "
-                        "on label %s:", labelStr)
-                return None
-
-    def _getPlatform(self, labelStr, platform, commit=True):
-        # Helper function to reduce code duplication - if a platform is not
-        # presented, attempt to fetch it from the cache; if not available,
-        # clear the caches
-        if platform is not None:
-            return platform
-        platform = self.get(labelStr)
-        if platform is None:
-            self.clearPlatformData(labelStr, commit=commit)
+            except proddef.ProductDefinitionTroveNotFoundError, err:
+                pass
+        # Bail out now if the project is local, because there is no upstream.
+        if handle and not handle.isExternal:
+            log.error("No platform definition found on label %s", labelStr)
             return None
-        return platform
+        # Don't refresh if we're offline and would need to talk to a remote
+        # repository.
+        if reposMgr.db.isOffline():
+            return None
+        # Use inbound mirror URL if available, or the platform stub's upstream
+        # URL otherwise.
+        sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
+        if not sourceUrl and platform:
+            sourceUrl = platform.upstream_url
+        if not sourceUrl:
+            sourceUrl = "https://%s/conary/" % fqdn
+        try:
+            platDef = self._getPlatDef(labelStr, sourceUrl)
+            return platDef
+        except (proddef.ProductDefinitionTroveNotFoundError,
+                reposErrors.InsufficientPermission):
+            log.info("Platform %s is not accessible because "
+                    "it is not entitled.", labelStr)
+            return None
+        return None
 
     @classmethod
     def _mirrorKey(cls, labelStr):
@@ -1513,17 +1510,15 @@ class PlatformDefCache(persistentcache.PersistentCache):
 
     def _refreshMirrorPermission(self, labelStr, platform=None, commit=True):
         platformMgr = self.mgr()
-        platformModel = platformMgr.platforms._platformModel
-        mirrorPermission = platformMgr.platforms._checkMirrorPermissions(platformModel)
+        mirrorPermission = platformMgr.platforms._checkMirrorPermissions(platform)
         self._update(self._mirrorKey(labelStr), mirrorPermission,
             commit=commit)
         return mirrorPermission
 
     def _refreshStatus(self, labelStr, platform=None, commit=True):
         platformMgr = self.mgr()
-        platformModel = platformMgr.platforms._platformModel
         (valid, connected, message) = platformMgr.platforms._getPlatformStatus(
-            platformModel)
+                platform)
         self._update(self._mirrorKey(labelStr), (valid, connected, message),
             commit=commit)
         return (valid, connected, message)
@@ -1534,11 +1529,11 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def _clearStatus(self, labelStr, commit=True):
         self.clearKey(self._statusKey(labelStr), commit=commit)
 
-    def getMirrorPermission(self, labelStr):
-        return self.get(self._mirrorKey(labelStr))
+    def getMirrorPermission(self, labelStr, platform=None):
+        return self.get(self._mirrorKey(labelStr), platform=platform)
 
-    def getStatus(self, labelStr):
-        return self.get(self._statusKey(labelStr))
+    def getStatus(self, labelStr, platform=None):
+        return self.get(self._statusKey(labelStr), platform=platform)
 
     def clearPlatformData(self, labelStr, commit=True):
         self._clearMirrorPermission(labelStr, commit=commit)

@@ -172,9 +172,15 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
             if label.startswith('localhost@'):
                 return oldLoadFromRepository(slf, self.cclient, label)
             return oldLoadFromRepository(slf, oldClient, label)
-
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
             newLoadFromRepository)
+
+        oldGetPlatDef = platformmgr.PlatformDefCache._getPlatDef
+        def newGetPlatDef(slf, labelStr, url=None):
+            if url == 'https://localhost/conary/':
+                url = self.cfg.repositoryMap.find('localhost')
+            return oldGetPlatDef(slf, labelStr, url)
+        self.mock(platformmgr.PlatformDefCache, '_getPlatDef', newGetPlatDef)
 
     def _addPlatform(self, label, platformDef):
         restdb = self.openRestDatabase()

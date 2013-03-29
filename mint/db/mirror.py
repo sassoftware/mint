@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 from mint.lib import database
 
@@ -16,17 +14,13 @@ class InboundMirrorsTable(database.KeyedTable):
 
     def getIdByHostname(self, hostname):
         cu = self.db.cursor()
-        sql = """
-            SELECT inboundMirrorId, sourceLabels, allLabels
-            FROM inboundMirrors
-        """
-        cu.execute(sql)
-        rows = cu.fetchall()
-        ret = []
-        for row in rows:
-            host = row[1].split('@')[0]
-            ret.append(row)
-        return ret
+        cu.execute("""
+        SELECT MIN(inboundMirrorId) FROM InboundMirrors
+        JOIN Projects ON Projects.projectId = InboundMirrors.targetProjectId
+        WHERE Projects.fqdn = ?
+        """, hostname)
+        return cu.fetchone()[0]
+
 
 class OutboundMirrorsTable(database.KeyedTable):
     name = 'OutboundMirrors'

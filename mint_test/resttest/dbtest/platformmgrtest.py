@@ -66,6 +66,7 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db.productMgr.reposMgr._mock.enableMethod('_getFqdn')
         self.db.productMgr.reposMgr._mock.enableMethod('_getNextMirrorOrder')
         self.db.productMgr.reposMgr._mock.enableMethod('_isProductExternal')
+        self.db.productMgr.reposMgr._mock.enableMethod('getIncomingMirrorUrlByLabel')
         self.db.productMgr.reposMgr._mock.enableByDefault()
         self.db.productMgr.reposMgr._mock.disable('createRepository')
         self.db.productMgr.reposMgr._mock.disable('_generateConaryrcFile')
