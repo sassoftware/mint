@@ -461,7 +461,6 @@ class Platforms(object):
     def load(self, platformId, platformLoad):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
-        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
         loadUri = platformLoad.loadUri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.tar', 'platform-load-')
@@ -479,11 +478,11 @@ class Platforms(object):
         platLoad.platformId = platformId
         platLoad.loadUri = platformLoad.loadUri
 
-        self.loader(platform, job.id, inFile, outFilePath, loadUri, repos)
+        self.loader(platform, job.id, inFile, outFilePath, loadUri)
 
         return platLoad
 
-    def _load(self, platform, jobId, inFile, outFilePath, uri, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, uri):
         # Open the job and commit after each state change
         job = self.jobStore.get(jobId, commitAfterChange = True)
         job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
@@ -734,6 +733,7 @@ class Platforms(object):
         pDefNotFoundMsgLocal = "Repository is empty, please manually load " + \
             "the preload for this platform available from %s."
         successMsg = "Available."
+        url = self._getUrl(platform)
 
         if platform.mode == 'auto':
             client = reposMgr.getAdminClient()
@@ -741,25 +741,24 @@ class Platforms(object):
             entitlement = self.db.productMgr.reposMgr.db.siteAuth.entitlementKey
             # Go straight to the host as defined by the platform, bypassing
             # any local repo map.
-            sourceUrl = self._getUrl(platform)
             try:
                 serverProxy = self.db.reposShim.getServerProxy(host,
-                    sourceUrl, None, [entitlement])
+                    url, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = proddef.PlatformDefinition()
                 platDef.loadFromRepository(client, platform.label)
             except reposErrors.OpenError, e:
                 remote = False
                 remoteConnected = False
-                remoteMessage = openMsg % sourceUrl
+                remoteMessage = openMsg % url
             except conaryErrors.ConaryError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = connectMsg % (sourceUrl, e)
+                remoteMessage = connectMsg % (url, e)
             except proddef.ProductDefinitionTroveNotFoundError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = pDefNotFoundMsg % sourceUrl
+                remoteMessage = pDefNotFoundMsg % url
             except Exception, e:
                 remote = False
                 remoteConnected = False
@@ -769,12 +768,10 @@ class Platforms(object):
                         "commercial license.  You are either missing the " + \
                         "entitlement for this platform or it is no longer valid"
                 else:
-                    remoteMessage = connectMsg % (sourceUrl, e)
+                    remoteMessage = connectMsg % (url, e)
 
         client = reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        url = reposMgr._getFullRepositoryMap().get(
-                platform.repositoryHostname, self._getUrl(platform))
 
         try:
             platDef.loadFromRepository(client, platform.label)

@@ -181,7 +181,6 @@ class ProjectManager(basemanager.BaseManager):
                 self.restDb.publisher.notify('ProductHidden', oldProject.pk)
 
         project.save()
-        self.mgr.generateConaryrcFile()
         project.modified_by = for_user
         project.modifed_date = time.time()
         return project

@@ -28,7 +28,6 @@ class ProjectsTestCase(RbacEngine):
         RbacEngine.setUp(self)
         mock.mock(reposmanager.ReposManager, "createRepositoryForProject")
         mock.mock(reposmanager.ReposManager, "createSourceTrove")
-        mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
         MockProdDef = mock.MockObject()
         MockProdDef.getImageGroup._mock.setReturn("group-foo-appliance")
         MockProdDef.loadFromRepository._mock.setReturn(MockProdDef)

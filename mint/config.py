@@ -114,8 +114,6 @@ class MintConfig(conarycfg.ConfigFile):
     commitActionEmail       = (CfgString, None)
     commitAction            = (CfgString, None)
     commitEmail             = (CfgString, None)
-    conaryRcFile            = (CfgPath, '/srv/rbuilder/config/conaryrc.generated')
-    createConaryRcFile      = (CfgBool, True)
     dbDriver                = (CfgString, 'sqlite')
     dbPath                  = (CfgString, None)
     debugMode               = (CfgBool, False)
@@ -310,6 +308,8 @@ class MintConfig(conarycfg.ConfigFile):
     EnableMailLists         = None
     MailListBaseURL         = None
     MailListPass            = None
+    conaryRcFile            = None
+    createConaryRcFile      = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

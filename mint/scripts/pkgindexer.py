@@ -207,11 +207,8 @@ class UpdatePackageIndexExternal(PackageIndexer):
                 labels[hostname] = versions.Label(l.keys()[0])
                 projectIds[hostname] = projectId
 
-                ccfg = conarycfg.ConaryConfiguration()
-                conarycfgFile = os.path.join(self.cfg.dataPath, 'config',
-                        'conaryrc')
-                if os.path.exists(conarycfgFile):
-                    ccfg.read(conarycfgFile)
+                ccfg = conarycfg.ConaryConfiguration(False)
+                ccfg.configLine('proxyMap * conarys://localhost')
                 ccfg.root = ccfg.dbPath = ':memory:'
                 ccfg.repositoryMap = repMap
                 if not localMirror:

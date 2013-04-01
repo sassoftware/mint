@@ -69,7 +69,6 @@ class PlatformManagerTest(restbase.BaseRestTest):
         self.db.productMgr.reposMgr._mock.enableMethod('getIncomingMirrorUrlByLabel')
         self.db.productMgr.reposMgr._mock.enableByDefault()
         self.db.productMgr.reposMgr._mock.disable('createRepository')
-        self.db.productMgr.reposMgr._mock.disable('_generateConaryrcFile')
         self.db.productMgr.reposMgr._mock.disable('getAdminClient')
         self.db.productMgr.reposMgr._mock.disable('_getRepositoryHandle')
         self.db.productMgr.reposMgr._mock.disable('_getRepositoryServer')

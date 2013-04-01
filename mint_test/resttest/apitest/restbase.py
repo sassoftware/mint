@@ -113,7 +113,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 architectureRef = archRef,
                 containerTemplateRef = containerTemplateRef,
                 stages = stageRefs)
-        client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
         pd.setPlatformName('localhost@rpath:plat-1')
         pd.saveToRepository(client, 'Product Definition commit\n')
         return pd
@@ -125,7 +125,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         label = self.productDefinition.getDefaultLabel()
         db = self.openRestDatabase()
         self.setDbUser(db, 'adminuser')
-        client = db.productMgr.reposMgr.getConaryClientForProduct(self.productShortName)
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
         repos = client.getRepos()
         self.addComponent("foo:bin=%s" % label, repos=repos)
         self.addCollection("foo=%s" % label, ['foo:bin'], repos=repos)
@@ -280,8 +280,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
     def getTestProjectRepos(self):
         db = self.openMintDatabase()
-        reposMgr = db.productMgr.reposMgr
-        return reposMgr.getRepositoryClientForProduct('testproject')
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
+        return client.repos
 
     def assertBlobEquals(self, actual, expected):
         """

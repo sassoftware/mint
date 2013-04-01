@@ -20,6 +20,7 @@ import stat
 from urllib import unquote
 from mimetypes import guess_type
 from webob import exc as web_exc
+from webob import response
 
 from mint import urltypes
 from mint import mint_error
@@ -305,3 +306,17 @@ class SiteHandler(WebHandler):
 
         fObj.commit(sync=False)
         return ''
+
+    def conaryrc(self, auth):
+        out = ''
+        if 'repomap' in self.req.params:
+            repoMap = {}
+            for handle in self.reposShim.iterRepositories(
+                    'NOT hidden AND NOT disabled'):
+                repoMap[handle.fqdn] = handle.getURL()
+            for name, url in sorted(repoMap.items()):
+                out += 'repositoryMap %s %s\n' % (name, url)
+        proxy = 'conarys://' + self.req.application_url.split('://')[-1]
+        out += 'proxyMap * %s\n' % proxy
+        self.response.content_type = 'text/plain'
+        return out

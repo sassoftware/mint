@@ -349,7 +349,7 @@ class MintServer(object):
                     continue
                 ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
-    def _getProjectConaryConfig(self, project, internal=True, repoToken=None):
+    def _getProjectConaryConfig(self, project, repoToken=None):
         """
         Creates a conary configuration object, suitable for internal or external
         rBuilder use.
@@ -359,20 +359,9 @@ class MintServer(object):
            NetClient/ShimNetClient internal to rBuilder; False otherwise.
         @type internal: C{bool}
         """
-        ccfg = project.getConaryConfig()
-        conarycfgFile = self.cfg.conaryRcFile
-        if not internal:
-            ccfg.conaryProxy = {} #Clear the internal proxies, as they're "localhost"
-            conarycfgFile += '-v1'
-
-        # This step reads all of the repository maps for cross talk, and, if
-        # external, sets up the cfg object to use the rBuilder conary proxy
-        if os.path.exists(conarycfgFile):
-            ccfg.read(conarycfgFile)
-
-        self._addInternalConaryConfig(ccfg, repoMaps=False,
-                repoToken=repoToken)
-
+        ccfg = conarycfg.ConaryConfiguration(False)
+        ccfg.conaryProxy = self.cfg.getInternalProxies()
+        self._addInternalConaryConfig(ccfg, repoMaps=True, repoToken=repoToken)
         return ccfg
 
     def _getProductDefinition(self, project, version):
@@ -715,7 +704,6 @@ class MintServer(object):
             raise
         self.db.commit()
 
-        self._generateConaryRcFile()
         sync = repository_sync.SyncTool(self.cfg, self.db)
         try:
             sync.syncReposByFQDN(fqdn)
@@ -1069,8 +1057,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             pass
         # Hide the project
         self.projects.hide(projectId)
-
-        self._generateConaryRcFile()
         return True
 
     @typeCheck(int)
@@ -1080,7 +1066,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.PermissionDenied
 
         self.projects.unhide(projectId)
-        self._generateConaryRcFile()
         return True
 
     @typeCheck(int, bool)
@@ -1651,8 +1636,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterLabelAccess(labelId)
         self.labels.editLabel(labelId, label, url, authType, username,
             password, entitlement)
-        if self.cfg.createConaryRcFile:
-            self._generateConaryRcFile()
         return True
 
     @typeCheck(int, int)
@@ -1661,42 +1644,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def removeLabel(self, projectId, labelId):
         self._filterProjectAccess(projectId)
         return self.labels.removeLabel(projectId, labelId)
-
-    def _getFullRepositoryMap(self):
-        repoMap = {}
-        for handle in self.reposMgr.iterRepositories(
-                'NOT hidden AND NOT disabled'):
-            repoMap[handle.fqdn] = handle.getURL()
-        return repoMap
-
-    def _generateConaryRcFile(self):
-        if not self.cfg.createConaryRcFile:
-            return False
-        mint.rest.db.reposmgr._cachedCfg = None
-
-        repoMaps = self._getFullRepositoryMap()
-
-        fObj_v0 = atomicOpen(self.cfg.conaryRcFile, chmod=0644)
-        fObj_v1 = atomicOpen(self.cfg.conaryRcFile + "-v1", chmod=0644)
-        for host, url in repoMaps.iteritems():
-            fObj_v0.write('repositoryMap %s %s\n' % (host, url))
-            fObj_v1.write('repositoryMap %s %s\n' % (host, url))
-
-        # add proxy stuff for version 1 config clients
-        if self.cfg.useInternalConaryProxy:
-            fObj_v1.write('conaryProxy http http://%s.%s\n' % (
-                self.cfg.hostName, self.cfg.siteDomainName))
-            fObj_v1.write('conaryProxy https https://%s\n' % (
-                self.cfg.secureHost,))
-        self.cfg.displayKey('proxy', out=fObj_v1)
-
-        fObj_v0.commit()
-        fObj_v1.commit()
-
-    @requiresAuth
-    @private
-    def getFullRepositoryMap(self):
-        return self._getFullRepositoryMap()
 
     #
     # BUILD STUFF
@@ -3154,7 +3101,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.restDb.productMgr.reposMgr.createRepository(targetProjectId,
                     createMaps=False)
 
-        self._generateConaryRcFile()
         return x
 
     @private
@@ -3170,7 +3116,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 sourcePassword = sourcePassword,
                 sourceEntitlement=sourceEntitlement,
                 allLabels = int(allLabels))
-        self._generateConaryRcFile()
         return x
 
     @private
@@ -3665,13 +3610,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
-        # We should use internal=False here because the configuration we
-        # generate here is used by the package creator service, not rBuilder.
-        # However, pcreator is always localhost, so use that for proxying.
         repoToken = os.urandom(16).encode('hex')
         self.db.auth_tokens.addToken(repoToken, self.auth.userId)
-        cfg = self._getProjectConaryConfig(project, internal=False,
-                repoToken=repoToken)
+        cfg = self._getProjectConaryConfig(project, repoToken=repoToken)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
         localhost = 'localhost'
@@ -4310,11 +4251,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
                                    'deleteSession')
-
-        # Why do this when reloading the tables?  Certainly seems
-        # unnecessary when we're reloading the tables for every request.
-        #if self.db.tablesReloaded:
-        #    self._generateConaryRcFile()
 
     @typeCheck(int)
     @requiresAdmin

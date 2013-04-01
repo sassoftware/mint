@@ -268,7 +268,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                             'maintenance.lock')
 
-    cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
     util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
     util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
 
@@ -278,9 +277,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
 
     cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
     cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
-
-    f = open(cfg.conaryRcFile, 'w')
-    f.close()
     return cfg
 
 mintCfg = None
@@ -385,7 +381,6 @@ class MintApacheServer(rephelp.ApacheServer):
 
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
-        open(self.mintCfg.conaryRcFile, 'w').close()
 
     def _setUpDjangoSettingsModule(self):
         dbDriver = self.mintDb.driver == 'sqlite' and 'sqlite3' or 'postgresql_psycopg2'

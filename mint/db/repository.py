@@ -26,6 +26,7 @@ from conary.build import nextversion
 from conary.conaryclient import filetypes
 from conary.dbstore.sqlerrors import CursorError
 from conary.lib import util
+from conary.lib.http import request
 from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import netclient
@@ -279,9 +280,10 @@ class RepomanMixin(object):
 
 class RepositoryManager(RepomanMixin):
 
-    def __init__(self, cfg, db, bypass=False):
+    def __init__(self, cfg, db, bypass=False, baseUrl=None):
         self.cfg = cfg
         self.db = db
+        self.baseUrl = baseUrl
         self._repoInit(bypass)
 
     def iterRepositories(self, whereClause='', *args):
@@ -317,7 +319,7 @@ class RepositoryManager(RepomanMixin):
                 *args)
 
         for row in cu:
-            yield RepositoryHandle(self, row)
+            yield RepositoryHandle(self, row, baseUrl=self.baseUrl)
 
     def _getRepository(self, whereClause, *args):
         """
@@ -341,11 +343,12 @@ class RepositoryManager(RepomanMixin):
 
 class RepositoryHandle(object):
 
-    def __init__(self, manager, projectInfo):
+    def __init__(self, manager, projectInfo, baseUrl=None):
         self._manager = weakref.ref(manager)
         self._cfg = manager.cfg
         self._db = manager.db
         self._projectInfo = projectInfo
+        self._baseUrl = baseUrl
 
         # Switch to a subclass for whichever database driver is needed.
         if self.hasDatabase:
@@ -401,27 +404,22 @@ class RepositoryHandle(object):
 
 
     # Getters for repository objects
-    def _getURLPieces(self):
-        if self._cfg.SSL:
-            protocol, port = 'https', 443
-            host = self._cfg.secureHost
+    def _getBaseUrl(self):
+        if self._baseUrl:
+            url = request.URL(self._baseUrl)
+            # Upgrade to HTTPS
+            if url.scheme == 'http' and url.hostport.port in (80, None):
+                hostport = url.hostport._replace(port=443)
+                url = url._replace(scheme='https', hostport=hostport)
+            return url
         else:
-            protocol, port = 'http', 80
-            host = self._cfg.siteHost
-
-        if ':' in host:
-            host, port = host.split(':')
-            port = int(port)
-
-        return protocol, host, port
+            return request.URL('https://' + self._cfg.secureHost)
 
     def getURL(self):
         if self.hasDatabase:
             # Local databases (including mirrors) are constructed based on the
             # rBuilder configuration.
-            protocol, host, port = self._getURLPieces()
-            return '%s://%s:%d/repos/%s/' % (protocol, host, port,
-                    self.shortName)
+            return '%s/repos/%s/' % (self._getBaseUrl(), self.shortName)
         else:
             # Remote repositories' info comes from the Projects table.
             return self._projectInfo['url']
@@ -808,10 +806,10 @@ WHERE level >= 0
         permissions in the repository, otherwise the proxy will have access to
         all roles.
         """
-        protocol, _, port = self._getURLPieces()
+        url = self._getBaseUrl()
         authToken = self.getAuthToken(userId)
         return shimclient.ShimServerProxy(self.getShimServer(),
-                protocol, port, authToken)
+                url.scheme, url.hostport.port, authToken)
 
     def getServerProxy(self, userId=None):
         """

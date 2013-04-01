@@ -499,37 +499,6 @@ def weak_signature_call(_func, *args, **kwargs):
             if arg in argnames)
     return _func(*args, **keep_args)
 
-def formatProductVersion(versions, currentVersion):
-    if currentVersion is None:
-        return "Not Selected"
-    ret = None
-    namespaces = dict()
-    for vId, b, ns, ver, nada in versions:
-        namespaces[ns] = 1
-        if vId == currentVersion:
-            ret = (ns, ver)
-    if not ret:
-        raise RuntimeError("Could not find the current version in the version list")
-    showNamespace = len(namespaces.keys()) > 1
-    if showNamespace:
-        ret = "%s (%s)" % (ret[1], ret[0])
-    else:
-        ret = "%s" % ret[1]
-    return ret
-
-def getBasicConaryConfiguration(mintCfg):
-    """ Return a basic conary client configuration. """
-
-
-    ccfg = conarycfg.ConaryConfiguration()
-    conarycfgFile = os.path.join(mintCfg.dataPath, 'config', 'conaryrc')
-    if os.path.exists(conarycfgFile):
-        ccfg.read(conarycfgFile)
-    ccfg.dbPath = ':memory:'
-    ccfg.root   = ':memory:'
-    ccfg = configureClientProxies(ccfg, mintCfg.useInternalConaryProxy, mintCfg.proxy, mintCfg.getInternalProxies())
-    return ccfg
-
 
 def parseFlavor(fStr):
     """

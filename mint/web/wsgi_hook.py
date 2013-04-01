@@ -113,7 +113,8 @@ class application(object):
 
     def handleRequest(self):
         self.db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        self.rm = RepositoryManager(self.cfg, self.db)
+        self.rm = RepositoryManager(self.cfg, self.db,
+                baseUrl=self.req.application_url)
         self.authToken = self._getAuth()
         self.authToken = netserver.AuthToken(*self.authToken)
         self.authToken.remote_ip = self.req.client_addr
@@ -164,6 +165,7 @@ class application(object):
                 db=self.db,
                 session=self.session,
                 authToken=self.authToken,
+                reposShim=self.rm,
                 )
         return webfe._handle()
 

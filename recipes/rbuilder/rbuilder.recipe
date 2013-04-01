@@ -149,8 +149,6 @@ class rBuilderProduct(CPackageRecipe):
 
         # allow apache to write to a few "generated" files
         r.Ownership('apache', 'root',
-            '%(servicedir)s/rbuilder/config/conaryrc.generated')
-        r.Ownership('apache', 'root',
             '%(servicedir)s/rbuilder/config/rbuilder-(generated|custom).conf')
         r.Ownership('apache', 'root',
             r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
@@ -174,8 +172,6 @@ class rBuilderProduct(CPackageRecipe):
 
         # These config files are managed at runtime or by the admin, not
         # by conary.
-        r.InitialContents(r'%(servicedir)s/rbuilder/config/'
-            'conaryrc(\.generated)?')
         r.InitialContents(r'%(servicedir)s/rbuilder/config/'
             'rbuilder-(custom|generated).conf')
         r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')

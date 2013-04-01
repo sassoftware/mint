@@ -39,8 +39,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
     def createRepositoryForProject(self, project, createMaps=True):
         repos = self.getRepositoryForProject(project)
 
-        self.generateConaryrcFile()
-
         if repos.hasDatabase:
             # Create the repository infrastructure (db, dirs, etc.).
             repos.create()
@@ -133,38 +131,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
             auth_type=authType, user_name=authUser, password=authPass,
             entitlement=entitlement)
         newLabel.save()
-
-    @exposed
-    def generateConaryrcFile(self):
-        global _cachedCfg
-        _cachedCfg = None
-        if not self.cfg.createConaryRcFile:
-            return
-        repoMaps = self._getFullRepositoryMap()
-
-        fObj_v0 = unixutils.atomicOpen(self.cfg.conaryRcFile, 
-                                       chmod=0644)
-        fObj_v1 = unixutils.atomicOpen(self.cfg.conaryRcFile + "-v1", 
-                                       chmod=0644)
-        for host, url in repoMaps.iteritems():
-            fObj_v0.write('repositoryMap %s %s\n' % (host, url))
-            fObj_v1.write('repositoryMap %s %s\n' % (host, url))
-        # add proxy stuff for version 1 config clients
-        if self.cfg.useInternalConaryProxy:
-            fObj_v1.write('conaryProxy http http://%s.%s\n' % (
-                self.cfg.hostName, self.cfg.siteDomainName))
-            fObj_v1.write('conaryProxy https https://%s\n' % (
-                self.cfg.secureHost,))
-        self.cfg.displayKey('proxy', out=fObj_v1)
-
-        fObj_v0.commit()
-        fObj_v1.commit()
-
-    def _getFullRepositoryMap(self):
-        repoMap = {}
-        for handle in self.iterRepositories(hidden=False, disabled=False):
-            repoMap[handle.fqdn] = handle.getURL()
-        return repoMap
 
     @exposed
     def getRepositoryForProject(self, project):

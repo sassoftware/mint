@@ -102,11 +102,6 @@ class PlatformsTest(BaseTest):
         # we already have a platform, so we must assume they've already been
         # created in the db.  call getPlatforms to create them for this test.
         self._getPlatforms()
-
-        mock.mockFunctionOnce(reposmgr.RepositoryManager,
-            '_getFullRepositoryMap', 
-            {'localhost' : 'http://localhost:8000/repos/localhost'})
-
         client = self.getRestClient(admin=True)
 
         # Enable the platform
@@ -364,9 +359,6 @@ class PlatformsTest(BaseTest):
         # Check the status now
         mock.mockFunctionOnce(proddef.PlatformDefinition,
                               'loadFromRepository', 1)
-        mock.mockFunctionOnce(reposmgr.RepositoryManager,
-                              '_getFullRepositoryMap', 
-                              {'localhost':'http://localhost/conary/'})
 
         platLabel = 'localhost@rpath:plat-1'
         platformMgr = self.openRestDatabase().platformMgr

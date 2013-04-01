@@ -755,9 +755,6 @@ class MintClient:
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
-    def getFullRepositoryMap(self):
-        return self.server.getFullRepositoryMap()
-
     def getAllProjectLabels(self, projectId):
         return self.server.getAllProjectLabels(projectId)
 

@@ -17,10 +17,9 @@ install: default-install
 	# data directories
 	mkdir -p $(DESTDIR)/srv/rbuilder/pki
 	# rBuilder config
-	install -D -m0644 conaryrc.default $(DESTDIR)/srv/rbuilder/config/conaryrc
+	touch $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	sed -i "s/python2.4/python$(PYVER)/g" $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
-	touch $(DESTDIR)/srv/rbuilder/config/conaryrc.generated
 	install -D -m0644 metadataDescriptor.xml $(DESTDIR)/srv/rbuilder/data/metadataDescriptor.xml
 	# rBuilder entitlement
 	install -D -m0644 entitlements.xml $(DESTDIR)/etc/conary/entitlements.xml

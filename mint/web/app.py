@@ -48,10 +48,11 @@ class MintApp(WebHandler):
     responseFactory = webob.Response
 
     def __init__(self, req, cfg, repServer = None, db=None, session=None,
-            authToken=None):
+            authToken=None, reposShim=None):
         self.req = req
         self.cfg = cfg
         self.db = db
+        self.reposShim = reposShim
 
         # always send html-strict; xhtml FTL
         # The default behavior of kid changed between 0.9.1 and 0.9.6
@@ -181,6 +182,7 @@ class MintApp(WebHandler):
             'errorMsgList':     self.errorMsgList,
             'output':           self.output,
             'remoteIp':         self.req.client_addr,
+            'reposShim':        self.reposShim,
         }
 
         # match the requested url to the right url handler

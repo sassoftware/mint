@@ -231,7 +231,6 @@ class AdminHandler(WebHandler):
         labelIdMap = self.client.getLabelsForProject(projectId)[0]
         label, labelId = labelIdMap.items()[0]
         labelInfo = self.client.getLabel(labelId)
-        conaryCfg = project.getConaryConfig()
 
         initialKwargs = {}
         initialKwargs['name'] = project.name
@@ -240,8 +239,7 @@ class AdminHandler(WebHandler):
         initialKwargs['backupExternal'] = project.backupExternal
 
         fqdn = versions.Label(label).getHost()
-        initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
-
+        initialKwargs['url'] = labelInfo['url']
         initialKwargs['authType'] = labelInfo['authType']
         initialKwargs['externalUser'] = labelInfo['username']
         initialKwargs['externalPass'] = labelInfo['password']
