@@ -238,7 +238,6 @@ class AdminHandler(WebHandler):
         initialKwargs['label'] = label
         initialKwargs['backupExternal'] = project.backupExternal
 
-        fqdn = versions.Label(label).getHost()
         initialKwargs['url'] = labelInfo['url']
         initialKwargs['authType'] = labelInfo['authType']
         initialKwargs['externalUser'] = labelInfo['username']

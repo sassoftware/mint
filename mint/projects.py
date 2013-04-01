@@ -1,23 +1,14 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-import os
 import re
-import string
 import socket
-import sys
-import time
 
 from mint.lib import database
 from mint.helperfuncs import truncateForDisplay
 from mint import helperfuncs
 from mint import userlevels
-from mint.mint_error import *
-
-from conary.deps import deps
-from conary.conarycfg import ConaryConfiguration
+from mint import mint_error
 
 
 class Project(database.TableObject):
@@ -91,7 +82,7 @@ class Project(database.TableObject):
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)
-        except ItemNotFound:
+        except mint_error.ItemNotFound:
             return userlevels.NONMEMBER
 
     def updateUserLevel(self, userId, level):
@@ -262,34 +253,34 @@ validLabel = re.compile('^[a-zA-Z][a-zA-Z0-9\-\@\.\:]*$')
 
 def _validateHostname(hostname, domainname, resHosts):
     if not hostname:
-        raise InvalidHostname
+        raise mint_error.InvalidHostname
     if validHost.match(hostname) == None:
-        raise InvalidHostname
+        raise mint_error.InvalidHostname
     if hostname in resHosts:
-        raise InvalidHostname
+        raise mint_error.InvalidHostname
     if (hostname + "." + domainname) == socket.gethostname():
-        raise InvalidHostname
+        raise mint_error.InvalidHostname
     return None
 
 def _validateShortname(shortname, domainname, resHosts):
     if not shortname:
-        raise InvalidShortname
+        raise mint_error.InvalidShortname
     if validHost.match(shortname) == None:
-        raise InvalidShortname
+        raise mint_error.InvalidShortname
     if shortname in resHosts:
-        raise InvalidShortname
+        raise mint_error.InvalidShortname
     if (shortname + "." + domainname) == socket.gethostname():
-        raise InvalidShortname
+        raise mint_error.InvalidShortname
     return None
 
 def _validateNamespace( namespace):
     v = helperfuncs.validateNamespace(namespace)
     if v != True:
-        raise InvalidNamespace
+        raise mint_error.InvalidNamespace
 
 def _validateProductVersion(version):
     if not version:
-        raise ProductVersionInvalid
+        raise mint_error.ProductVersionInvalid
     if not validProductVersion.match(version):
-        raise ProductVersionInvalid
+        raise mint_error.ProductVersionInvalid
     return None

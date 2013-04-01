@@ -20,7 +20,6 @@ import stat
 from urllib import unquote
 from mimetypes import guess_type
 from webob import exc as web_exc
-from webob import response
 
 from mint import urltypes
 from mint import mint_error

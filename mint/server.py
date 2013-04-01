@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import base64
@@ -16,9 +16,8 @@ import tempfile
 import StringIO
 
 from mint import buildtypes
-import mint.db.database
-import mint.rest.db.reposmgr
-import mint.rest.db.database
+from mint.db import database as mint_database
+from mint.rest.db import database as rest_database
 from mint import users
 from mint.lib import data
 from mint.lib import database
@@ -41,7 +40,6 @@ from mint import userlevels
 from mint import usertemplates
 from mint import urltypes
 from mint.db import repository
-from mint.lib.unixutils import atomicOpen
 from mint.reports import MintReport
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
@@ -262,7 +260,7 @@ class MintServer(object):
                 self.authToken = authToken
                 self.auth = users.Authorization(**auth)
 
-                self.restDb = mint.rest.db.database.Database(self.cfg, self.db,
+                self.restDb = rest_database.Database(self.cfg, self.db,
                                                              dbOnly=True)
                 self.restDb.setAuth(self.auth, authToken)
                 self.siteAuth.refresh()
@@ -4226,7 +4224,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def __init__(self, cfg, allowPrivate=False, db=None, req=None):
         self.cfg = cfg
         self.req = req
-        self.db = mint.db.database.Database(cfg, db=db)
+        self.db = mint_database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
         self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
