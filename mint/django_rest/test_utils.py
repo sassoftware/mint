@@ -348,6 +348,8 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         img = self.mgr.createImage(name=name, description=description,
             project_branch_stage=stage,
             _image_type=imageType, base_image=baseImage)
+        if not img.architecture and not img.trove_flavor:
+            img.trove_flavor = ''
         self.mgr.createImageBuild(img)
         for fileUrl, fileTitle, fileSize, fileSha1 in files:
             self.mgr.createImageBuildFile(img,

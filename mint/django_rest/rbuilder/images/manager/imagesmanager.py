@@ -87,7 +87,8 @@ class ImagesManager(basemanager.BaseManager):
             image.trove_version = '/%s/0.1:1-1-1' % versions.CookLabel()
 
         if not image.trove_flavor and image.architecture:
-            image.trove_flavor = "is: %s" % image.architecture
+            flavor = deps.parseFlavor(str('is: ' + image.architecture))
+            image.trove_flavor = flavor.freeze()
 
         # Fill in the redundant information starting with the most
         # specific part

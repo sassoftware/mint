@@ -275,7 +275,7 @@ image_post_xml = """
 <image>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <status_message></status_message>
   <trove_name>troveName20</trove_name>
@@ -310,7 +310,7 @@ image_put_xml = """
 <image>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <status_message></status_message>
   <trove_name>troveName20-Changed</trove_name>
@@ -347,7 +347,7 @@ build_file_post_xml = \
     <image>
       <trove_last_changed></trove_last_changed>
       <updated_by id="http://testserver/api/v1/users/2002"/>
-      <trove_flavor>is: x86</trove_flavor>
+      <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
       <created_by id="http://testserver/api/v1/users/2001"/>
       <status_message></status_message>
       <trove_name>troveName20-Changed</trove_name>

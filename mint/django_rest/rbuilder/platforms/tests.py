@@ -190,15 +190,21 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
         project = project_models.Project.objects.get(name='blippy') 
 
         output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
+        image_name = 'group-bogus'
+        image_ver = '/example.rpath.com@other:label/0.0:1.0-1-1'
+        image_flavor = '1#x86'
 
         i1 = imagemodels.Image(
-            project=project, name='alpha', output_trove=output_trove
+            project=project, name='alpha', output_trove=output_trove,
+            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
         )
         i2 = imagemodels.Image(
-            project=project, name='beta', output_trove=output_trove
+            project=project, name='beta', output_trove=output_trove,
+            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
         )
         i3 = imagemodels.Image(
-            project=project, name='gamma', output_trove=None
+            project=project, name='gamma', output_trove=None,
+            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
         )
 
         def noop(*args, **kwargs):
