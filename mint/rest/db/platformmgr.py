@@ -1157,7 +1157,7 @@ class PlatformManager(manager.Manager):
         return False
 
     def _lookupFromRepository(self, platform, createPlatDef):
-        platformLabel = platform
+        platformLabel = platform.label
         if self.isOffline(platformLabel):
             return None
 

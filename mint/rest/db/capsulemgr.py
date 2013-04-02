@@ -32,7 +32,7 @@ def useIndexer(func):
     def wrapped(self, *args, **kwargs):
         indexer = self.getIndexer()
         try:
-            return func(self, *args, **kwargs)
+            return func(self, indexer, *args, **kwargs)
         finally:
             indexer.close()
     wrapped.func_name = func.func_name
