@@ -383,6 +383,11 @@ class ImagesManager(basemanager.BaseManager):
             fobj.save()
 
             filePath = self._getImageFilePath(hostname, imageId, fobj.file_name)
+            with open(filePath + '.sha1') as sha1file:
+                sha1sum = sha1file.readline().split()[0]
+            if sha1sum != fobj.sha1:
+                raise RuntimeError("Image file was corrupted during "
+                        "upload, check build log")
             url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)

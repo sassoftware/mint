@@ -294,16 +294,12 @@ class SiteHandler(WebHandler):
                         targetFn)
                 return ''
 
-        # Validate SHA1 trailer (or header) if it is present.
-        if 'content-sha1' in self.req.headers:
-            expected = self.req.headers['content-sha1'].decode('base64')
-            actual = ctx.digest()
-            if expected != actual:
-                log.warning("SHA-1 mismatch on uploaded file %s; "
-                        "discarding.", targetFn)
-                return ''
-
         fObj.commit(sync=False)
+        # Write out digest, to be validated when the jobslave posts the final
+        # image file list.
+        fObj = AtomicFile(targetFn + '.sha1', 'w')
+        print >> fObj, ctx.hexdigest()
+        fObj.commit()
         return ''
 
     def conaryrc(self, auth):
