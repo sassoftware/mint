@@ -638,14 +638,18 @@ class ImagesTestCase(RbacEngine):
             ]
         fileContentList = []
         for idx, (fname, content) in enumerate(contentMap):
+            sha1 = hashlib.sha1(content).hexdigest()
             params = dict(
-                sha1 = hashlib.sha1(content).hexdigest(),
+                sha1 = sha1,
                 size = len(content),
                 title = "File %s" % idx,
                 filename = os.path.join(imgPath, fname),
             )
             fileContentList.append(params)
-            file(params['filename'], "w").write(content)
+            with open(params['filename'], 'w') as fobj:
+                fobj.write(content)
+            with open(params['filename'] + '.sha1', 'w') as fobj:
+                fobj.write(sha1 + '\n')
         return fileContentList
 
     def testPutImageBuildFiles(self):
@@ -712,7 +716,6 @@ class ImagesTestCase(RbacEngine):
   </metadata>
 </files>""")
 
-        fileContentList[-1].update(sha1='Fake', title='Fake')
         xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
 
         response = self._put('images/%s/build_files' % img.image_id,
@@ -722,10 +725,9 @@ class ImagesTestCase(RbacEngine):
 
         self.failUnlessEqual(response.status_code, 200)
         obj = xobj.parse(response.content)
-        # sha1 is char(40), so we need to pad with whitespaces
         self.failUnlessEqual(
             [(x.title, x.sha1) for x in obj.files.file],
-            [(x['title'], x['sha1'].ljust(40)) for x in fileContentList])
+            [(x['title'], x['sha1']) for x in fileContentList])
 
         self.failUnlessEqual(
                 [ (x[0][:4], x[0][4].keys(), x[1]) for x in createSourceTroveCallArgs ],
