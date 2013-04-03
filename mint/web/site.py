@@ -16,9 +16,7 @@
 
 import logging
 import os
-import stat
 from urllib import unquote
-from mimetypes import guess_type
 from webob import exc as web_exc
 
 from mint import urltypes
@@ -158,7 +156,6 @@ class SiteHandler(WebHandler):
         # For urltype.LOCAL, construct the redirect URL
         # Use override redirect if it's set (e.g. redirecting to Amazon S3).
 
-        serveOurselves = False
         if urlType == urltypes.LOCAL:
             if overrideRedirect:
                 redirectUrl = overrideRedirect
@@ -171,10 +168,6 @@ class SiteHandler(WebHandler):
                 if not os.path.exists(filename):
                     raise web_exc.HTTPNotFound()
 
-                size = os.stat(filename)[stat.ST_SIZE]
-                if size >= (1024*1024) * 2047:
-                    serveOurselves = True
-
                 build = self.client.getBuild(buildId)
                 project = self.client.getProject(build.projectId) 
                 redirectUrl = "/images/%s/%d/%s" % (project.hostname, build.id,
@@ -186,18 +179,6 @@ class SiteHandler(WebHandler):
             self.client.addDownloadHit(urlId, self.remoteIp)
 
         # apache 2.0 has trouble sending >2G files
-        if serveOurselves:
-            self.req.headers_out['Content-length'] = str(size)
-            self.req.headers_out['Content-Disposition'] = \
-                "attachment; filename=%s;" % os.path.basename(filename)
-            typeGuess = guess_type(filename)
-            if typeGuess[0]:
-                self.req.content_type = typeGuess[0]
-            else:
-                self.req.content_type = "application/octet-stream"
-            imgF = file(filename)
-            util.copyfileobj(imgF, self.req)
-            return ""
         if redirectUrl:
             self._redirect(redirectUrl)
         else:
