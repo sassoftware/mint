@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import errno
 import logging
 import os
 from urllib import unquote
@@ -258,14 +259,39 @@ class SiteHandler(WebHandler):
         targetFn = os.path.join(self.cfg.imagesPath, project.hostname,
                 str(buildId), fileName)
         util.mkdirChain(os.path.dirname(targetFn))
-        fObj = AtomicFile(targetFn, 'wb', prefix='img-', suffix='.tmp')
+        fObj = AtomicFile(targetFn, 'wb+', prefix='img-', suffix='.tmp')
         ctx = digestlib.sha1()
 
-        try:
-            copied = util.copyfileobj(self.req.body_file, fObj, digest=ctx)
-        except IOError, err:
-            log.warning("IOError during upload of %s: %s", targetFn, str(err))
-            raise web_exc.HTTPBadRequest()
+        inFile = None
+        if 'x-uploaded-file' in self.req.headers:
+            # The frontend proxy has already saved the request body to a
+            # temporary location, so first try to rename it into place.
+            try:
+                os.rename(self.req.headers['x-uploaded-file'], fObj.name)
+            except OSError, err:
+                if err.errno != errno.EXDEV:
+                    raise
+                # Upload dir is on a different filesystem.
+                inFile = open(self.req.headers['x-uploaded-file'], 'rb')
+        else:
+            # No offloading was done. Copy from the request body.
+            inFile = self.req.body_file
+
+        if inFile:
+            # Copy and digest simultaneously
+            try:
+                copied = util.copyfileobj(self.req.body_file, fObj, digest=ctx)
+            except IOError, err:
+                log.warning("IOError during upload of %s: %s", targetFn, str(err))
+                raise web_exc.HTTPBadRequest()
+        else:
+            # Just digest
+            with open(fObj.name) as inFile:
+                while True:
+                    data = inFile.read(1024)
+                    if not data:
+                        break
+                    ctx.update(data)
 
         if 'content-length' in self.req.headers:
             expected = long(self.req.headers['content-length'])

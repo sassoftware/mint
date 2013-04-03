@@ -145,7 +145,6 @@ class MintConfig(conarycfg.ConfigFile):
     templatePath            = (CfgPath, _templatePath + '/web/templates')
 
     # Web features
-    diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
     licenseCryptoReports    = (CfgBool, True)
     removeTrovesVisible     = (CfgBool, False)
     hideFledgling           = (CfgBool, False)
@@ -310,6 +309,7 @@ class MintConfig(conarycfg.ConfigFile):
     MailListPass            = None
     conaryRcFile            = None
     createConaryRcFile      = None
+    diffCacheDir            = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

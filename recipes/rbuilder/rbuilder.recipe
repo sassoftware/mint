@@ -17,28 +17,20 @@
 rbuilder_dirs = {
     'capsules':                     (0775, ('root', 'apache')),
     'catalog':                      (0775, ('root', 'apache')),
-    'changesets':                   (0775, ('root', 'apache')),
     'config':                       (0775, ('root', 'apache')),
     'cscache':                      (0775, ('root', 'apache')),
     'data':                         (0775, ('root', 'apache')),
     'data/credstore':               (0770, ('credstore', 'credstore')),
-    'diffcache':                    (0775, ('root', 'apache')),
-    'entitlements':                 (0775, ('root', 'apache')),
     'finished-images':              (0775, ('root', 'apache')),
-    'incoming-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
     'notices':                      (0775, ('root', 'apache')),
-    # Packages are downloaded by rmake, but could be removed from apache
-    'package-creator-downloads':    (0775, ('rmake', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),
     'sessions':                     (0770, ('root', 'apache')),
     'storage':                      (0775, ('root', 'apache')),
-    'templates':                    (0775, ('root', 'apache')),
     'tmp':                          (0775, ('root', 'apache')),
     '/var/log/rbuilder':            (0775, ('root', 'apache')),
-    '/var/lib/rbuilder':            (0775, ('root', 'apache')),
     }
 
 class rBuilderProduct(CPackageRecipe):
