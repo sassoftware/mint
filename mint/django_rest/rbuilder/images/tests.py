@@ -716,6 +716,8 @@ class ImagesTestCase(RbacEngine):
   </metadata>
 </files>""")
 
+        # We can't pass an arbitrary sha1 anymore, the code validates it
+        fileContentList[-1].update(title='Fake')
         xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
 
         response = self._put('images/%s/build_files' % img.image_id,
