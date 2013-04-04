@@ -23,7 +23,6 @@ rbuilder_dirs = {
     'data/credstore':               (0770, ('credstore', 'credstore')),
     'finished-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
-    'notices':                      (0775, ('root', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),

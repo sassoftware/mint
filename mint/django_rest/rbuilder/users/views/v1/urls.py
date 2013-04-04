@@ -6,7 +6,6 @@
 
 from django.conf.urls.defaults import patterns
 from mint.django_rest.rbuilder.users.views.v1 import views
-from mint.django_rest.rbuilder.notices.views.v1 import views as noticesviews
 from mint.django_rest.rbuilder.rbac.views.v1 import views as rbacviews
 from mint.django_rest import urls
 
@@ -22,9 +21,6 @@ urlpatterns = patterns('',
         views.UserService(),
         name='User',
         model='users.User'),
-    URL(r'^/(?P<user_id>\d+)/notices/?$',
-        noticesviews.UserNoticesService(),
-        name='UserNotices'),
     URL(r'^/(?P<user_id>\d+)/roles/?$',
         rbacviews.RbacUserRolesService(),
         name='UserRoles',

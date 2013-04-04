@@ -19,7 +19,6 @@ from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
 from mint.django_rest.rbuilder.packageindex.manager import PackageManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
 from mint.django_rest.rbuilder.users.manager import UsersManager
-from mint.django_rest.rbuilder.notices.manager import UserNoticesManager
 from mint.django_rest.rbuilder.modulehooks.manager import ModuleHooksManager
 from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
                                                         SourceErrorsManager, \
@@ -56,7 +55,6 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'packageMgr' : PackageManager,
         'usersMgr' : UsersManager,
         'projectManager' : ProjectManager,
-        'userNoticesMgr' : UserNoticesManager,
         'sourceStatusMgr' : SourceStatusManager,
         'sourceErrorsMgr' : SourceErrorsManager,
         'sourceMgr' : SourceManager,

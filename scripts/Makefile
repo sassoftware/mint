@@ -21,9 +21,7 @@ static_files =				\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\
-	rss-update			\
 	set-authuserpass		\
-	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
 	set-password                    \

@@ -2705,8 +2705,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 self.buildData.getDataValue(buildId, 'outputToken')[1]:
             raise mint_error.PermissionDenied
 
-        ret = self._setBuildFilenames(buildId, filenames, normalize=True,
-                sendNotice=True)
+        ret = self._setBuildFilenames(buildId, filenames, normalize=True)
         self.buildData.removeDataValue(buildId, 'outputToken')
 
         return ret
@@ -2731,10 +2730,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if self.builds.getPublished(buildId):
             raise mint_error.BuildPublished()
 
-        return self._setBuildFilenames(buildId, filenames, sendNotice=True)
+        return self._setBuildFilenames(buildId, filenames)
 
-    def _setBuildFilenames(self, buildId, filenames, normalize=False,
-            sendNotice=False):
+    def _setBuildFilenames(self, buildId, filenames, normalize=False):
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
                 (self.cfg.authUser, self.cfg.authPass), self.db._db)
@@ -2745,15 +2743,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildName = build.name
         buildType = buildtypes.typeNamesMarketing.get(build.buildType, None)
 
-        # URLs in notices should use the canonical hostname since they
-        # are stored permanently.
-        downloadUrlTemplate = self.getDownloadUrlTemplate(useRequest=False)
-
-        # We don't have a timestamp on the data coming from the jobslave, so
-        # just use the current time for that.
-        buildTime = time.time()
-
-        imageFiles = []
         cu = self.db.transaction()
         try:
             # sqlite doesn't do delete cascade
@@ -2790,7 +2779,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 urlId = cu.lastrowid
                 cu.execute("""INSERT INTO BuildFilesUrlsMap (fileId, urlId)
                         VALUES(?, ?)""", fileId, urlId)
-                imageFiles.append((fileName, downloadUrlTemplate % fileId))
         except:
             self.db.rollback()
             raise

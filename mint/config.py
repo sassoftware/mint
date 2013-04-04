@@ -224,7 +224,6 @@ class MintConfig(conarycfg.ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
-    noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
 
@@ -310,6 +309,7 @@ class MintConfig(conarycfg.ConfigFile):
     conaryRcFile            = None
     createConaryRcFile      = None
     diffCacheDir            = None
+    noticesRssFeed          = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
