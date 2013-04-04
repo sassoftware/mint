@@ -1065,7 +1065,8 @@ class JobHandlerRegistry(HandlerRegistry):
             system = inventorymodels.System.objects.get(system_id=systemId)
             self.system = system
 
-            return self.mgr.mgr.sysMgr.getDescriptorUpdate(systemId)
+            return self.mgr.mgr.sysMgr.getSystemDescriptorForAction(systemId,
+                    match.kwargs['descriptor_type'])
 
         def getRelatedResource(self, descriptor):
             return self.system
@@ -1093,12 +1094,25 @@ class JobHandlerRegistry(HandlerRegistry):
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
 
-            topLevelGroup = str(self.descriptorData.getField('trove_label'))
-            test = self.descriptorData.getField('dry_run')
-            extra = dict(sources = [ topLevelGroup ],
-                            test = test,
-                            zone = self.system.managing_zone.name)
-
+            extra = dict(zone = self.system.managing_zone.name)
+            topLevelItems = self.descriptorData.getField('updates')
+            previewId = self.descriptorData.getField('preview_id')
+            topLevelGroup = self.descriptorData.getField('trove_label')
+            if self.system.latest_survey and self.system.latest_survey.has_system_model:
+                # System model present, old-style invocation. Allow the
+                # preview but it will fail to apply later because there
+                # will be no previewId passed
+                if topLevelItems is None and topLevelGroup is not None:
+                    topLevelItems = [ topLevelGroup ]
+            if topLevelItems is not None:
+                # Convert top-level items to a system model
+                systemModel = "\n".join("install %s" % x for x in topLevelItems)
+                extra.update(systemModel = systemModel)
+            elif previewId is not None:
+                extra.update(previewId = previewId)
+            else:
+                extra.update(test = self.descriptorData.getField('dry_run'),
+                        sources = [ topLevelGroup ])
 
             return (params, ), extra
 

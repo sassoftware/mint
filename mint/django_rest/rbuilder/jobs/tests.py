@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+import uuid
 from lxml import etree
 
 from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
@@ -12,6 +13,7 @@ from mint.django_rest.test_utils import XMLTestCase, RepeaterMixIn
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.jobs import testsxml
 from mint.django_rest.rbuilder.inventory import models as invmodels
+from mint.django_rest.rbuilder.inventory import tests as invtests
 
 from xobj import xobj
 
@@ -172,7 +174,7 @@ class Jobs2TestCase(BaseJobsTest):
         self.failUnlessEqual([ x.status_text for x in jobs ],
             ["Initializing", "text 299"])
 
-class JobCreationTest(BaseJobsTest, RepeaterMixIn):
+class JobCreationTest(BaseJobsTest, RepeaterMixIn, invtests.ConfigDescriptorMixIn):
     def _mock(self):
         RepeaterMixIn.setUpRepeaterClient(self)
         from mint.django_rest.rbuilder.inventory.manager import repeatermgr
@@ -668,7 +670,32 @@ Some more errors here
 
         return jobXml
 
+    def _createSyncXml(self, systemId, topLevelGroup=None, previewId=None):
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
+        if previewId is None:
+            assert topLevelGroup is not None
+            data = "<updates><item>%s</item></updates>" % topLevelGroup
+            opType = "preview"
+        else:
+            assert topLevelGroup is None
+            data = "<preview_id>%s</preview_id>" % previewId
+            opType = "apply_update"
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/%(opType)s"/>
+  <descriptor_data>
+    %(data)s
+  </descriptor_data>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=systemId,
+        data=data, opType=opType)
+
+        return jobXml
+
     def _postJob(self, jobXml, systemId):
+        jobEtree = etree.fromstring(jobXml)
+        jobDescriptorId = jobEtree.xpath("descriptor/@id")[0]
         url = "inventory/systems/%(systemId)s/jobs" % dict(
             systemId=systemId)
         response = self._post(url, jobXml,
@@ -676,8 +703,7 @@ Some more errors here
         self.assertEquals(response.status_code, 200)
         obj = xobj.parse(response.content)
         job = obj.job
-        self.failUnlessEqual(job.descriptor.id,
-            "http://testserver/api/v1/inventory/systems/%s/descriptors/update" % systemId)
+        self.failUnlessEqual(job.descriptor.id, jobDescriptorId)
 
         return job
 
@@ -731,8 +757,28 @@ Some more errors here
 
         return response.content
 
-    def _testJobSystemSoftwareUpdate(self, topLevelGroup, payload, dryRun=False):
-        system = self._makeSystem()
+    def _testJobSystemSoftwareUpdate(self, oldTopLevelGroup, topLevelGroup,
+            dryRun=False, system=None):
+        payload = """
+    <preview>
+      <conary_package_changes>
+        <conary_package_change>
+          <type>changed</type>
+          <from_conary_package>
+            <name>group-fake</name>
+            <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
+          </from_conary_package>
+          <to_conary_package>
+            <name>group-fake</name>
+            <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
+          </to_conary_package>
+        </conary_package_change>
+      </conary_package_changes>
+      <observed>%(old)s</observed>
+      <desired>%(new)s</desired>
+    </preview>""" % dict(old=oldTopLevelGroup, new=topLevelGroup)
+        if system is None:
+            system = self._makeSystem()
 
         jobXml = self._createUpdateXml(system.system_id, topLevelGroup, str(dryRun).lower())
         job = self._postJob(jobXml, system.system_id)
@@ -744,30 +790,12 @@ Some more errors here
         content = self._fetchPreviewResponseContent(payload, dbjob)
 
         system = system.__class__.objects.get(system_id=system.system_id)
-        return system, content
+        return system, payload, content
 
     def testJobSystemSoftwareUpdateWithPreview(self):
         old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        payload = """
-<preview>
-  <conary_package_changes>
-    <conary_package_change>
-      <type>changed</type>
-      <from_conary_package>
-        <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
-      </from_conary_package>
-      <to_conary_package>
-        <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
-      </to_conary_package>
-    </conary_package_change>
-  </conary_package_changes>
-  <observed>%(old)s</observed>
-  <desired>%(new)s</desired>
-</preview>""" % locals()
-        system, content = self._testJobSystemSoftwareUpdate(new, payload, dryRun=True)
+        system, payload, content = self._testJobSystemSoftwareUpdate(old, new, dryRun=True)
 
         observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
@@ -779,27 +807,9 @@ Some more errors here
         self.assertEquals(observed, f_ver + '[]')
 
     def testJobSystemSoftwareUpdateWithUpdate(self):
-        old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        payload = """
-<preview>
-  <conary_package_changes>
-    <conary_package_change>
-      <type>changed</type>
-      <from_conary_package>
-        <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
-      </from_conary_package>
-      <to_conary_package>
-        <name>group-fake</name>
-        <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
-      </to_conary_package>
-    </conary_package_change>
-  </conary_package_changes>
-  <observed>%(new)s</observed>
-  <desired>%(new)s</desired>
-</preview>""" % locals()
-        system, content = self._testJobSystemSoftwareUpdate(new, payload, dryRun=False)
+        system, payload, content = self._testJobSystemSoftwareUpdate(new, new,
+                dryRun=False)
 
         observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
@@ -810,6 +820,85 @@ Some more errors here
         to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
         t_ver = getattr(to, 'version')
         self.assertEquals(observed, t_ver + '[]')
+
+    def _makeSystemWithSystemModel(self):
+        self._mockConfigDescriptorCache()
+        # Create new system
+        system = self._makeSystem()
+        # Add a survey with a system model
+        from rbuilder.inventory import testsxml as txml
+        response = self._post("inventory/systems/%s/surveys" % system.pk,
+            data = txml.survey_input_xml,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        # Reload system
+        system = system.__class__.objects.get(pk=system.pk)
+        self.assertNotEquals(system.latest_survey_id, None)
+        return system
+
+    def testJobSystemSyncWithPreview(self):
+        system = self._makeSystemWithSystemModel()
+
+        old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
+        new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
+        system, payload, content = self._testJobSystemSoftwareUpdate(old, new,
+                dryRun=True, system=system)
+
+        observed = xobj.parse(content).preview.observed
+        topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
+        self.assertEquals(topLevelItems, [ old ])
+
+        # Confirm <observed> is still on original version in accordance with dryRun=True.
+        frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
+        f_ver = getattr(frum, 'version')
+        self.assertEquals(observed, f_ver + '[]')
+
+        callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.assertEquals(callList[0].kwargs['systemModel'],
+            "install %s" % new)
+
+    def testGetDescriptorsForSystemModel(self):
+        system = self._makeSystemWithSystemModel()
+        descr = self.mgr.sysMgr.getDescriptorPreview(system.system_id)
+        self.assertEquals(descr.getDisplayName(), "Preview Software Update")
+        self.assertEquals(descr.getDescriptions(), {None: "Preview Software Update"})
+        fields = descr.getDataFields()
+        self.assertEquals([ x.name for x in fields ], [ 'updates' ])
+        self.assertEquals([ x.multiple for x in fields ], [ True ])
+
+        resp = self._get("inventory/systems/%s/descriptors/preview" %
+                system.system_id,
+                username="admin", password="password")
+        self.assertEquals(resp.status_code, 200)
+
+        descr = self.mgr.sysMgr.getDescriptorApplyUpdate(system.system_id)
+        self.assertEquals(descr.getDisplayName(), "Apply Software Update")
+        self.assertEquals(descr.getDescriptions(), {None: "Apply Software Update"})
+        fields = descr.getDataFields()
+        self.assertEquals([ x.name for x in fields ], [ 'preview_id' ])
+
+        resp = self._get("inventory/systems/%s/descriptors/apply_update" %
+                system.system_id,
+                username="admin", password="password")
+        self.assertEquals(resp.status_code, 200)
+
+
+    def testPreviewSystemModel(self):
+        system = self._makeSystemWithSystemModel()
+        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
+        jobXml = self._createSyncXml(system.system_id, topLevelGroup)
+        job = self._postJob(jobXml, system.system_id)
+        callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.assertEquals(callList[0].kwargs['systemModel'],
+            "install %s" % topLevelGroup)
+
+        previewId = str(uuid.uuid4())
+        jobXml = self._createSyncXml(system.system_id, previewId=previewId)
+
+        job = self._postJob(jobXml, system.system_id)
+        callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
+        self.assertEquals(callList[-1].kwargs['previewId'], previewId)
 
 #     def testJobSystemSoftwareUpdateWithAddedPackage(self):
 #         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"

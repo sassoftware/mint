@@ -93,6 +93,48 @@ update_descriptor = """<descriptor>
 </descriptor>
 """
 
+preview_descriptor = """<descriptor>
+  <metadata>
+    <displayName>Preview Software Update</displayName>
+    <descriptions>
+      <desc>Preview Software Update</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>updates</name>
+      <descriptions>
+        <desc>Items to update</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <multiple>true</multiple>
+    </field>
+  </dataFields>
+</descriptor>
+"""
+
+sync_descriptor = """<descriptor>
+  <metadata>
+    <displayName>Apply Software Update</displayName>
+    <descriptions>
+      <desc>Apply Software Update</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>preview_id</name>
+      <descriptions>
+        <desc>Preview ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>
+"""
+
+
 # TODO: copy/paste here could really use some templates
 configure_descriptor = """<descriptor>
   <metadata>
@@ -2102,8 +2144,10 @@ class SystemManager(basemanager.BaseManager):
             assimilation = self.getDescriptorAssimilation,
             capture      = self.getDescriptorCaptureSystem,
             configure    = self.getDescriptorConfigure,
+            preview      = self.getDescriptorPreview,
             update       = self.getDescriptorUpdate,
             survey_scan  = self.getDescriptorSurveyScan,
+            apply_update = self.getDescriptorApplyUpdate,
         )
         method = methodMap.get(descriptorType)
         if method is None:
@@ -2113,6 +2157,16 @@ class SystemManager(basemanager.BaseManager):
     def getDescriptorAssimilation(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
             fromStream=system_assimilate_descriptor)
+        return descr
+
+    def getDescriptorPreview(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=preview_descriptor)
+        return descr
+
+    def getDescriptorApplyUpdate(self, systemId, *args, **kwargs):
+        descr = descriptor.ConfigurationDescriptor(
+            fromStream=sync_descriptor)
         return descr
 
     def getDescriptorUpdate(self, systemId, *args, **kwargs):
