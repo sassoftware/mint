@@ -1,9 +1,0 @@
-/var/log/pgbouncer/*.log {
-    missingok
-    notifempty
-    sharedscripts
-    delaycompress
-    postrotate
-        /sbin/service pgbouncer reload 2>/dev/null || true
-    endscript
-}
