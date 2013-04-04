@@ -547,7 +547,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         job = obj.job
         self.failUnlessEqual(job.descriptor.id, "http://testserver/api/v1/target_types/6/descriptor_create_target")
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target_type.name for x in dbjob.jobtargettype_set.all() ],
@@ -646,7 +646,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%d/descriptors/configuration" % target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],
@@ -736,7 +736,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%d/descriptors/configuration" % target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
 
         jobXml = """
 <job>
@@ -786,7 +786,7 @@ class JobCreationTest(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%s/descriptors/configure_credentials" %  target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],
@@ -903,7 +903,7 @@ ZcY7o9aU
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%s/descriptors/configuration" %  target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],
@@ -1223,7 +1223,7 @@ ZcY7o9aU
         self.failUnlessEqual(job.descriptor.id,
             "http://testserver/api/v1/targets/%s/descriptors/refresh_systems" %  target.target_id)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         # Make sure the job is related to the target type
         self.failUnlessEqual(
             [ x.target.name for x in dbjob.target_jobs.all() ],
@@ -1566,7 +1566,7 @@ ZcY7o9aU
             "http://testserver/api/v1/inventory/systems/%s/descriptors/capture"
                 % systemId)
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         jobToken = dbjob.job_token
         self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.SYSTEM_CAPTURE)
         self.failUnlessEqual(
@@ -2008,7 +2008,7 @@ ZcY7o9aU
             "http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s"
                 % (targetId, buildFileId))
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         jobToken = dbjob.job_token
         self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.TARGET_DEPLOY_IMAGE)
         imageNames = [ 'image 02' ]
@@ -2125,7 +2125,7 @@ ZcY7o9aU
             "http://testserver/api/v1/targets/%s/descriptors/launch/file/%s"
                 % (targetId, buildFileId))
 
-        dbjob = jmodels.Job.objects.get(job_uuid=job.job_uuid)
+        dbjob = jmodels.Job.objects.get(job_uuid=unicode(job.job_uuid))
         jobToken = dbjob.job_token
         self.failUnlessEqual(dbjob.job_type.name, dbjob.job_type.TARGET_LAUNCH_SYSTEM)
         # The revolving job only links to the current image, unlike
