@@ -31,7 +31,6 @@ from mint import helperfuncs
 from mint import jobstatus
 from mint import maintenance
 from mint import mint_error
-from mint import notices_callbacks
 from mint import buildtemplates
 from mint import projects
 from mint import reports
@@ -2797,11 +2796,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise
         else:
             self.db.commit()
-
-        if sendNotice:
-            notices = notices_callbacks.ImageNotices(self.cfg, username)
-            notices.notify_built(buildName, buildType, buildTime,
-                    project.name, project.version, imageFiles)
         return True
 
     @typeCheck(int, int, int, str)
@@ -4300,19 +4294,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return True
 
     def getPackageCreatorClient(self):
-        callback = notices_callbacks.PackageNoticesCallback(self.cfg, self.authToken[0])
-        return self._getPackageCreatorClient(callback)
+        return self._getPackageCreatorClient()
 
     def getApplianceCreatorClient(self):
-        callback = notices_callbacks.ApplianceNoticesCallback(self.cfg, self.authToken[0])
-        return self._getPackageCreatorClient(callback)
+        return self._getPackageCreatorClient()
 
-    def _getPackageCreatorClient(self, callback):
+    def _getPackageCreatorClient(self):
         def _getManager():
             from mint.django_rest.rbuilder.manager import rbuildermanager
             return rbuildermanager.RbuilderManager()
         return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            callback=callback, djangoManagerCallback=_getManager)
+            djangoManagerCallback=_getManager)
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:
