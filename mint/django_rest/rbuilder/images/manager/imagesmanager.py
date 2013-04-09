@@ -237,10 +237,11 @@ class ImagesManager(basemanager.BaseManager):
                 fileUrl.delete()
         imageDir = os.path.join(self.cfg.imagesPath, image.project.short_name,
                 str(image_id))
-        for name in ['build.log', 'trace.txt']:
-            path = os.path.join(imageDir, name)
-            if os.path.exists(path):
-                os.unlink(path)
+        if os.path.isdir(imageDir):
+            for name in os.listdir(imageDir):
+                path = os.path.join(imageDir, name)
+                if name in ('build.log', 'trace.txt') or name.endswith('.sha1'):
+                    os.unlink(path)
         # Delete the parent directory, if it's empty.
         try:
             os.rmdir(imageDir)
