@@ -21,11 +21,10 @@ then
 fi
 
 # "service rmake reset" doesn't clean up postgres yet
-# NOTE: psql 9.x and pgbouncer don't get along, use 8.2
-/opt/postgresql-9.2/bin/psql $pgbopt -c 'kill rmake2'
-dropdb $superopt rmake2 #&>/dev/null ||:
+psql $pgbopt -Xc 'kill rmake2'
+dropdb $superopt rmake2 ||:
 createdb $superopt --encoding=UTF8 --owner=rmake rmake2
-/opt/postgresql-9.2/bin/psql $pgbopt -c 'resume rmake2'
+psql $pgbopt -Xc 'resume rmake2'
 
 ./deleteproject --force rmake-repository \
     || echo "Warning: failed to delete project rmake-repository"
