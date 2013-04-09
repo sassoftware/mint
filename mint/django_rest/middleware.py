@@ -111,7 +111,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
 
     def getLogFile(self, request):
         ''' returns log file and path for storing XML debug info'''
-        if request.debugFileName is not None:
+        if getattr(request, 'debugFileName', None):
             return file(request.debugFileName, "a"), request.debugFileName
 
         now = time.localtime(request.startTime)
@@ -238,6 +238,7 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
             logFile.write(request.raw_post_data)
 
     def _process_request(self, request):
+        request.startTime = time.time()
         if self.shouldLog():
             self._logRequest(request)
         return None
