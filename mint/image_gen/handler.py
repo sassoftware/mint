@@ -1,5 +1,5 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
@@ -57,14 +57,14 @@ class BaseImageHandler(rmk_handler.JobHandler):
     def _uploadStatus(self, status):
         E = builder.ElementMaker()
         code = self._translateCode(status.code)
-        root = E.imageStatus(
-                E.code(str(code)),
-                E.message(status.text),
+        root = E.image(
+                E.status(str(code)),
+                E.status_message(status.text),
                 )
-        self._upload('PUT', 'status', etree.tostring(root))
+        self._upload('PUT', '', etree.tostring(root))
 
     def _uploadLog(self, data):
-        self._upload('POST', 'buildLog', data, 'text/plain')
+        self._upload('POST', 'build_log', data, 'text/plain')
 
     def _upload(self, method, path, body, contentType='application/xml'):
         url = self.imageBase + path

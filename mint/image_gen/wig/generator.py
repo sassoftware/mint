@@ -1,9 +1,8 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
-import hashlib
 import itertools
 import os
 import re
@@ -16,11 +15,10 @@ from conary import trovetup
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from conary.lib import util
+from jobslave import response
 from lxml import builder
 from lxml import etree
-from restlib import client as rl_client
 from mint.image_gen import constants as iconst
-from mint.image_gen.response import FilePutter
 from mint.image_gen.util import FileWithProgress
 from mint.image_gen.wig import backend
 from mint.image_gen.wig import bootable
@@ -123,11 +121,7 @@ class ImageGenerator(object):
         self.wigServiceUrl = data['windowsBuildService']
 
         # Mint service
-        self.imageBase = ('%sapi/products/%s/images/%d/' % (data['outputUrl'],
-            data['project']['hostname'], data['buildId']) ).encode('utf8')
-        self.uploadBase = '%suploadBuild/%d/' % ( data['outputUrl'],
-                data['buildId'],)
-        self.imageToken = data['outputToken'].encode('ascii')
+        self.response = response.ResponseProxy(data['outputUrl'], data)
 
         self.stepList = STEP_LIST[:]
         self.setStepList()
@@ -152,38 +146,6 @@ class ImageGenerator(object):
                     progressString % int(percent))
         self.filesTransferred += 1
         return callback
-
-    def _post(self, method, path, contentType='application/xml', body=None):
-        # FIXME: copypasta from jobslave, obsoleted by using robj in
-        # postResults()
-        headers = {
-                'Content-Type': contentType,
-                'X-rBuilder-OutputToken': self.imageToken,
-                }
-        url = self.imageBase + path
-
-        client = rl_client.Client(url, headers)
-        client.connect()
-        return client.request(method, body)
-
-    def _postFileObject(self, method, targetName, fobj, digest):
-        # FIXME: copypasta from jobslave
-        headers = {
-                'Content-Type': 'application/octet-stream',
-                'X-rBuilder-OutputToken': self.imageToken,
-                }
-        url = self.uploadBase + targetName
-
-        client = FilePutter(url, headers)
-        client.connect()
-        return client.putFileObject(method, fobj, digest)
-
-    def sendLog(self, data):
-        try:
-            self._post('POST', 'buildLog', contentType='text/plain', body=data)
-        except rl_client.ResponseError, err:
-            if err.status != 204:  # No Content
-                raise
 
     def _getServicingXml(self, msis):
         criticalPackageList = []
@@ -237,17 +199,13 @@ class ImageGenerator(object):
             self.sendStatus(iconst.WIG_JOB_UPLOADING,
                     "Transferring image result", "%d%%" % (percent,))
         wrapper = FileWithProgress(fobj, callback)
-
-        # Also calculate SHA-1 digest as it uploads.
-        ctx = hashlib.sha1()
-        self._postFileObject('PUT', name, wrapper, ctx)
-
+        digest = self.response.postFileObject('PUT', name, wrapper, size)
         E = builder.ElementMaker()
         fileXml = E.file(
             E.title(title),
             E.size(str(size)),
-            E.sha1(ctx.hexdigest()),
-            E.fileName(name),
+            E.sha1(digest),
+            E.file_name(name),
             )
         return fileXml
 
@@ -265,7 +223,7 @@ class ImageGenerator(object):
 
         E = builder.ElementMaker()
         root = E.files(*xmlFiles)
-        self._post('PUT', 'files', body=etree.tostring(root))
+        self.response.post('PUT', 'build_files', body=etree.tostring(root))
 
 
 class WbsGenerator(ImageGenerator):
