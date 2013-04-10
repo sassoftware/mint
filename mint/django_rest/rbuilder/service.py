@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
@@ -14,7 +12,6 @@ from django.http import HttpResponseNotAllowed, HttpResponseNotFound
 
 from django_restapi import resource
 
-from mint.db import database
 from mint import users
 from mint.django_rest.deco import getHeaderValue, access, ACCESS, HttpAuthenticationRequired, HttpAuthorizationRequired
 from mint.django_rest.rbuilder.manager import rbuildermanager
@@ -67,7 +64,7 @@ class BaseService(resource.Resource):
             mintAuth = users.Authorization(user_name=user_name,
                 token=(user_name, password), admin=request._is_admin,
                 userId=user.user_id)
-            self.mgr.setAuth(mintAuth, user)
+            self.mgr.setAuth(request, mintAuth, user)
 
     def read(self, request, *args, **kwargs):
         resp = None
@@ -204,14 +201,11 @@ class BaseAuthService(BaseService):
     def _check_uuid_auth(self, request, kwargs):
         return False
 
-    def _setMintAuth(self, user=None):
-        db = database.Database(self.mgr.cfg)
+    def _setMintAuth(self, request, user=None):
+        db = request.META['mint.wsgiContext'].db
         if user is None:
             authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
-            cu = db.cursor()
-            cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = ?", True)
-            ret = cu.fetchall()
-            userId = ret[0][0]
+            userId = None
             isAdmin = True
         else:
             authToken = (user.user_name, "FAKE PASSWORD")
@@ -220,5 +214,5 @@ class BaseAuthService(BaseService):
         userName = authToken[0]
         mintAuth = users.Authorization(username=userName,
             token=authToken, admin=isAdmin, userId=userId)
-        self.mgr.setAuth(mintAuth, user)
+        self.mgr.setAuth(request, mintAuth, user)
 

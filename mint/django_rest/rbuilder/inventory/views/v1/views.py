@@ -111,7 +111,7 @@ class BaseInventoryService(service.BaseAuthService):
             system__pk=systemId, event_uuid=eventUuid)
         if not sjobs:
             return False
-        self._setMintAuth()
+        self._setMintAuth(request)
         return True
 
 class InventoryService(BaseInventoryService):

@@ -363,6 +363,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def _addRequestAuth(self, username=None, password=None, jobToken=None, **extra):
         extra['mint.authToken'] = (username, password)
+        extra['mint.wsgiContext'] = namedtuple('fakecontext', 'cfg db')(
+                cfg=self.mintCfg,
+                db=None,
+                )
         if username:
             type, password = self._authHeader(username, password)
             extra[type] = password

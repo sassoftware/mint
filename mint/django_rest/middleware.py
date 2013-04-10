@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import os
@@ -29,10 +29,8 @@ from django.db.utils import IntegrityError
 from django.db import connection
 import django.core.exceptions as core_exc
 
-from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth, errors, models
-from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.inventory import errors as ierrors
@@ -40,14 +38,7 @@ from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
 
-try:
-    # The mod_python version is more efficient, so try importing it first.
-    from mod_python.util import parse_qsl # pyflakes=ignore
-except ImportError:
-    from cgi import parse_qsl # pyflakes=ignore
-
-if parse_qsl is None:
-    from cgi import parse_qsl
+from cgi import parse_qsl
 
 RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
 RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
@@ -550,7 +541,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
         # the same scope in which it was opened.
         from mint.django_rest.rbuilder import modellib
         if getattr(modellib.XObjModel, '_rbmgr', None):
-            modellib.XObjModel._rbmgr.restDb.close()
+            modellib.XObjModel._rbmgr.close()
             modellib.XObjModel._rbmgr = None
 
         return response

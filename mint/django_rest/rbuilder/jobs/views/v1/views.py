@@ -22,7 +22,7 @@ class JobsBaseService(service.BaseAuthService):
             job_uuid=jobUuid, job_token=jobToken)
         if not jobs:
             return False
-        self._setMintAuth(jobs[0].created_by)
+        self._setMintAuth(request, jobs[0].created_by)
         return True
 
 class JobsService(JobsBaseService):

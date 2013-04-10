@@ -65,7 +65,7 @@ class _JobOutputTokenAuthService(service.BaseAuthService):
             name='outputToken', value=imageOutputToken).select_related('image__created_by')
         if not imgs:
             return False
-        self._setMintAuth(imgs[0].image.created_by)
+        self._setMintAuth(request, imgs[0].image.created_by)
         request._withAuthToken = True
         return True
 
@@ -172,7 +172,7 @@ class ImageBuildFileService(service.BaseAuthService):
             images__image__files__file_id=fileId, job_token=jobToken)
         if not jobs:
             return False
-        self._setMintAuth(jobs[0].created_by)
+        self._setMintAuth(request, jobs[0].created_by)
         request._withAuthToken = True
         return True
 

@@ -1064,8 +1064,8 @@ class ImagesTestCase(RbacEngine):
         models.Image.objects.filter(image_id=imageId).update(project_branch=None,
             project_branch_stage=None)
         transaction.commit()
-        olddb = self.mgr.restDb.db
-        b = builds.BuildsTable(olddb)
+        restDb = self.mgr._makeRestDb(self.mintCfg)
+        b = builds.BuildsTable(restDb.db)
         b.setProductVersion(imageId, projectBranchId, stageName)
 
         img = models.Image.objects.get(image_id=imageId)
