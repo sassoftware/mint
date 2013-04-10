@@ -352,52 +352,20 @@ class SetMethodRequestMiddleware(BaseMiddleware):
 
         return None
 
-class SetMintAuthMiddleware(BaseMiddleware):
-    """
-    Set the authentication information on the request
-    """
-    def _process_request(self, request):
-        request._auth = auth.getAuth(request)
-        username, password = request._auth
-        request._authUser = authenticate(username=username, password=password,
-                mintConfig=request.cfg)
-        return None
-
-class SetMintAdminMiddleware(BaseMiddleware):
-    """
-    Set a flag on the request indicating whether or not the user is an admin
-    """
-    def _process_request(self, request):
-        request._is_admin = auth.isAdmin(request._authUser)
-        return None
-
-class LocalSetMintAdminMiddleware(BaseMiddleware):
-    def _process_request(self, request):
-        request._is_admin = True
-        request._is_authenticated = True
-        request._authUser = usersmodels.User.objects.get(pk=1)
-        request._auth = ("admin", "admin")
-
-class SetMintAuthenticatedMiddleware(BaseMiddleware):
-    """
-    Set a flag on the request indicating whether or not the user is authenticated
-    """
-    def _process_request(self, request):
-        request._is_authenticated = auth.isAuthenticated(request._authUser)
-        return None
 
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if not self.isLocalServer(request):
-            cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-        else:
-            cfgPath = config.RBUILDER_CONFIG
-
-        cfg = config.getConfig(cfgPath)
-        request.cfg = cfg
-
+        context = request.META['mint.wsgiContext']
+        request.cfg = context.cfg
+        request._auth = auth.getAuth(request)
+        username, password = request._auth
+        request._authUser = authenticate(username=username, password=password,
+                mintConfig=request.cfg)
+        request._is_admin = auth.isAdmin(request._authUser)
+        request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
+
 
 class AddCommentsMiddleware(BaseMiddleware):
 

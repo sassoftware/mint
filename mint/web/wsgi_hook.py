@@ -96,6 +96,7 @@ class application(object):
                     "Something has gone terribly wrong. "
                     "Check the webserver logs for details.")
         finally:
+            self.req.environ['mint.wsgiContext'] = None
             if self.rm:
                 self.rm.close()
             if self.db:
@@ -119,6 +120,7 @@ class application(object):
         self.authToken = netserver.AuthToken(*self.authToken)
         self.authToken.remote_ip = self.req.client_addr
         self.req.environ['mint.authToken'] = self.authToken
+        self.req.environ['mint.wsgiContext'] = self
 
         if '_method' in self.req.GET:
             method = self.req.GET['_method'].upper()
