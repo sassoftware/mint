@@ -645,7 +645,7 @@ class SystemManager(basemanager.BaseManager):
         if withRetagging:
             if for_user:
                 self.mgr.addToMyQuerySet(system, for_user)
-            self.mgr.retagQuerySetsByType('system', for_user)
+            self.mgr.retagQuerySetsByType('system', for_user, defer=True)
 
         return system
 
@@ -879,7 +879,7 @@ class SystemManager(basemanager.BaseManager):
             system.modified_by = for_user
         system.modified_date = timeutils.now()
         system.save()
-        self.mgr.retagQuerySetsByType('system')
+        self.mgr.invalidateQuerySetsByType('system')
         return system
 
     def checkInstalledSoftware(self, system):

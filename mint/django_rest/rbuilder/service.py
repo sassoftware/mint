@@ -202,7 +202,6 @@ class BaseAuthService(BaseService):
         return False
 
     def _setMintAuth(self, request, user=None):
-        db = request.META['mint.wsgiContext'].db
         if user is None:
             authToken = (self.mgr.cfg.authUser, self.mgr.cfg.authPass)
             userId = None
