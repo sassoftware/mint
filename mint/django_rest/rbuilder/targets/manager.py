@@ -597,6 +597,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             cu.execute("DROP TABLE tmp_target_system")
 
     def _updateTargetSystems(self, cu, target, systems):
+        # Prevent updates to the main table during the merge process
+        cu.execute("LOCK TABLE target_system")
         query = """
             INSERT INTO tmp_target_system
                 (name, description, target_internal_id, ip_addr_1, ip_addr_2, state, created_date)
