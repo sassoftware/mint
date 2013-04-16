@@ -224,7 +224,3 @@ class rBuilderProduct(CPackageRecipe):
         # Attempt to isolate things that don't work when mint is just a library
         r.ComponentSpec('appliance', '/usr/share/raa/')
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
-
-        # Make a symlink for gunicorn logs to where they used to be under apache
-        r.Symlink('/var/log/gunicorn', '/var/log/httpd')
-        r.DanglingSymlinks(exceptions='/var/log/httpd')
