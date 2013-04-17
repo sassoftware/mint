@@ -179,7 +179,6 @@ class SiteHandler(WebHandler):
         if urlId:
             self.client.addDownloadHit(urlId, self.remoteIp)
 
-        # apache 2.0 has trouble sending >2G files
         if redirectUrl:
             self._redirect(redirectUrl)
         else:

@@ -87,7 +87,7 @@ class WebHandler(object):
 
         return returner
 
-    def _redirectHttp(self, location='', temporary=False):
+    def _redirectHttp(self, location='', temporary=True):
         self._redirect(location, temporary=temporary)
 
     def _redirect(self, location, temporary = False):
