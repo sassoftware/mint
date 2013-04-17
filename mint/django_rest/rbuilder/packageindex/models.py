@@ -41,6 +41,9 @@ class Package(modellib.XObjIdModel):
     trailing_version = modellib.SyntheticField()
 
     def computeSyntheticFields(self, sender, **kwargs):
-        ver = versions.VersionFromString(self.version)
-        self.trailing_label = ver.trailingLabel().asString()
-        self.trailing_version = ver.trailingRevision().asString()
+        if self.version:
+            ver = versions.VersionFromString(self.version)
+            self.trailing_label = ver.trailingLabel().asString()
+            self.trailing_version = ver.trailingRevision().asString()
+        else:
+            self.trailing_label = self.trailing_version = None
