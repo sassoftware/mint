@@ -1,8 +1,8 @@
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-from rbuilder.packageindex import models
-from rbuilder.projects import models as projmodels
+from mint.django_rest.rbuilder.packageindex import models
+from mint.django_rest.rbuilder.projects import models as projmodels
 
 class Test(XMLTestCase):
     def setUp(self):
