@@ -1359,6 +1359,8 @@ class MultiShimServerCache(object):
             # Found the project -- use that project's (maybe shim) server proxy
             return repo.getServerProxy(userId=self.userId)
 
+    singleServer = netclient.ServerCache.singleServer.im_func
+
 
 class MultiShimNetClient(shimclient.ShimNetClient):
     def __init__(self, manager, userId=None):
