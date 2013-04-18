@@ -254,14 +254,9 @@ class MintServer(object):
                     # access -- we don't want a broken session preventing
                     # anonymous access or logins.
                     authToken = ('anonymous', 'anonymous')
-                auth = self.users.checkAuth(authToken)
-                authToken = (authToken[0], '')
-                self.authToken = authToken
-                self.auth = users.Authorization(**auth)
-
                 self.restDb = rest_database.Database(self.cfg, self.db,
                                                              dbOnly=True)
-                self.restDb.setAuth(self.auth, authToken)
+                self._setAuth(authToken)
                 self.siteAuth.refresh()
                 try:
                     maintenance.enforceMaintenanceMode(self.cfg, self.auth)
@@ -4202,6 +4197,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def isPlatformAvailable(self, platformLabel):
         return (platformLabel in self.cfg.availablePlatforms)
+
+    def _setAuth(self, authToken):
+        auth = self.users.checkAuth(authToken)
+        authToken = (authToken[0], '')
+        self.authToken = authToken
+        self.auth = users.Authorization(**auth)
+        if self.restDb:
+            self.restDb.setAuth(self.auth, authToken)
 
     def __init__(self, cfg, allowPrivate=False, db=None, req=None):
         self.cfg = cfg
