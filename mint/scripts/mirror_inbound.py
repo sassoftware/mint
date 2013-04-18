@@ -18,7 +18,7 @@ from mint.scripts.mirror import MirrorScript
 log = logging.getLogger(__name__)
 
 
-class MirrorInbound(MirrorScript):
+class Script(MirrorScript):
     logFileName = "mirror-inbound.log"
     options = None
 
@@ -78,5 +78,5 @@ class MirrorInbound(MirrorScript):
         log.info("Inbound mirror script finished")
 
 if __name__ == "__main__":
-    mi = MirrorInbound()
+    mi = Script()
     sys.exit(mi.run())
