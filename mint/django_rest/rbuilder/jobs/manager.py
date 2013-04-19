@@ -1106,7 +1106,8 @@ class JobHandlerRegistry(HandlerRegistry):
                     topLevelItems = [ topLevelGroup ]
             if topLevelItems is not None:
                 # Convert top-level items to a system model
-                systemModel = "\n".join("install %s" % x for x in topLevelItems)
+                systemModel = "\n".join("install %s" % x.strip()
+                        for x in topLevelItems)
                 extra.update(systemModel = systemModel)
             elif previewId is not None:
                 if previewId.startswith('http'):
