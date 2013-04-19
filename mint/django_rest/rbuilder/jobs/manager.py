@@ -1109,6 +1109,16 @@ class JobHandlerRegistry(HandlerRegistry):
                 systemModel = "\n".join("install %s" % x for x in topLevelItems)
                 extra.update(systemModel = systemModel)
             elif previewId is not None:
+                if previewId.startswith('http'):
+                    # Preview URL was passed. We need to extract the
+                    # preview ID, load the XML for it, then get the
+                    # preview ID as understood by CIM
+                    previewPath = urlparse.urlsplit(previewId).path
+                    match = self.splitResourceId(previewPath)
+                    preview = models.JobPreviewArtifact.objects.get(
+                            creation_id=match.kwargs.get('id'))
+                    doc = etree.fromstring(preview.preview)
+                    previewId = doc.attrib['id']
                 extra.update(previewId = previewId)
             else:
                 extra.update(test = self.descriptorData.getField('dry_run'),
@@ -1175,7 +1185,6 @@ class JobHandlerRegistry(HandlerRegistry):
         ResultsTag = 'system'
 
         def getDescriptor(self, descriptorId):
-
             match = self.splitResourceId(descriptorId)
             systemId = int(match.kwargs['system_id'])
             if str(systemId) != str(self.extraArgs.get('system_id')):
