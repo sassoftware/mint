@@ -1154,7 +1154,7 @@ class JobHandlerRegistry(HandlerRegistry):
             if not node.text:
                 node.text = None
                 return ''
-            val = trovetup.TroveTuple(node.text)
+            val = trovetup.TroveTuple(node.text.strip())
             node.text = val.asString(withTimestamp=True)
             return node.text
 

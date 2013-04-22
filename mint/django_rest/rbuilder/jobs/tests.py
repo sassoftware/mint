@@ -842,7 +842,10 @@ Some more errors here
 
         old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        system, payload, content = self._testJobSystemSoftwareUpdate(old, new,
+        # RCE-1553: add some white spaces around the trove spec, make
+        # sure they get properly stripped
+        newS = "\n\t%s  \n  \n" % new
+        system, payload, content = self._testJobSystemSoftwareUpdate(old, newS,
                 dryRun=True, system=system)
 
         observed = xobj.parse(content).preview.observed
