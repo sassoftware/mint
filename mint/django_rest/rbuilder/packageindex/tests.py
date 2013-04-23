@@ -10,13 +10,16 @@ class Test(XMLTestCase):
         project = projmodels.Project.objects.get(name='chater-foo')
         branch = projmodels.ProjectVersion.objects.get(project=project, name='1')
 
-        self.package = models.Package.objects.create( project=project,
+        self.package = models.Package.objects.create(project=project,
                 name="foo", version="/%s/1-2-3" % branch.label,
                 branch_name=branch.name,
                 server_name=branch.label.split('@', 1)[0],
                 )
 
     def testModel(self):
+        # RCE-1535 - empty version should not break synthetic fields
+        models.Package()
+        # Proceed with meaningful test
         url = "packages/%s" % self.package.package_id
         response = self._get(url, username='admin', password='password')
         self.assertEquals(response.status_code, 200)

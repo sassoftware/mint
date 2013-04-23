@@ -842,7 +842,10 @@ Some more errors here
 
         old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        system, payload, content = self._testJobSystemSoftwareUpdate(old, new,
+        # RCE-1553: add some white spaces around the trove spec, make
+        # sure they get properly stripped
+        newS = "\n\t%s  \n  \n" % new
+        system, payload, content = self._testJobSystemSoftwareUpdate(old, newS,
                 dryRun=True, system=system)
 
         observed = xobj.parse(content).preview.observed
@@ -893,12 +896,20 @@ Some more errors here
         self.assertEquals(callList[0].kwargs['systemModel'],
             "install %s" % topLevelGroup)
 
-        previewId = str(uuid.uuid4())
+        # Create a preview artifact
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
+        intPreviewId = "updates/%s" % uuid.uuid4()
+        previewXml = '<preview id="%s"><blah/></preview>' % intPreviewId
+        preview = models.JobPreviewArtifact.objects.create(job=dbjob,
+                preview=previewXml, system=system)
+        # Make up a proper URL for the preview
+        previewId = job.id.rsplit('/', 2)[0] + "/inventory/previews/%s" % preview.creation_id
+
         jobXml = self._createSyncXml(system.system_id, previewId=previewId)
 
         job = self._postJob(jobXml, system.system_id)
         callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
-        self.assertEquals(callList[-1].kwargs['previewId'], previewId)
+        self.assertEquals(callList[-1].kwargs['previewId'], intPreviewId)
 
 #     def testJobSystemSoftwareUpdateWithAddedPackage(self):
 #         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
