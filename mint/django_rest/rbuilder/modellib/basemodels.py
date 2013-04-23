@@ -381,8 +381,8 @@ class BaseManager(models.Manager):
             # so.
             elif isinstance(field, ForeignKey) and \
                  field.text_field is not None and \
-                 getattr(val, 'text', val):
-                lookup = { field.text_field : getattr(val, 'text', val) }
+                 not val.getchildren() and val.text:
+                lookup = { field.text_field : val.text }
                 # Look up the inlined value
                 val = field.related.parent_model.objects.get(**lookup)
 

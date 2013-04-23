@@ -3256,6 +3256,29 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         ]
         self.failUnlessEqual(actual,desired)
 
+    def testPostSystemLineBreaksAroundManagementInterfaceName(self):
+        # RCE-1564
+        models.System.objects.all().delete()
+        doc = etree.fromstring(testsxml.system_post_xml)
+        node = doc.find('management_interface')
+        # Clear management interface ID
+        node.attrib.clear()
+        etree.SubElement(node, 'name').text = 'cim'
+        # Add whitespaces to trigger the bug
+        node.text = '\n    '
+        node.tail = '\n   \n\n'
+        system_xml = etree.tostring(doc)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        node = doc.find('management_interface')
+        self.assertEquals(node.attrib['id'],
+                'http://testserver/api/v1/inventory/management_interfaces/1')
+        self.assertEquals(node.text,
+                'Common Information Model (CIM)')
+
+
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
         system = self.newSystem(local_uuid="localuuid001",
