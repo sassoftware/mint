@@ -2178,7 +2178,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
         cfgBuffer = StringIO.StringIO()
         cc.displayKey('repositoryMap', cfgBuffer)
         repoToken = os.urandom(16).encode('hex')
-        print >> cfgBuffer, 'user %s %s' % (self.auth.username, repoToken)
+        print >> cfgBuffer, 'user * %s %s' % (self.auth.username, repoToken)
         cfgData = cfgBuffer.getvalue()
 
         r = {}
@@ -3587,6 +3587,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def _getMinCfg(self, project):
         repoToken = os.urandom(16).encode('hex')
         self.db.auth_tokens.addToken(repoToken, self.auth.userId)
+        self.db.commit()
         cfg = self._getProjectConaryConfig(project, repoToken=repoToken)
         cfg['name'] = self.auth.username
         cfg['contact'] = ''
