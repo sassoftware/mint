@@ -136,6 +136,12 @@ class JobManager(basemanager.BaseManager):
             jobs.job.append(job)
         return jobs
 
+    @classmethod
+    def systemModelForSystem(cls, system, topLevelItems):
+        systemModelLines = []
+        systemModelLines.extend("install %s" % x.strip() for x in topLevelItems)
+        return "\n".join(systemModelLines)
+
 
 class AbstractHandler(object):
     __slots__ = [ 'mgrRef', 'extraArgs', ]
@@ -983,10 +989,17 @@ class JobHandlerRegistry(HandlerRegistry):
             params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
                 self.system, destination, eventUuid=str(self.eventUuid),
                 requiredNetwork=None)
-            desiredTopLevelItems = [ x.trove_spec
+            desiredTopLevelItems = [ x.trove_spec.strip()
                 for x in self.system.desired_top_level_items.all() ]
-            return (params, ), dict(zone=self.system.managing_zone.name,
-                desiredTopLevelItems=desiredTopLevelItems)
+            kwargs = dict(zone=self.system.managing_zone.name)
+            if self.system.latest_survey_id is None or not self.system.latest_survey.has_system_model:
+                kwargs.update(desiredTopLevelItems=desiredTopLevelItems)
+            else:
+                systemModel = self.mgr.systemModelForSystem(
+                        self.system, [ trovetup.TroveTuple(x).asString()
+                            for x in desiredTopLevelItems ])
+                kwargs.update(systemModel=systemModel)
+            return (params, ), kwargs
 
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
@@ -1098,7 +1111,7 @@ class JobHandlerRegistry(HandlerRegistry):
             topLevelItems = self.descriptorData.getField('updates')
             previewId = self.descriptorData.getField('preview_id')
             topLevelGroup = self.descriptorData.getField('trove_label')
-            if self.system.latest_survey and self.system.latest_survey.has_system_model:
+            if self.system.latest_survey_id is not None and self.system.latest_survey.has_system_model:
                 # System model present, old-style invocation. Allow the
                 # preview but it will fail to apply later because there
                 # will be no previewId passed
@@ -1106,8 +1119,8 @@ class JobHandlerRegistry(HandlerRegistry):
                     topLevelItems = [ topLevelGroup ]
             if topLevelItems is not None:
                 # Convert top-level items to a system model
-                systemModel = "\n".join("install %s" % x.strip()
-                        for x in topLevelItems)
+                systemModel = self.mgr.systemModelForSystem(self.system,
+                        topLevelItems)
                 extra.update(systemModel = systemModel)
             elif previewId is not None:
                 if previewId.startswith('http'):
@@ -1136,7 +1149,8 @@ class JobHandlerRegistry(HandlerRegistry):
         def _updateDesiredInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
-            if test:
+            previewId = descriptorData.getField('preview_id')
+            if test or (previewId is not None):
                 return
             topLevelItems = set(topLevelItems)
             self.mgr.mgr.sysMgr.setDesiredTopLevelItems(system, topLevelItems)

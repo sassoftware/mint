@@ -826,7 +826,7 @@ Some more errors here
         # Create new system
         system = self._makeSystem()
         # Add a survey with a system model
-        from rbuilder.inventory import testsxml as txml
+        txml = invtests.testsxml
         response = self._post("inventory/systems/%s/surveys" % system.pk,
             data = txml.survey_input_xml,
             username='admin', password='password')
@@ -910,6 +910,61 @@ Some more errors here
         job = self._postJob(jobXml, system.system_id)
         callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.assertEquals(callList[-1].kwargs['previewId'], intPreviewId)
+
+    def testJobSystemScan_systemModel(self):
+        system = self._makeSystemWithSystemModel()
+
+        topLevelGroup = "group-foo=/a@b:c/12345.67:1-2-3[is: x86_64]"
+        invmodels.SystemDesiredTopLevelItem.objects.create(
+            system=system, trove_spec=topLevelGroup)
+
+        jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_SCAN)
+        jobXml = """
+<job>
+  <job_type id="http://localhost/api/v1/inventory/event_types/%(jobTypeId)s"/>
+  <descriptor id="http://testserver/api/v1/inventory/systems/%(systemId)s/descriptors/survey_scan"/>
+  <descriptor_data/>
+</job>
+""" % dict(jobTypeId=jobType.job_type_id, systemId=system.system_id)
+
+        response = self._post('jobs', jobXml,
+            username='testuser', password='password')
+        self.assertEquals(response.status_code, 200)
+        obj = xobj.parse(response.content)
+        job = obj.job
+        self.failUnlessEqual(job.descriptor.id,
+            "http://testserver/api/v1/inventory/systems/%s/descriptors/survey_scan" % system.system_id)
+
+        repClient = self.mgr.repeaterMgr.repeaterClient
+        cimParams = repClient.CimParams
+        resLoc = repClient.ResultsLocation
+
+        callList = repClient.getCallList()
+
+        eventUuids = [ x.args[0].pop('eventUuid') for x in callList ]
+
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
+        # Make sure the job is related to the system
+        self.failUnlessEqual(
+            [ (x.system_id, x.event_uuid) for x in dbjob.systems.all() ],
+            [ (system.system_id, eventUuids[0]) ],
+        )
+
+        self.failUnlessEqual(callList,
+            [
+                ('survey_scan_cim',
+                    (
+                        cimParams(**{'targetType': None, 'instanceId': None, 'targetName': None, 'port': 5989, 'host': u'1.1.1.1', 'launchWaitTime': 1200, 'clientKey': u'testsystemsslclientkey', 'requiredNetwork': None, 'clientCert': u'testsystemsslclientcertificate'}),
+
+                    ),
+                    dict(
+                        systemModel = 'install group-fake=/fake.rpath.com@rpath:fake-0/0-0-0[]\ninstall group-foo=/a@b:c/1-2-3[is: x86_64]',
+                        zone=system.managing_zone.name,
+                        uuid=job.job_uuid,
+                    ),
+                ),
+            ])
+
 
 #     def testJobSystemSoftwareUpdateWithAddedPackage(self):
 #         topLevelGroup = "group-foo=example.com@rpath:42/1-2-3"
