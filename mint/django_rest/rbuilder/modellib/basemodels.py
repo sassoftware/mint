@@ -45,8 +45,15 @@ class Etree(object):
     @classmethod
     def findBasicChild(cls, etreeModel, childName, default=None):
         ret = etreeModel.find(childName)
-        if ret is None or ret.text is None:
+        if ret is None or len(ret) > 0:
+            # If the node has children, its text value is None because
+            # we don't support mixed content in our XML
             return default
+        if ret.text is None:
+            # lxml considers text to be None for <a/> or <a></a> - we
+            # expect that to be an empty string, and the absence of the
+            # node to be None
+            return ''
         return ret.text
 
     @classmethod

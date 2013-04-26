@@ -13,6 +13,7 @@ from django.db import connection, transaction
 from django.template import TemplateDoesNotExist
 
 from mint.django_rest import timeutils
+from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
@@ -34,6 +35,18 @@ logging.disable(logging.CRITICAL)
 
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
+
+class BasicTests(XMLTestCase):
+    """XML Parsing and such"""
+    def testEmptyStringsInXmlNodes(self):
+        s = "<root><a/><b></b></root>"
+        doc = modellib.Etree.fromstring(s)
+        self.assertEquals(modellib.Etree.findBasicChild(doc, 'a'), '')
+        self.assertEquals(modellib.Etree.findBasicChild(doc, 'b'), '')
+        self.assertEquals(modellib.Etree.findBasicChild(doc, 'c'), None)
+        self.assertEquals(
+                modellib.Etree.findBasicChild(doc, 'c', default=1), 1)
+
 
 class AuthTests(XMLTestCase):
     def testAuthRCE1341(self):
@@ -2930,7 +2943,6 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
 </system>
 """
         xml = xmlTempl % params
-        from mint.django_rest.rbuilder import modellib
         etreeModel = etree.fromstring(xml)
         model = models.System.objects.load_from_object(etreeModel, request=None,
             flags=modellib.Flags(save=False))
