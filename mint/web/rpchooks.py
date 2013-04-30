@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import json
 import xmlrpclib
 from conary.lib import util
 from conary.repository import errors
@@ -28,7 +29,11 @@ def rpcHandler(context):
     # only handle POSTs
     if req.method.upper() != 'POST':
         raise web_exc.HTTPMethodNotAllowed(allow='POST')
-    if req.content_type != 'text/xml':
+    if req.content_type == 'text/xml':
+        kind = 'xml'
+    elif req.content_type == 'application/x-json':
+        kind = 'json'
+    else:
         raise web_exc.HTTPBadRequest()
     # instantiate a MintServer
     srvr = server.MintServer(context.cfg, allowPrivate=True, req=req,
@@ -40,7 +45,10 @@ def rpcHandler(context):
         stream.seek(0)
     elif encoding != 'identity':
         raise web_exc.HTTPBadRequest()
-    (args, method) = util.xmlrpcLoad(stream)
+    if kind == 'xml':
+        (args, method) = util.xmlrpcLoad(stream)
+    else:
+        (method, args) = json.load(stream)
 
     # coax parameters into something MintServer likes
     params = [method, context.authToken, args]
@@ -57,5 +65,8 @@ def rpcHandler(context):
                 content_type='text/html')
 
     # create a response
-    resp = xmlrpclib.dumps((result,), methodresponse=1)
-    return context.responseFactory(content_type='text/xml', body=resp)
+    if kind == 'xml':
+        resp = xmlrpclib.dumps((result,), methodresponse=1)
+    else:
+        resp = json.dumps(result[1])
+    return context.responseFactory(content_type=req.content_type, body=resp)

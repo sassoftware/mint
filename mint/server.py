@@ -2977,14 +2977,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return [versionDict, versionList]
 
     @typeCheck(int)
-    # @requiresAuth
+    @requiresAuth
     def getAllProjectLabels(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT DISTINCT(%s) FROM PackageIndex WHERE projectId=?"
-                % database.concat(self.db, 'serverName', "'@'",  'branchName'),
-            projectId)
-        labels = cu.fetchall()
-        return [x[0] for x in labels]
+        cu.execute("""SELECT DISTINCT(serverName || '@' || branchName)
+                FROM PackageIndex WHERE projectId=?""", projectId)
+        return [x[0] for x in cu]
 
     @typeCheck(int)
     @requiresAuth
