@@ -1,0 +1,82 @@
+#!/usr/bin/python
+#
+# Copyright (c) SAS Institute Inc.
+#
+
+import logging
+import sys
+
+from conary import versions
+from conary.conaryclient import mirror
+from conary.repository import errors
+
+from mint import projects
+from mint import server
+from mint.db import repository
+from mint.scripts.mirror import MirrorScript
+
+log = logging.getLogger(__name__)
+
+
+class Script(MirrorScript):
+    logFileName = "mirror-inbound.log"
+    options = None
+
+    def action(self):
+        self.server = server.MintServer(self.cfg, allowPrivate=True)
+        self.server._setAuth((self.cfg.authUser, self.cfg.authPass))
+        self.mgr = self.server.reposMgr
+
+        for label in self.server.getInboundMirrors():
+            inboundMirrorId, targetProjectId, sourceLabels, sourceUrl, \
+                    sourceAuthType, sourceUser, sourcePass, \
+                    sourceEntitlement, mirrorOrder, allLabels = label
+            targetProject = projects.Project(self.server, targetProjectId)
+            handle = self.mgr.getRepositoryFromProjectId(targetProjectId)
+            log.info("Mirroring %s", targetProject.name)
+
+            try:
+                reposHost = handle.fqdn
+                cfg = mirror.MirrorConfiguration()
+                cfg.host = reposHost
+                if allLabels:
+                    cfg.labels = []
+                else:
+                    cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
+
+                # Source repository is a normal ShimNetClient but preprogrammed
+                # to look upstream for this FQDN.
+                userInfo = entitlement = None
+                if sourceAuthType == 'userpass':
+                    userInfo = (sourceUser, sourcePass)
+                elif sourceAuthType == 'entitlement':
+                    entitlement = sourceEntitlement
+                sourceRepos = self.mgr.getRepos(userId=repository.ANY_READER)
+                sourceRepos.c.cache[reposHost] = self.mgr.getServerProxy(
+                        reposHost, url=sourceUrl, user=userInfo, entitlement=entitlement)
+
+                # Target repository is a normal ShimNetClient but preprogrammed
+                # to use this specific handle.
+                targetRepos = self.mgr.getRepos()
+                targetRepos.c.cache[reposHost] = handle.getServerProxy(
+                        userId=repository.ANY_WRITER)
+
+                self._doMirror(cfg, sourceRepos, targetRepos)
+
+            except KeyboardInterrupt:
+                log.info("Inbound mirror terminated by user")
+                break
+            except errors.InsufficientPermission, ie:
+                log.error("%s. Check to make sure that you have been given access to mirror from the aforementioned repository.", ie)
+            except:
+                log.exception("Unhandled exception while mirroring %s",
+                        targetProject.name)
+
+        return 0
+
+    def cleanup(self):
+        log.info("Inbound mirror script finished")
+
+if __name__ == "__main__":
+    mi = Script()
+    sys.exit(mi.run())

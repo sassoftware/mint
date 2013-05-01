@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 """
@@ -315,7 +315,8 @@ class RepositoryManager(RepomanMixin):
                     commitEmail, database, url, authType, username, password,
                     entitlement, %s AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
+                %s ORDER BY hidden ASC, projectId ASC
+                """ % (sourceClause, whereClause),
                 *args)
 
         for row in cu:
@@ -1357,6 +1358,8 @@ class MultiShimServerCache(object):
         else:
             # Found the project -- use that project's (maybe shim) server proxy
             return repo.getServerProxy(userId=self.userId)
+
+    singleServer = netclient.ServerCache.singleServer.im_func
 
 
 class MultiShimNetClient(shimclient.ShimNetClient):
