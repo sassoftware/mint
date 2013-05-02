@@ -227,8 +227,6 @@ class ProductManager(manager.Manager):
         except sqlerrors.CursorError, e:
             raise mint_error.InvalidError(e.msg)
 
-        authInfo = models.AuthInfo('userpass',
-                self.cfg.authUser, self.cfg.authPass)
         self.reposMgr.createRepository(projectId)
 
         # can only add members after the repository is set up

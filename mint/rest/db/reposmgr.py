@@ -39,11 +39,9 @@ class RepositoryManager(manager.Manager):
     def createRepository(self, productId, createMaps=True):
         repos = self.db.reposShim.getRepositoryFromProjectId(productId)
 
-        authInfo = models.AuthInfo('userpass',
-                self.cfg.authUser, self.cfg.authPass)
-
+        authInfo = models.AuthInfo('none')
         if createMaps:
-            self._setLabel(productId, repos.fqdn, repos.getURL(), authInfo)
+            self._setLabel(productId, repos.fqdn, None, authInfo)
 
         if repos.hasDatabase:
             # Create the repository infrastructure (db, dirs, etc.).
@@ -58,14 +56,10 @@ class RepositoryManager(manager.Manager):
         # them later - instead we amortize the cost over every commit
         netServer = repos.getNetServer()
         self._getRoleForLevel(netServer, userlevels.USER)
+        self._getRoleForLevel(netServer, userlevels.ADMIN)
         if not repos.isExternal:
             self._getRoleForLevel(netServer, userlevels.DEVELOPER)
             self._getRoleForLevel(netServer, userlevels.OWNER)
-
-        # add the auth user so we can add additional permissions
-        # to this repository
-        self.addUser(repos, self.cfg.authUser,
-                password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def deleteRepository(self, fqdn):
         # TODO: move this to the internal RepositoryManager
