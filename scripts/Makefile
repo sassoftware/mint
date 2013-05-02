@@ -16,8 +16,6 @@ static_files =				\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
-	mirror-inbound			\
-	mirror-outbound			\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\
@@ -33,6 +31,8 @@ generated_files = $(generic_scripts)
 generic_scripts = \
 	job-cleanup			\
 	migrate-config			\
+	mirror-inbound			\
+	mirror-outbound			\
 	pki-tool			\
 	postgres-auto-update		\
 	postgres-major-migrate		\

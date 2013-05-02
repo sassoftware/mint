@@ -1,9 +1,7 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
-import copy
-import os
 import sys
 
 from mint import mint_error
@@ -11,7 +9,6 @@ from mint import userlevels
 from mint.db import projects
 from mint.db import repository as reposdb
 from mint.lib import mintutils
-from mint.lib import unixutils
 from mint.rest import errors
 from mint.rest.api import models
 from mint.rest.db import manager
@@ -21,7 +18,6 @@ from conary import conaryclient
 from conary import trove as cny_trove
 from conary.repository import changeset
 from conary.repository import errors as reposerrors
-from conary.repository import shimclient
 
 _cachedCfg = None
 
@@ -68,7 +64,7 @@ class RepositoryManager(manager.Manager):
 
         # add the auth user so we can add additional permissions
         # to this repository
-        self.addUser(repos.fqdn, self.cfg.authUser,
+        self.addUser(repos, self.cfg.authUser,
                 password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def deleteRepository(self, fqdn):
@@ -152,7 +148,9 @@ class RepositoryManager(manager.Manager):
         return self._getRepositoryHandle(fqdn).getShimServer()
 
     def _getRepositoryHandle(self, fqdn):
-        if '.' in fqdn:
+        if isinstance(fqdn, reposdb.RepositoryHandle):
+            return fqdn
+        elif '.' in fqdn:
             return self.db.reposShim.getRepositoryFromFQDN(fqdn)
         elif fqdn.isdigit():
             return self.db.reposShim.getRepositoryFromProjectId(fqdn)

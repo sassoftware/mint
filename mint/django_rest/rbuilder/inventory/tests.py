@@ -3289,6 +3289,35 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         self.assertEquals(node.text,
                 'Common Information Model (CIM)')
 
+    def testPostSystemWithCredentials(self):
+        # RCE-1610
+        models.System.objects.all().delete()
+        doc = etree.fromstring(testsxml.system_post_xml)
+        creds = etree.SubElement(doc, 'credentials')
+        credentials = dict(username='jerry', password='seinfeld')
+        for k, v in credentials.items():
+            etree.SubElement(creds, k).text = v
+        # Change management interface to WMI
+        node = doc.find('management_interface')
+        # Clear management interface ID
+        node.attrib.clear()
+        etree.SubElement(node, 'name').text = 'wmi'
+
+        system_xml = etree.tostring(doc)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        node = doc.find('management_interface')
+        self.assertEquals(node.attrib['id'],
+                'http://testserver/api/v1/inventory/management_interfaces/2')
+        self.assertEquals(node.text,
+                'Windows Management Instrumentation (WMI)')
+        system = models.System.objects.get(system_id=doc.find('system_id').text)
+        self.assertEquals(
+                self.mgr.sysMgr.unmarshalCredentials(system.credentials),
+                credentials)
+
 
 class SystemCertificateTestCase(XMLTestCase):
     def testGenerateSystemCertificates(self):
