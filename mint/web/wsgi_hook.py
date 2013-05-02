@@ -82,6 +82,7 @@ class application(object):
                 key='pysid',
                 secure=True,
                 httponly=True,
+                timeout=self.cfg.sessionTimeout,
                 )
 
         self.start_response = start_response
