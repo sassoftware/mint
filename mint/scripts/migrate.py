@@ -5477,3 +5477,50 @@ class MigrateTo_67(SchemaMigration):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Platforms ADD upstream_url text")
         return True
+
+class MigrateTo_68(SchemaMigration):
+    '''citrine'''
+    Version = (68, 0)
+
+    def migrate(self):
+        db = self.db
+        createTable2(db, 'target_launch_profile', """
+                    id                      %(PRIMARYKEY)s,
+                    target_id               integer             NOT NULL
+                        REFERENCES Targets ON DELETE CASCADE,
+                    name                    TEXT NOT NULL,
+                    description             TEXT NOT NULL,
+                    descriptor_data         TEXT NOT NULL,
+                    created_date            TIMESTAMP WITH TIME ZONE NOT NULL
+                        DEFAULT current_timestamp,
+                    modified_date           TIMESTAMP WITH TIME ZONE NOT NULL
+                        DEFAULT current_timestamp,
+                    created_by integer
+                        REFERENCES "users" ("userid") ON DELETE SET NULL
+                """)
+        db.createIndex('target_launch_profile',
+                'target_launch_profile_name_uq',
+                'name', unique=True)
+        createTable2(db, 'jobs_job_launch_profile', """
+                id          %(PRIMARYKEY)s,
+                job_id      integer NOT NULL
+                            REFERENCES jobs_job(job_id)
+                            ON DELETE CASCADE,
+                launch_profile_id integer NOT NULL
+                            REFERENCES target_launch_profile(id)
+                            ON DELETE CASCADE
+                """)
+        db.createIndex('jobs_job_launch_profile',
+                'jobs_job_launch_profile_jid_pid_uq',
+                'job_id, launch_profile_id', unique=True)
+        cu = self.db.cursor()
+        cu.execute("""
+            INSERT INTO "jobs_job_type"
+                ("name", "description", "priority", "resource_type")
+            VALUES
+                ('create launch profile',
+                 'Create launch profile',
+                 105, 'Target')
+        """)
+        return True
+

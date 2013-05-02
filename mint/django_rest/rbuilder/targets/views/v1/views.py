@@ -153,6 +153,44 @@ class TargetSystemLaunchService(service.BaseService):
         return self.mgr.serializeDescriptor(
             self.mgr.getDescriptorLaunchSystem(target_id, file_id))
 
+class TargetSystemLaunchWithProfileService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id, profile_id, file_id):
+        return self.get(target_id, profile_id, file_id)
+
+    def get(self, target_id, profile_id, file_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorLaunchSystemWithProfile(target_id,
+                profile_id, file_id))
+
+
+class TargetCreateLaunchProfileService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        return self.mgr.serializeDescriptor(
+            self.mgr.getDescriptorCreateLaunchProfile(target_id))
+
+class TargetLaunchProfilesService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id):
+        return self.get(target_id)
+
+    def get(self, target_id):
+        target = self.mgr.getTargetById(target_id)
+        return self.mgr.getLaunchProfiles(target)
+
+class TargetLaunchProfileService(service.BaseService):
+    @return_xml
+    def rest_GET(self, request, target_id, launch_profile_id):
+        return self.get(target_id, launch_profile_id)
+
+    def get(self, target_id, launch_profile_id):
+        target = self.mgr.getTargetById(target_id)
+        return self.mgr.getLaunchProfile(target, launch_profile_id)
+
 class TargetTypeCreateTargetService(service.BaseService):
     @return_xml
     def rest_GET(self, request, target_type_id):

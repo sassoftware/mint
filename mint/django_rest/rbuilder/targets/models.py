@@ -117,6 +117,7 @@ class Target(modellib.XObjIdModel):
         actions.action.append(self._actionConfigureUserCredentials())
         actions.action.append(self._actionRefreshImages())
         actions.action.append(self._actionRefreshSystems())
+        actions.action.append(self._actionCreateLaunchProfile())
         self.jobs = modellib.HrefFieldFromModel(self, "TargetJobs")
         self.target_user_credentials = modellib.HrefFieldFromModel(self,
             viewName="TargetUserCredentials")
@@ -171,6 +172,17 @@ class Target(modellib.XObjIdModel):
                 enabled=enabled,
                 descriptorModel=self, descriptorViewName="TargetRefreshSystems")
         return action
+
+    def _actionCreateLaunchProfile(self):
+        actionName = "Create launch profile"
+        enabled = (self.state != self.States.UNCONFIGURED)
+        action = jobmodels.EventType.makeAction(
+                jobTypeName=jobmodels.EventType.TARGET_CREATE_LAUNCH_PROFILE,
+                actionName=actionName,
+                enabled=enabled,
+                descriptorModel=self, descriptorViewName="TargetCreateLaunchProfile")
+        return action
+
 
     @classmethod
     def getDriverClassForTargetId(cls, targetId):
@@ -385,6 +397,44 @@ class JobTarget(modellib.XObjModel):
     job = models.ForeignKey(jobmodels.Job, related_name='target_jobs')
     target = models.ForeignKey('Target')
 
+class TargetLaunchProfiles(modellib.Collection):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(tag='launch_profiles')
+    list_fields = ['launch_profiles']
+
+class TargetLaunchProfile(modellib.XObjIdModel):
+    class Meta:
+        db_table = "target_launch_profile"
+        unique_together = [ 'name' ]
+    _xobj_explicit_accessors = set()
+
+    _xobj = xobj.XObjMetadata(tag='launch_profile')
+    id = models.AutoField(primary_key=True)
+    target = D(models.ForeignKey('Target'), "Target")
+    name = D(models.TextField(null=False), "Profile Name")
+    description = D(models.TextField(null=False), "Profile Description")
+    descriptor_data = D(modellib.XMLField(), "Descriptor data")
+    created_by = D(modellib.ForeignKey(usersmodels.User, null=True,
+            related_name='+', db_column='created_by',
+            on_delete=models.SET_NULL),
+        "User who created system")
+
+class JobLaunchProfile(modellib.XObjModel):
+    class Meta:
+        db_table = 'jobs_job_launch_profile'
+        unique_together = [ 'job', 'launch_profile' ]
+    view_name = "TargetLaunchProfile"
+
+    _xobj = xobj.XObjMetadata(tag='launch_profile')
+
+    id = models.AutoField(primary_key=True)
+    job = models.ForeignKey(jobmodels.Job, related_name='created_launch_profiles')
+    launch_profile = models.ForeignKey(TargetLaunchProfile)
+
+    def get_url_key(self, *args, **kwargs):
+        return [self.launch_profile.target.target_id, self.launch_profile.id]
 
 for mod_obj in sys.modules[__name__].__dict__.values():
     if hasattr(mod_obj, '_xobj'):
