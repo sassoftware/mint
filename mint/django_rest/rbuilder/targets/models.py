@@ -175,7 +175,11 @@ class Target(modellib.XObjIdModel):
 
     def _actionCreateLaunchProfile(self):
         actionName = "Create launch profile"
-        enabled = (self.state != self.States.UNCONFIGURED)
+        enabled = (self._rbmgr is not None and
+                self.state != self.States.UNCONFIGURED)
+        if enabled:
+            creds = self._rbmgr.targetsManager.getTargetCredentialsForCurrentUser(self)
+            enabled &= (creds is not None)
         action = jobmodels.EventType.makeAction(
                 jobTypeName=jobmodels.EventType.TARGET_CREATE_LAUNCH_PROFILE,
                 actionName=actionName,
