@@ -92,6 +92,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return m
 
     def _getTargetCredentialsForCurrentUser(self, target):
+        if self.auth is None:
+            return None
         userId = self.auth.userId
         return self._getTargetCredentialsForUser(target, userId)
 
