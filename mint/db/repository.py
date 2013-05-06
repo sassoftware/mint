@@ -677,9 +677,15 @@ class RepositoryHandle(object):
             # If the password is not valid, just ignore it -- the password
             # might actually be intended for something we're proxying to.
             # See RBL-5269
-            maybeUserId = self._getUserIdFromToken(mintToken)
-            if maybeUserId is not None:
-                userId = maybeUserId
+            if (useRepoDb and mintToken.user == self._cfg.authUser
+                    and mintToken.password == self._cfg.authPass):
+                # Allow local scripts (e.g. mirror-inbound) to use mintauth to
+                # authenticate.
+                userId = ANY_WRITER
+            else:
+                maybeUserId = self._getUserIdFromToken(mintToken)
+                if maybeUserId is not None:
+                    userId = maybeUserId
         return self.getAuthToken(userId, level=None, authToken=mintToken,
                 extraRoles=extraRoles)
 
