@@ -700,7 +700,7 @@ class MintServer(object):
         try:
             sync.syncReposByFQDN(fqdn)
         except:
-            log.traceback("Error synchronizing repository branches")
+            log.exception("Error synchronizing repository branches")
         return projectId
 
     @typeCheck(int)
