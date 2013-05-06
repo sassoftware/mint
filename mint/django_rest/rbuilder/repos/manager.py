@@ -52,14 +52,10 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
         # them later - instead we amortize the cost over every commit
         netServer = repos.getNetServer()
         self._getRoleForLevel(netServer, userlevels.USER)
+        self._getRoleForLevel(netServer, userlevels.ADMIN)
         if not repos.isExternal:
             self._getRoleForLevel(netServer, userlevels.DEVELOPER)
             self._getRoleForLevel(netServer, userlevels.OWNER)
-
-        # add the auth user so we can add additional permissions
-        # to this repository
-        self.addUser(repos, self.cfg.authUser,
-                password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def _getRoleForLevel(self, reposServer, level):
         """
@@ -112,25 +108,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
     def changePassword(self, repos, username, password):
         reposServer = repos.getShimServer()
         reposServer.auth.changePassword(username, password)
-
-    def addLabel(self, project, fqdn, url, authInfo):
-        authUser = authPass = entitlement = ''
-        authType = authInfo.auth_type
-        if authType == 'entitlement':
-            entitlement = authInfo.entitlement
-        elif authType == 'userpass':
-            authUser, authPass = authInfo.user_name, authInfo.password
-
-        # This table needs to go away, with the authentication bits moved
-        # into projects and the rest dropped. Until then, we need a dummy
-        # label as too many things depend on it being a label even though
-        # they really just need a FQDN.
-        label = fqdn + "@rpl:2"
-
-        newLabel = models.Label(project=project, label=label, url=url,
-            auth_type=authType, user_name=authUser, password=authPass,
-            entitlement=entitlement)
-        newLabel.save()
 
     @exposed
     def getRepositoryForProject(self, project):

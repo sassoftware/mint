@@ -1,11 +1,19 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-
-# This script is only used when the target mirror is in a DMZ and does not
-# have permission/access to call back to the rBuilder Appliance to mirror.
-# This script should be run from a machine with access to both rBA and mirror.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 import logging
 import sys
@@ -43,11 +51,8 @@ class Script(MirrorScript):
 
             try:
                 cfg.host = reposHost = sourceProject.fqdn
-
-                sourceProjCCfg = sourceProject.getConaryConfig()
-                sourceUrl = sourceProjCCfg.repositoryMap[reposHost]
-                conaryProxy = sourceProjCCfg.conaryProxy
-                repositoryMap = client.getFullRepositoryMap()
+                sourceUrl = 'https://localhost/repos/%s/' % (
+                        sourceProject.shortname,)
 
                 # Note that the mirror role must be named differently so that
                 # conary does not delete it when the user is deleted at the
@@ -58,23 +63,16 @@ class Script(MirrorScript):
 
                 # Configure source
                 sourceCfg = cfg.setSection("source")
-                sourceCfg.repositoryMap.update(repositoryMap)
                 sourceCfg.repositoryMap.update({reposHost: sourceUrl})
+                sourceCfg.user.addServerGlob('*',
+                        self.cfg.authUser, self.cfg.authPass)
                 cfg.setSection('') # Switch back to the main config
-
-                # Add user/entitlement information from all projects
-                _, _, userMap, entMap = client.getAllLabelsForProjects()
-                for host, authInfo in userMap:
-                    sourceCfg.user.addServerGlob(host, authInfo[0], authInfo[1])
-                for host, entitlement in entMap:
-                    sourceCfg.entitlement.addEntitlement(host, entitlement[1])
 
                 # Get a repository client for the mirror function
                 sourceCCfg = conarycfg.ConaryConfiguration()
+                sourceCCfg.configLine('includeConfigFile https://localhost/conaryrc')
                 sourceCCfg.repositoryMap.update(sourceCfg.repositoryMap)
                 sourceCCfg.user = sourceCfg.user
-                sourceCCfg.entitlement = sourceCfg.entitlement
-                sourceCCfg.conaryProxy = conaryProxy
 
                 # privRepos is a privileged netclient for managing the
                 # mirror user and its permissions
@@ -144,13 +142,8 @@ class Script(MirrorScript):
                     # Now that we've brought trove access up to date,
                     # delete our admin access to this project's
                     # repository and replace it with the mirror user.
-                    user = conarycfg.UserInformation(data for data in
-                        sourceCfg.user if data[0] != reposHost)
-                    entitlement = conarycfg.EntitlementList(data for data in
-                        sourceCfg.entitlement if data[0] != reposHost)
-                    user.insert(0, (reposHost, (mirrorUser, mirrorPassword)))
-                    sourceCfg.user = sourceCCfg.user = user
-                    sourceCfg.entitlement = sourceCCfg.entitlement = entitlement
+                    sourceCfg.user.addServerGlob(reposHost, mirrorUser,
+                            mirrorPassword)
 
                     # And re-open the repository
                     sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()

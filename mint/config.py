@@ -143,6 +143,7 @@ class MintConfig(conarycfg.ConfigFile):
     siteDomainName          = (CfgString, 'rpath.com',
         "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
     templatePath            = (CfgPath, _templatePath + '/web/templates')
+    sessionTimeout          = (CfgInt, 3600 * 24 * 7)
 
     # Web features
     licenseCryptoReports    = (CfgBool, True)

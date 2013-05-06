@@ -534,6 +534,12 @@ class LabelsTable(database.KeyedTable):
     @database.dbWriter
     def editLabel(self, cu, labelId, label, url, authType='none',
             username=None, password=None, entitlement=None):
+        if not url:
+            url = None
+        if not username:
+            username = password = None
+        if not entitlement:
+            entitlement = None
         cu.execute("""UPDATE Labels SET label=?, url=?, authType=?,
             username=?, password=?, entitlement=? WHERE labelId=?""",
             label, url, authType, username, password, entitlement, labelId)

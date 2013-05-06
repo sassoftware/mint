@@ -188,13 +188,8 @@ class AdminHandler(WebHandler):
 
             # set up the mirror, if requested
             if useMirror == 'net':
-                localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
-                           '', self.cfg.siteHost, self.cfg.basePath, 
-                           hostname)
-
-                # set the internal label to our authUser and authPass
-                project.editLabel(labelId, str(extLabel), localUrl,
-                    'userpass', self.cfg.authUser, self.cfg.authPass, '')
+                project.editLabel(labelId, str(extLabel),
+                        '', 'none', '', '', '')
 
                 if inboundMirror and editing:
                     mirrorId = inboundMirror['inboundMirrorId']

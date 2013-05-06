@@ -6,6 +6,8 @@
 import logging
 import sys
 
+from conary import conaryclient
+from conary import conarycfg
 from conary import versions
 from conary.conaryclient import mirror
 from conary.repository import errors
@@ -32,11 +34,10 @@ class Script(MirrorScript):
                     sourceAuthType, sourceUser, sourcePass, \
                     sourceEntitlement, mirrorOrder, allLabels = label
             targetProject = projects.Project(self.server, targetProjectId)
-            handle = self.mgr.getRepositoryFromProjectId(targetProjectId)
+            reposHost = targetProject.fqdn
             log.info("Mirroring %s", targetProject.name)
 
             try:
-                reposHost = handle.fqdn
                 cfg = mirror.MirrorConfiguration()
                 cfg.host = reposHost
                 if allLabels:
@@ -44,8 +45,8 @@ class Script(MirrorScript):
                 else:
                     cfg.labels = [versions.Label(x) for x in sourceLabels.split()]
 
-                # Source repository is a normal ShimNetClient but preprogrammed
-                # to look upstream for this FQDN.
+                # Source repository is a ShimNetClient preprogrammed to look
+                # upstream for this FQDN.
                 userInfo = entitlement = None
                 if sourceAuthType == 'userpass':
                     userInfo = (sourceUser, sourcePass)
@@ -55,11 +56,13 @@ class Script(MirrorScript):
                 sourceRepos.c.cache[reposHost] = self.mgr.getServerProxy(
                         reposHost, url=sourceUrl, user=userInfo, entitlement=entitlement)
 
-                # Target repository is a normal ShimNetClient but preprogrammed
-                # to use this specific handle.
-                targetRepos = self.mgr.getRepos()
-                targetRepos.c.cache[reposHost] = handle.getServerProxy(
-                        userId=repository.ANY_WRITER)
+                # Target repository is a regular dumb client using internal
+                # creds.
+                targetCfg = conarycfg.ConaryConfiguration(False)
+                targetCfg.includeConfigFile('https://localhost/conaryrc')
+                targetCfg.user.addServerGlob(reposHost,
+                        self.cfg.authUser, self.cfg.authPass)
+                targetRepos = conaryclient.ConaryClient(targetCfg).repos
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
 
