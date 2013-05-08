@@ -958,7 +958,7 @@ Some more errors here
 
                     ),
                     dict(
-                        systemModel = 'install group-fake=/fake.rpath.com@rpath:fake-0/0-0-0[]\ninstall group-foo=/a@b:c/1-2-3[is: x86_64]',
+                        systemModel = 'install group-fake=/fake.rpath.com@rpath:fake-0/0-0-0\ninstall group-foo=/a@b:c/1-2-3',
                         zone=system.managing_zone.name,
                         uuid=job.job_uuid,
                     ),
