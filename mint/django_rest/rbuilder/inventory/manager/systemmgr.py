@@ -616,6 +616,16 @@ class SystemManager(basemanager.BaseManager):
             system.created_by = for_user
             system.modified_by = for_user
 
+        etreeModel = getattr(system, '_etreeModel', None)
+        if etreeModel is not None:
+            creds = etreeModel.find('credentials')
+            if creds is not None:
+                credsDict = dict((x.tag, x.text)
+                        for x in creds.iterchildren()
+                        if not x.tag.startswith('_')
+                        and bool(x.text))
+                if credsDict:
+                    self._addSystemCredentials(system, credsDict)
         # add the system
         system.save()
 

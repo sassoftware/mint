@@ -247,6 +247,14 @@ event_types_xml="""\
     <resource_type>System</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/28">
+    <description>Create launch profile</description>
+    <job_type_id>28</job_type_id>
+    <name>create launch profile</name>
+    <priority>105</priority>
+    <resource_type>Target</resource_type>
+    <system_events/>
+  </event_type>
 </event_types>"""
 
 event_type_put_xml="""\
