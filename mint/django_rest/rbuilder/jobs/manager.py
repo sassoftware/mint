@@ -996,10 +996,14 @@ class JobHandlerRegistry(HandlerRegistry):
                 kwargs.update(desiredTopLevelItems=desiredTopLevelItems)
             else:
                 systemModel = self.mgr.systemModelForSystem(
-                        self.system, [ trovetup.TroveTuple(x).asString()
+                        self.system, [ self._troveTupForSystemModel(x)
                             for x in desiredTopLevelItems ])
                 kwargs.update(systemModel=systemModel)
             return (params, ), kwargs
+
+        def _troveTupForSystemModel(self, trvspec):
+            trvtup = trovetup.TroveTuple(trvspec)
+            return "%s=%s" % (trvtup.name, trvtup.version.asString())
 
         def postprocessRelatedResource(self, job, model):
             model.event_uuid = str(self.eventUuid)
