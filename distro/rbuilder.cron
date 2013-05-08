@@ -4,7 +4,7 @@
 
 */5     *   *   *   *       root    /usr/share/rbuilder/scripts/job-cleanup -q
 # Capsule indexer
-*/10    *   *   *   *       root    curl -d "" --output /dev/null --stderr /dev/null http://127.0.0.1/api/capsules/rpm/content
+#*/10    *   *   *   *       root    curl -d "" --output /dev/null --stderr /dev/null http://127.0.0.1/api/capsules/rpm/content
 *       *   *   *   *       root    /usr/share/rbuilder/scripts/process-system-events -q >& /dev/null
 0       0   *   *   *       root    /usr/share/rbuilder/scripts/target-systems-import -q >& /dev/null
 0       0   *   *   *       root    /usr/share/rbuilder/scripts/purge-surveys -q >& /dev/null
