@@ -3139,6 +3139,62 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         return True
 
+    @typeCheck(int)
+    @requiresAdmin
+    @private
+    def getBackgroundMirror(self, projectId):
+        """
+        Return proxy-mode project IDs that have the same FQDN as the given
+        mirror-mode project
+        """
+        cu = self.db.cursor()
+        cu.execute("""
+            SELECT b.projectId
+            FROM Projects a
+            JOIN Projects b ON a.fqdn = b.fqdn
+            LEFT JOIN InboundMirrors am ON am.targetProjectId = a.projectId
+            LEFT JOIN InboundMirrors bm ON bm.targetProjectId = b.projectId
+            WHERE a.projectId = ? AND a.external AND a.hidden
+            AND am.targetProjectId IS NOT NULL
+            AND b.projectId != a.projectId AND b.external AND NOT b.hidden
+            AND bm.targetProjectId IS NULL
+            """, projectId)
+        return set(x[0] for x in cu)
+
+    @typeCheck(int, bool)
+    @requiresAdmin
+    @private
+    def setBackgroundMirror(self, projectId, backgroundMirror):
+        mirror = self.getInboundMirror(projectId)
+        if not mirror:
+            return False
+        projectIds = self.getBackgroundMirror(projectId)
+        if backgroundMirror and not projectIds:
+            project = self.projects.get(projectId)
+            self.hideProject(projectId)
+            proxyId = self.newExternalProject(
+                    name=project['name'] + '-proxy',
+                    hostname=project['hostname'] + '-proxy',
+                    domainname=project['domainname'],
+                    label=project['fqdn'] + '@proxy:proxy',
+                    url=mirror['sourceUrl'],
+                    mirrored=False,
+                    )
+            proxyLabelId = self.labels.getLabelsForProject(proxyId)[0].values()[0]
+            proxyLabelInfo = self.getLabel(proxyLabelId)
+            self.editLabel(proxyLabelId,
+                    label=proxyLabelInfo['label'],
+                    url=mirror['sourceUrl'],
+                    authType=mirror['sourceAuthType'],
+                    username=mirror['sourceUsername'],
+                    password=mirror['sourcePassword'],
+                    entitlement=mirror['sourceEntitlement'],
+                    )
+        elif not backgroundMirror:
+            self.unhideProject(projectId)
+            for projectId in projectIds:
+                self.deleteProject(projectId)
+
     @private
     @typeCheck(int, (list, str), bool, bool, bool, int)
     @requiresAdmin

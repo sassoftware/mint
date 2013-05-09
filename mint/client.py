@@ -662,6 +662,12 @@ class MintClient:
                 sourceUrl, sourceAuthType, sourceUsername, sourcePassword,
                 sourceEntitlement, allLabels)
 
+    def getBackgroundMirror(self, projectId):
+        return self.server.getBackgroundMirror(projectId)
+
+    def setBackgroundMirror(self, projectId, backgroundMirror):
+        return self.server.setBackgroundMirror(projectId, backgroundMirror)
+
     def addOutboundMirror(self, sourceProjectId, targetLabels,
             allLabels = False, recurse = False, useReleases = False, id = -1):
         return self.server.addOutboundMirror(sourceProjectId, targetLabels,
