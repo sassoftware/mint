@@ -412,6 +412,16 @@ install needle
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
+        # Post survey again, should not fail (RCE-1765)
+        surveyXml = testsxml2.windows_upload_survey_xml.replace(
+                '123456789', '0xdeadbeef').replace(
+                        '<fix_comments></fix_comments>',
+                        '<fix_comments>really fixed</fix_comments>')
+        response = self._post(url,
+            data = surveyXml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
         self._hiturl('inventory/survey_windows_patches/1')
         self._hiturl('inventory/survey_windows_os_patches/1')
         self._hiturl('inventory/windows_patch_info/1')

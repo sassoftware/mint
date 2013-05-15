@@ -635,16 +635,17 @@ class SurveyManager(basemanager.BaseManager):
             xinfo = xmodel.find('windows_os_patch_info')
             if xinfo is None:
                 continue
-            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
-                hotfix_id = self._findSimple(xinfo, 'hotfix_id'),
+            defaults = dict(
                 name = self._findSimple(xinfo, 'name'),
                 fix_comments = self._findSimple(xinfo, 'fix_comments'),
                 description  = self._findSimple(xinfo, 'description'),
-                caption = self._findSimple(xinfo, 'caption')
-            )
-            if created:
-                info.save()
-            pkg = survey_models.SurveyWindowsOsPatch(
+                caption = self._findSimple(xinfo, 'caption'))
+            info, created = survey_models.WindowsOsPatchInfo.objects.get_or_create(
+                hotfix_id = self._findSimple(xinfo, 'hotfix_id'),
+                defaults = defaults)
+            if not created:
+                info.update(**defaults)
+            survey_models.SurveyWindowsOsPatch.objects.create(
                 survey = survey,
                 windows_os_patch_info = info,
                 status = self._findSimple(xmodel, 'status'),
@@ -652,7 +653,6 @@ class SurveyManager(basemanager.BaseManager):
                 installed_by = self._findSimple(xmodel, 'installed_by'),
                 cs_name = self._findSimple(xmodel, 'cs_name'),
             )
-            pkg.save()
 
     def _save_windows_patches(self, survey, xwindows_patches, windows_packages_by_id):
         ''' saves all windows patches with references to what windows_packages they patch '''     
