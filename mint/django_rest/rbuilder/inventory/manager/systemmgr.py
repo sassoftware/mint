@@ -36,6 +36,7 @@ from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
+from mint.django_rest.rbuilder.users import models as usermodels
 from mint.rest import errors as mint_rest_errors
 
 from smartform import descriptor
@@ -790,6 +791,9 @@ class SystemManager(basemanager.BaseManager):
                 system.update(current_state=credentialsMissing)
             else:
                 self._scheduleApplySystemConfiguration(system)
+                if (system.management_interface_id == wmiIfaceId and
+                        system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE):
+                    self._scheduleRwbsInstallation(system)
         elif system.isRegistered:
             # See if a new poll is required
             if (system.current_state_id in self.NonresponsiveStates):
@@ -2013,6 +2017,46 @@ class SystemManager(basemanager.BaseManager):
             system_id=system.system_id)
         self.log_system(system, "Applying system configuration")
         return job
+
+    def _scheduleRwbsInstallation(self, system):
+        network = self.extractNetworkToUse(system)
+        if not network:
+            self.log_system(system, "Not installing Windows Build Service software - network information unavailable")
+            return None
+        topLevelGroup = self._getRwbsGroup()
+
+        jobType = self.getEventTypeByName(jobmodels.EventType.SYSTEM_UPDATE)
+        job = jobmodels.Job(job_type=jobType)
+        job.descriptor = self.getDescriptorUpdate(system.system_id)
+        job.descriptor.id = ("/api/v1/inventory/systems/%s/descriptors/update" %
+            system.system_id)
+        job.descriptor_data = etree.fromstring("<descriptor_data/>")
+        etree.SubElement(job.descriptor_data, 'trove_label').text = topLevelGroup
+        etree.SubElement(job.descriptor_data, 'dry_run').text = 'false'
+
+        user = system.created_by
+        if user is None:
+            # If this is a registration originated from the system, it's
+            # perfectly normal to not have a user specified.
+            # Grab the first admin user. addJob only uses it to check
+            # via RBAC if the user is allowed to manage the system,
+            # which for a new system it doesn't matter.
+            user = usermodels.User.objects.filter(is_admin=True).order_by('user_id')[0]
+        self.mgr.addJob(job, forUser=user, system_id=system.system_id)
+        self.log_system(system, "Scheduled installation of Windows Build Service software")
+        return job
+
+    def _getRwbsGroup(self):
+        rwbsGroupName = 'group-rwbs-appliance'
+        trvSpec = trovetup.TroveSpec(rwbsGroupName, self.cfg.rwbsLabel)
+        # Request is usually unauthenticated, we need an admin client
+        cclient = self.mgr.getAdminClient()
+        trvs = cclient.repos.findTrove(None, trvSpec)
+        if not trvs:
+            return
+        trv = trovetup.TroveTuple(trvs[0])
+        # don't use asString() since we don't want the flavor passed
+        return "%s=%s" % (trv.name, trv.version)
 
     @exposed
     def importTargetSystems(self):

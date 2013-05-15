@@ -1076,6 +1076,52 @@ class SystemTypesTestCase(XMLTestCase):
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
 
+class WindowsBuildServiceTestCase(XMLTestCase, test_utils.RepeaterMixIn):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
+
+    def testRwbsRegistration(self):
+        # RCE-1565
+        class Cli(object):
+            class repos(object):
+                _troves = []
+                _invocation = []
+                @classmethod
+                def findTrove(cls, *args):
+                    cls._invocation.append(args)
+                    return cls._troves
+        from conary import versions
+        Cli.repos._troves.append(('group-rwbs-appliance',
+            versions.ThawVersion('/example.com@rpl:2/12345.67:1-1-1'), None))
+        from mint.db import repository as reposdbmgr
+        self.mock(reposdbmgr.RepomanMixin, 'getAdminClient', lambda *args, **kwargs: Cli())
+
+        url = "inventory/systems"
+        response = self._post(url, data=testsxml.rwbs_registration_xml)
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        systemId = doc.find('system_id').text
+        self.assertEquals(systemId, '3')
+        system = models.System.objects.get(system_id=systemId)
+        # Fetch all jobs associated with this system
+        self.assertEquals(
+            [ x.job_type.name for x in system.jobs.all() ],
+            [ 'system update software' ])
+        job = system.jobs.all()[0]
+        descr = descriptor.ConfigurationDescriptor(fromStream=job._descriptor)
+        self.assertEquals(descr.getDisplayName(), 'Update Software')
+        self.assertEquals(descr.getDescriptions(), {None: 'Update your system'})
+        self.assertEquals([ x.name for x in descr.getDataFields() ],
+                ['trove_label', 'dry_run'])
+        ddata = descriptor.DescriptorData(fromStream=job._descriptor_data,
+                descriptor=descr)
+        self.assertEquals(
+                [ (x.getName(), x.getValue()) for x in ddata.getFields() ],
+                [
+                    ('trove_label', 'group-rwbs-appliance=/example.com@rpl:2/1-1-1'),
+                    ('dry_run', False) ])
+
 class SystemStatesTestCase(XMLTestCase):
 
     def testGetSystemStates(self):

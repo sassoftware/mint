@@ -3580,4 +3580,21 @@ system_configuration_xml = """
 </job>
 """
 
-
+rwbs_registration_xml = """
+<system>
+  <management_interface id="https://_/api/v1/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
+  <hostname>d76643</hostname>
+  <network_address>
+    <address>10.20.15.2</address>
+    <pinned>true</pinned>
+  </network_address>
+  <system_type id="https://_/api/v1/inventory/system_types/3"/>
+  <local_uuid>4C4C4544-004D-5410-8031-B2C04F385631</local_uuid>
+  <generated_uuid>3ca9ab4f-3644-40ea-82b3-9d7dd8da09b0</generated_uuid>
+  <credentials>
+    <username>bob</username>
+    <password>sikrit</password>
+  </credentials>
+  <managing_zone id="http://_/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
+</system>
+"""
