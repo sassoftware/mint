@@ -312,8 +312,7 @@ class SiteHandler(WebHandler):
         out = ''
         if self.req.params.get('repositoryMap') != 'no':
             repoMap = {}
-            for handle in self.reposShim.iterRepositories(
-                    'NOT hidden AND NOT disabled'):
+            for handle in self.reposShim.iterRepositories('NOT disabled'):
                 repoMap[handle.fqdn] = handle.getURL()
             for name, url in sorted(repoMap.items()):
                 out += 'repositoryMap %s %s\n' % (name, url)
