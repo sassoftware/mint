@@ -65,6 +65,12 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_cpus@"/>
             <type>int</type>
             <default>1</default>
+            <constraints>
+                <range>
+                    <min>1</min>
+                    <max>32</max>
+                </range>
+            </constraints>
             <required>false</required>
         </field>
         <field>
