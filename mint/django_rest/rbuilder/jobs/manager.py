@@ -1163,8 +1163,8 @@ class JobHandlerRegistry(HandlerRegistry):
         def _updateDesiredInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
-            previewId = descriptorData.getField('preview_id')
-            if test or (previewId is not None):
+            sysModelTopLevelItems = descriptorData.getField('updates')
+            if test or (sysModelTopLevelItems is not None):
                 return
             topLevelItems = set(topLevelItems)
             self.mgr.mgr.sysMgr.setDesiredTopLevelItems(system, topLevelItems)
@@ -1172,8 +1172,6 @@ class JobHandlerRegistry(HandlerRegistry):
         def _updateObservedInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
-            if test:
-                return
             topLevelItems = set(topLevelItems)
             self.mgr.mgr.sysMgr.setObservedTopLevelItems(system, topLevelItems)
 

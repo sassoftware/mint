@@ -1077,6 +1077,7 @@ class SystemDesiredTopLevelItem(DesiredTopLevelItem):
     class Meta:
         db_table = 'inventory_system_desired_top_level_item'
         unique_together = [ ('system', 'trove_spec') ]
+        ordering = [ 'id' ]
 
     _xobj = xobj.XObjMetadata(tag = 'desired_top_level_item')
     system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'desired_top_level_items'))
@@ -1085,6 +1086,7 @@ class SystemObservedTopLevelItem(DesiredTopLevelItem):
     class Meta:
         db_table = 'inventory_system_observed_top_level_item'
         unique_together = [ ('system', 'trove_spec') ]
+        ordering = [ 'id' ]
 
     _xobj = xobj.XObjMetadata(tag = 'observed_top_level_item')
     system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'observed_top_level_items'))
