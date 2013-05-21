@@ -139,6 +139,10 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
             log.warning("Unknown project %s in request for %s",
                     hostName, req.url)
             raise web_exc.HTTPNotFound()
+        elif 'x-conary-proxy-host' not in req.headers:
+            log.warning("Request for unknown repository %s via URL %s",
+                    fqdn, req.url)
+            raise web_exc.HTTPNotFound()
 
         # Determine the user's authorization with respect to the rBuilder
         # project, if there is one.
