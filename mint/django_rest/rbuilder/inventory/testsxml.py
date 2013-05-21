@@ -1067,10 +1067,26 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
-        <enabled>True</enabled>
+        <enabled>False</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
+      </action>
+      <action>
+        <description>Preview software update</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/preview"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_preview_software_update</key>
+        <name>Preview Software Update</name>
+      </action>
+      <action>
+        <description>Apply software update</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/apply_update"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_update_software</key>
+        <name>Apply Software Update</name>
       </action>
       <action>
         <description>Apply system configuration</description>
@@ -1179,10 +1195,26 @@ systems_xml = """\
       <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-        <enabled>True</enabled>
+        <enabled>False</enabled>
         <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
         <key>system_update_software</key>
         <name>Update Software</name>
+      </action>
+      <action>
+        <description>Preview software update</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
+        <enabled>True</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_preview_software_update</key>
+        <name>Preview Software Update</name>
+      </action>
+      <action>
+        <description>Apply software update</description>
+        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
+        <enabled>False</enabled>
+        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+        <key>system_apply_update_software</key>
+        <name>Apply Software Update</name>
       </action>
       <action>
         <description>Apply system configuration</description>
@@ -1434,10 +1466,26 @@ system_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
+    </action>
+    <action>
+      <description>Preview software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_preview_software_update</key>
+      <name>Preview Software Update</name>
+    </action>
+    <action>
+      <description>Apply software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_apply_update_software</key>
+      <name>Apply Software Update</name>
     </action>
     <action>
         <description>Apply system configuration</description>
@@ -1834,10 +1882,26 @@ system_target_xml = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
+    </action>
+    <action>
+      <description>Preview software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_preview_software_update</key>
+      <name>Preview Software Update</name>
+    </action>
+    <action>
+      <description>Apply software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_apply_update_software</key>
+      <name>Apply Software Update</name>
     </action>
    <action>
       <description>Apply system configuration</description>
@@ -2277,10 +2341,26 @@ system_with_target = """\
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
-      <enabled>True</enabled>
+      <enabled>False</enabled>
       <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
       <key>system_update_software</key>
       <name>Update Software</name>
+    </action>
+    <action>
+      <description>Preview software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/preview"/>
+      <enabled>True</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_preview_software_update</key>
+      <name>Preview Software Update</name>
+    </action>
+    <action>
+      <description>Apply software update</description>
+      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/apply_update"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
+      <key>system_apply_update_software</key>
+      <name>Apply Software Update</name>
     </action>
     <action>
         <description>Apply system configuration</description>

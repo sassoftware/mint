@@ -624,7 +624,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
             password="password")
         doc = etree.fromstring(response.content)
         actions = doc.xpath('./actions/action')
-        self.assertEqual(len(actions), 5)
+        self.assertEqual(len(actions), 7)
 
     def testFetchActionsDescriptor(self):
         descriptorTestData = [
