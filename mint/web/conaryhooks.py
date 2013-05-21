@@ -116,10 +116,13 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
                     fqdn = fqdn[:-1]
             else:
                 hostName = hostPart
-        elif 'x-conary-servername' in req.headers:
-            fqdn = req.headers['x-conary-servername']
         else:
-            fqdn = req.host.split(':')[0]
+            for x in range(req.path_info.count('/') - 1):
+                req.path_info_pop()
+            if 'x-conary-servername' in req.headers:
+                fqdn = req.headers['x-conary-servername']
+            else:
+                fqdn = req.host.split(':')[0]
         self.isSecure = req.scheme == 'https'
 
         # resolve the conary repository names
@@ -230,16 +233,10 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
                     'loop (request %s, via %s)' % (req.host, via))
             raise web_exc.HTTPBadGateway()
 
-        if ':' in cfg.siteDomainName:
-            domain = cfg.siteDomainName
-        else:
-            domain = cfg.siteDomainName + ':%(port)d'
-        urlBase = "%%(protocol)s://%s.%s/" % \
-                (cfg.hostName, domain)
-        # Entitlement and password injection used to live here, now
-        # convertAuthToken handles it.
-
-        proxyServer = serverClass(serverCfg, urlBase)
+        basicUrl = self.context.req.application_url
+        if not basicUrl.endswith('/'):
+            basicUrl += '/'
+        proxyServer = serverClass(serverCfg, basicUrl)
         if restDb:
             proxyServer.setRestDb(restDb)
         shimRepo = None
