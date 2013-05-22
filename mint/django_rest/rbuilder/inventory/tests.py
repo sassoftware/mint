@@ -412,6 +412,16 @@ install needle
             username='admin', password='password')
         self.assertEqual(response.status_code, 200)
 
+        # Post survey again, should not fail (RCE-1765)
+        surveyXml = testsxml2.windows_upload_survey_xml.replace(
+                '123456789', '0xdeadbeef').replace(
+                        '<fix_comments></fix_comments>',
+                        '<fix_comments>really fixed</fix_comments>')
+        response = self._post(url,
+            data = surveyXml,
+            username='admin', password='password')
+        self.assertEqual(response.status_code, 200)
+
         self._hiturl('inventory/survey_windows_patches/1')
         self._hiturl('inventory/survey_windows_os_patches/1')
         self._hiturl('inventory/windows_patch_info/1')
@@ -614,7 +624,7 @@ class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
             password="password")
         doc = etree.fromstring(response.content)
         actions = doc.xpath('./actions/action')
-        self.assertEqual(len(actions), 5)
+        self.assertEqual(len(actions), 7)
 
     def testFetchActionsDescriptor(self):
         descriptorTestData = [
@@ -1075,6 +1085,52 @@ class SystemTypesTestCase(XMLTestCase):
         buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
+
+class WindowsBuildServiceTestCase(XMLTestCase, test_utils.RepeaterMixIn):
+    def setUp(self):
+        XMLTestCase.setUp(self)
+        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
+
+    def testRwbsRegistration(self):
+        # RCE-1565
+        class Cli(object):
+            class repos(object):
+                _troves = []
+                _invocation = []
+                @classmethod
+                def findTrove(cls, *args):
+                    cls._invocation.append(args)
+                    return cls._troves
+        from conary import versions
+        Cli.repos._troves.append(('group-rwbs-appliance',
+            versions.ThawVersion('/example.com@rpl:2/12345.67:1-1-1'), None))
+        from mint.db import repository as reposdbmgr
+        self.mock(reposdbmgr.RepomanMixin, 'getAdminClient', lambda *args, **kwargs: Cli())
+
+        url = "inventory/systems"
+        response = self._post(url, data=testsxml.rwbs_registration_xml)
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        systemId = doc.find('system_id').text
+        self.assertEquals(systemId, '3')
+        system = models.System.objects.get(system_id=systemId)
+        # Fetch all jobs associated with this system
+        self.assertEquals(
+            [ x.job_type.name for x in system.jobs.all() ],
+            [ 'system update software' ])
+        job = system.jobs.all()[0]
+        descr = descriptor.ConfigurationDescriptor(fromStream=job._descriptor)
+        self.assertEquals(descr.getDisplayName(), 'Update Software')
+        self.assertEquals(descr.getDescriptions(), {None: 'Update your system'})
+        self.assertEquals([ x.name for x in descr.getDataFields() ],
+                ['trove_label', 'dry_run'])
+        ddata = descriptor.DescriptorData(fromStream=job._descriptor_data,
+                descriptor=descr)
+        self.assertEquals(
+                [ (x.getName(), x.getValue()) for x in ddata.getFields() ],
+                [
+                    ('trove_label', 'group-rwbs-appliance=/example.com@rpl:2/1-1-1'),
+                    ('dry_run', False) ])
 
 class SystemStatesTestCase(XMLTestCase):
 
@@ -3288,6 +3344,35 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
                 'http://testserver/api/v1/inventory/management_interfaces/1')
         self.assertEquals(node.text,
                 'Common Information Model (CIM)')
+
+    def testPostSystemWithCredentials(self):
+        # RCE-1610
+        models.System.objects.all().delete()
+        doc = etree.fromstring(testsxml.system_post_xml)
+        creds = etree.SubElement(doc, 'credentials')
+        credentials = dict(username='jerry', password='seinfeld')
+        for k, v in credentials.items():
+            etree.SubElement(creds, k).text = v
+        # Change management interface to WMI
+        node = doc.find('management_interface')
+        # Clear management interface ID
+        node.attrib.clear()
+        etree.SubElement(node, 'name').text = 'wmi'
+
+        system_xml = etree.tostring(doc)
+        response = self._post('inventory/systems/',
+            data=system_xml, username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        node = doc.find('management_interface')
+        self.assertEquals(node.attrib['id'],
+                'http://testserver/api/v1/inventory/management_interfaces/2')
+        self.assertEquals(node.text,
+                'Windows Management Instrumentation (WMI)')
+        system = models.System.objects.get(system_id=doc.find('system_id').text)
+        self.assertEquals(
+                self.mgr.sysMgr.unmarshalCredentials(system.credentials),
+                credentials)
 
 
 class SystemCertificateTestCase(XMLTestCase):

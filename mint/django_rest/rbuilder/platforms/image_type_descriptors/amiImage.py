@@ -15,7 +15,6 @@ XML = """\
       </descriptions>
       <help href="@Help_image_name@"/>
       <type>str</type>
-      <default/>
       <required>true</required>
     </field>
     <field>
@@ -25,7 +24,6 @@ XML = """\
       </descriptions>
       <help href="@Help_image_filename@"/>
       <type>str</type>
-      <default/>
       <required>false</required>
     </field>
     <field>
@@ -44,7 +42,6 @@ XML = """\
       </descriptions>
       <help href="@Help_scratch_mountpoint@"/>
       <type>str</type>
-      <default/>
       <required>false</required>
     </field>
     <field>

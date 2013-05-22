@@ -14,7 +14,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_image_name@"/>
             <type>str</type>
-            <default/>
             <required>true</required>
         </field>
         <field>
@@ -24,7 +23,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_image_filename@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -34,7 +32,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_conary_installlabelpath@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -44,7 +41,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_bug_report_url@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -74,7 +70,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_anaconda_templates@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -84,7 +79,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_anaconda_custom@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -94,7 +88,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_media_template@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -129,7 +122,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
                     <key>8500000000</key>
                 </describedValue>
             </enumeratedType>
-            <default/>
             <required>true</required>
         </field>
         <field>
