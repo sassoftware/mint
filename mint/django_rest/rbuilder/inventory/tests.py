@@ -587,6 +587,17 @@ install needle
         self.assertIn(latest_removable1, remaining)
         self.assertIn(latest_unremovable2, remaining)
 
+    def testSurveyForPackageWithoutSignature(self):
+        # RCE-1608
+        system_xml = testsxml.system_post_xml.replace("</system>",
+            testsxml2.two + "\n</system>")
+        doc = etree.fromstring(system_xml)
+        for cp in doc.find('survey').find('conary_packages').iterchildren('conary_package'):
+            cpi = cp.find('conary_package_info')
+            cpi.find('signature').text = ''
+        system_xml = etree.tostring(doc)
+        response = self._post('inventory/systems/', data=system_xml)
+        self.assertEquals(response.status_code, 200)
 
 class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
     '''

@@ -806,7 +806,7 @@ class SurveyManager(basemanager.BaseManager):
         # hack: if <config_properties> has a <values> as a subelement, this is
         # the client sending it weird, and attempt
         # to rename it to configuration
-        if xconfig_properties and xconfig_properties.find('values') is not None:
+        if xconfig_properties is not None and xconfig_properties.find('values') is not None:
             xconfig_properties.find('values').tag = 'configuration'
 
         # hack: desired_properties comes in from the server configuration, not the survey
