@@ -344,9 +344,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             'Configure user credentials for target',
             'Refresh images',
             'Refresh systems',
+            'Create launch profile',
           ])
         self.failUnlessEqual([ x.enabled for x in actions ],
-          [ 'true', 'false', 'false', 'false', ])
+          [ 'true', 'false', 'false', 'false', 'false', ])
         dbobj = models.Target.objects.get(target_id=target.target_id)
         self.failUnlessEqual(dbobj.target_type.name, 'vmware')
         self.failUnlessEqual(dbobj.zone.name, 'other zone')
@@ -2259,29 +2260,7 @@ ZcY7o9aU
   </dataFields>
 </descriptor>""")
 
-        from smartform import descriptor
-        def mockGetDescriptor(slf, trvTup):
-            return descriptor.SystemConfigurationDescriptor(fromStream="""\
-<descriptor>
-  <metadata>
-    <displayName>FooDescriptor</displayName>
-    <rootElement>blah</rootElement>
-    <descriptions><desc>Description</desc></descriptions>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>blargh</name>
-      <descriptions>
-        <desc>Blargh</desc>
-      </descriptions>
-      <type>str</type>
-      <required>true</required>
-    </field>
-  </dataFields>
-</descriptor>
-""")
-        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+        self._mockSystemConfigurationDescriptor()
 
         # Grab an image
         tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
@@ -2358,3 +2337,324 @@ ZcY7o9aU
             (tgt.target_id, buildFileId),
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
+
+    def _mockSystemConfigurationDescriptor(self):
+        from smartform import descriptor
+        def mockGetDescriptor(slf, trvTup):
+            return descriptor.SystemConfigurationDescriptor(fromStream="""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions><desc>Description</desc></descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>blargh</name>
+      <descriptions>
+        <desc>Blargh</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+    </field>
+  </dataFields>
+</descriptor>
+""")
+        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
+        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
+
+    def testCreateLaunchProfile(self):
+        self._mockSystemConfigurationDescriptor()
+        self.mgr.repeaterMgr.repeaterClient.setJobData("""\
+<descriptor>
+  <metadata>
+    <displayName>FooDescriptor</displayName>
+    <rootElement>blah</rootElement>
+    <descriptions>
+      <desc>Description</desc>
+    </descriptions>
+  </metadata>
+  <dataFields>
+    <field>
+      <name>imageId</name>
+      <descriptions>
+        <desc>Image ID</desc>
+      </descriptions>
+      <type>str</type>
+      <required>true</required>
+      <hidden>true</hidden>
+    </field>
+    <field>
+      <name>device</name>
+      <descriptions>
+        <desc>Device</desc>
+      </descriptions>
+      <type>enumeratedType</type>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Illudium Q-36 Explosive Space Modulator</desc>
+          </descriptions>
+          <key>modulatoor</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>ACME Triple Strength Battleship Steel Armor Plate</desc>
+          </descriptions>
+          <key>armor-plate</key>
+        </describedValue>
+      </enumeratedType>
+      <required>true</required>
+      <default>modulatoor</default>
+    </field>
+    <field>
+      <name>propulsion</name>
+      <descriptions>
+        <desc>Propulsion</desc>
+      </descriptions>
+      <type>enumeratedType</type>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Gas</desc>
+          </descriptions>
+          <key>gas</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Coals</desc>
+          </descriptions>
+          <key>coals</key>
+        </describedValue>
+      </enumeratedType>
+      <required>true</required>
+      <default>gas</default>
+    </field>
+  </dataFields>
+</descriptor>
+""")
+
+        # Grab a target
+        tgt = [ x for x in self.targets if x.target_type.name == 'vmware' ][0]
+        response = self._get('targets/%d/descriptors/launch_profile' %
+            (tgt.target_id, ),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, """\
+<descriptor xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.rpath.com/permanent/descriptor-1.1.xsd" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
+  <dataFields>
+    <field>
+      <descriptions>
+        <desc>Name</desc>
+      </descriptions>
+      <name>__name</name>
+      <required>True</required>
+      <type>str</type>
+    </field>
+    <field>
+      <descriptions>
+        <desc>Description</desc>
+      </descriptions>
+      <name>__description</name>
+      <required>True</required>
+      <type>str</type>
+    </field>
+    <field>
+      <name>device</name>
+      <descriptions>
+        <desc>Device</desc>
+      </descriptions>
+      <type>enumeratedType</type>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Target default (Illudium Q-36 Explosive Space Modulator)</desc>
+          </descriptions>
+          <key>__targetDefault</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Illudium Q-36 Explosive Space Modulator</desc>
+          </descriptions>
+          <key>modulatoor</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>ACME Triple Strength Battleship Steel Armor Plate</desc>
+          </descriptions>
+          <key>armor-plate</key>
+        </describedValue>
+      </enumeratedType>
+      <required>true</required>
+      <default>__targetDefault</default>
+    </field>
+    <field>
+      <name>propulsion</name>
+      <descriptions>
+        <desc>Propulsion</desc>
+      </descriptions>
+      <type>enumeratedType</type>
+      <enumeratedType>
+        <describedValue>
+          <descriptions>
+            <desc>Target default (Gas)</desc>
+          </descriptions>
+          <key>__targetDefault</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Gas</desc>
+          </descriptions>
+          <key>gas</key>
+        </describedValue>
+        <describedValue>
+          <descriptions>
+            <desc>Coals</desc>
+          </descriptions>
+          <key>coals</key>
+        </describedValue>
+      </enumeratedType>
+      <required>true</required>
+      <default>__targetDefault</default>
+    </field>
+  </dataFields>
+  <metadata>
+    <descriptions>
+      <desc>Create launch profile</desc>
+    </descriptions>
+    <displayName>Create launch profile</displayName>
+    <rootElement>descriptor_data</rootElement>
+  </metadata>
+</descriptor>
+""")
+
+        # Fetch target
+        response = self._get('targets/%s' % tgt.target_id,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+
+        doc = etree.fromstring(response.content)
+        # Select action
+        action = doc.xpath('actions/action[name="Create launch profile"]')[0]
+        descriptorId = action.find('descriptor').attrib['id']
+        jobType = action.find('job_type').attrib['id']
+
+        self.assertEquals(descriptorId,
+            'http://testserver/api/v1/targets/1/descriptors/launch_profile')
+
+        self.assertEquals(jobType,
+            'http://testserver/api/v1/inventory/event_types/28')
+
+        # Create launch profile
+        # Default propulsion is gas, we're overriding it with coals
+        jobXml = """
+<job>
+  <job_type id="%(jobType)s"/>
+  <descriptor id="%(descriptorId)s"/>
+  <descriptor_data>%(descriptorData)s</descriptor_data>
+</job>
+""" % dict(jobType=jobType, descriptorId=descriptorId,
+        descriptorData="<__name>Acme Profile</__name><__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")
+
+        response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        resources = doc.xpath('created_resources')[0]
+        self.assertEquals([ x.tag for x in resources ],
+                ['launch_profile'])
+        profileId = 1
+        self.assertEquals([ x.attrib['id'] for x in resources ],
+                ['http://testserver/api/v1/targets/1/launch_profiles/%s' % profileId])
+
+        # Make sure we can fetch the newly created launch profile
+        response = self._get('targets/%s/launch_profiles/1' % tgt.target_id,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content, """\
+<launch_profile id="http://testserver/api/v1/targets/1/launch_profiles/">
+  <description>Acme Profile</description>
+  <descriptor_data>
+    <descriptor_data>
+      <__description>Acme Profile</__description>
+      <__name>Acme Profile</__name>
+      <device>__targetDefault</device>
+      <propulsion>coals</propulsion>
+    </descriptor_data>
+  </descriptor_data>
+  <id>1</id>
+  <name>Acme Profile</name>
+  <target id="http://testserver/api/v1/targets/1"/>
+</launch_profile>
+""")
+        self._setupImages()
+        # Needed by setTargetUserCredentials
+        class Auth(object):
+            def __init__(self, user):
+                self.userId = user.user_id
+                self.user = user
+
+        user = self.getUser('ExampleDeveloper')
+        self.mgr._auth = Auth(user)
+        self.mgr.setTargetUserCredentials(tgt,
+                dict(username='wile', password='acme'))
+
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        profile = models.TargetLaunchProfile.objects.get(id=profileId)
+
+        # Grab image, make sure we have the new launch profile action
+        response = self._get("images/%d" % img.image_id,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = etree.fromstring(response.content)
+        actions = doc.find('actions')
+        self.assertEquals([ x.find('name').text for x in actions ],
+            [
+                "Deploy image on 'Target Name vmware' (vmware)",
+                "Deploy image on 'Target Name vcloud' (vcloud)",
+                "Deploy image on 'Target without credentials' (vmware)",
+                "Launch system on 'Target Name vmware' (vmware)",
+                "Launch system on 'Target Name vcloud' (vcloud)",
+                "Launch system on 'Target without credentials' (vmware)",
+                "Launch system using profile '%s' (on %s)" %
+                    (profile.description, tgt.name),
+                'Cancel image build',
+        ])
+        self.assertEquals([ x.find('description').text for x in actions ],
+            [
+                "Deploy image on 'Target Name vmware' (vmware)",
+                "Deploy image on 'Target Name vcloud' (vcloud)",
+                "Deploy image on 'Target without credentials' (vmware)",
+                "Launch system on 'Target Name vmware' (vmware)",
+                "Launch system on 'Target Name vcloud' (vcloud)",
+                "Launch system on 'Target without credentials' (vmware)",
+                "Launch system using profile '%s' (on %s)" %
+                    (profile.description, tgt.name),
+                'Cancel image build',
+        ])
+        self.assertEquals([ x.find('descriptor').attrib['id'] for x in actions ],
+            [
+                'http://testserver/api/v1/targets/1/descriptors/deploy/file/7',
+                'http://testserver/api/v1/targets/5/descriptors/deploy/file/7',
+                'http://testserver/api/v1/targets/6/descriptors/deploy/file/7',
+                'http://testserver/api/v1/targets/1/descriptors/launch/file/7',
+                'http://testserver/api/v1/targets/5/descriptors/launch/file/7',
+                'http://testserver/api/v1/targets/6/descriptors/launch/file/7',
+                'http://testserver/api/v1/targets/1/descriptors/launch/profile/1/file/7',
+                'http://testserver/api/v1/images/9/descriptors/cancel_build'
+        ])
+
+        # Fetch descriptor via launch profile
+        response = self._get("targets/%s/descriptors/launch/profile/%s/file/7" %
+                (tgt.target_id, profile.id),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        from smartform import descriptor
+        descr = descriptor.ConfigurationDescriptor(fromStream=response.content)
+        self.assertEquals([ x.name for x in descr.getDataFields() ],
+                ['imageId', 'device', 'propulsion', 'withConfiguration', 'system_configuration', ])
+        # Make sure the default for propulsion is coals, while the
+        # default for device is the target's default
+        self.assertEquals([ x.default for x in descr.getDataFields() ],
+                [['7'], ['modulatoor'], ['coals'], ['False'], []])

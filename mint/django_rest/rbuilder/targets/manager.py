@@ -47,6 +47,8 @@ class CatalogServiceHelper(object):
         return DriverClass
 
 class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
+    EnumTypeTargetDefault = '__targetDefault'
+
     @exposed
     def authTargetJob(self, job):
         requireAdmin = set(self.mgr.sysMgr.eventType(x).job_type_id
@@ -90,6 +92,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return m
 
     def _getTargetCredentialsForCurrentUser(self, target):
+        if self.auth is None or self.auth.userId is None:
+            return None
         userId = self.auth.userId
         return self._getTargetCredentialsForUser(target, userId)
 
@@ -370,6 +374,22 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         return descr
 
     @exposed
+    def getDescriptorLaunchSystemWithProfile(self, targetId, profileId, buildFileId):
+        descr = self.getDescriptorLaunchSystem(targetId, buildFileId)
+        profile = models.TargetLaunchProfile.objects.get(id=profileId)
+        pdescr = self.getDescriptorCreateLaunchProfile(targetId)
+        ddata = descriptor.DescriptorData(descriptor=pdescr,
+                fromStream=profile.descriptor_data)
+        for field in descr.getDataFields():
+            val = ddata.getField(field.name)
+            if val is None:
+                continue
+            if val == self.EnumTypeTargetDefault:
+                continue
+            field.default = [ val ]
+        return descr
+
+    @exposed
     def getConfigDescriptorForImage(self, img):
         trvName = img.trove_name
         trvVersion = img.trove_version
@@ -409,6 +429,41 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         imageData = self.mgr.imagesManager.getImageData(imgs[0])
         return self._getDescriptorFromCatalogService(targetId, buildFileId,
             'imageDeploymentDescriptor', imageData=imageData)
+
+    @exposed
+    def getDescriptorCreateLaunchProfile(self, targetId):
+        descr = self._getDescriptorFromCatalogService(targetId, 1,
+            'systemLaunchDescriptor', extraArgs=dict(imageData=dict()))
+        rdescr = descr.__class__()
+        rdescr.setRootElement('descriptor_data')
+        rdescr.setDisplayName("Create launch profile")
+        rdescr.addDescription("Create launch profile")
+        rdescr.addDataField("__name", descriptions="Name",
+                type="str",
+                required=True)
+        rdescr.addDataField("__description", descriptions="Description",
+                type="str", required=True)
+        usefulFields = []
+        ignoredFields = set(['imageId', 'instanceName', 'instanceDescription'])
+        for field in descr.getDataFields():
+            if field.name in ignoredFields:
+                continue
+            usefulFields.append(field)
+            if not (field.enumeratedType and field.required and field.default):
+                continue
+            for f in field.enumeratedType.describedValue:
+                if f.key == field.default[0]:
+                    defaultDescr = "Target default (%s)" % f.descriptions.asDict()[None]
+                    break
+            else:
+                defaultDescr = "Target default"
+            field.enumeratedType.describedValue.insert(0,
+                    descr.ValueWithDescription(self.EnumTypeTargetDefault,
+                        defaultDescr))
+            field.default = [ self.EnumTypeTargetDefault ]
+        for field in usefulFields:
+            rdescr.addDataFieldRaw(field)
+        return rdescr
 
     def _getDescriptorFromCatalogService(self, targetId, buildFileId,
                 rmakeMethodName, **kwargs):
@@ -894,6 +949,25 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         descr = self.mgr.getDescriptorCreateTargetByTargetType(target.target_type_id)
         return descr
 
+    @exposed
+    def createTargetLaunchProfile(self, target, job, descriptorData):
+        name = descriptorData.getField('__name')
+        description = descriptorData.getField('__description') or name
+        profile = models.TargetLaunchProfile.objects.create(target=target,
+                name=name,
+                description=description,
+                descriptor_data=job._descriptor_data,
+                created_by=job.created_by)
+        models.JobLaunchProfile.objects.create(job=job,
+                launch_profile=profile)
+        job.computeSyntheticFields(job.__class__)
+        return profile
+
+    @exposed
+    def getLaunchProfile(self, target, launch_profile_id):
+        profile = models.TargetLaunchProfile.objects.get(target=target,
+                id=launch_profile_id)
+        return profile
 
 class TargetTypesManager(basemanager.BaseManager, CatalogServiceHelper):
     @exposed

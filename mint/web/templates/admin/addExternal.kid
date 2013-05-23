@@ -13,7 +13,7 @@
         'externalUser', 'externalPass', 'externalEntKey',
         'authType', 'useMirror',
         'externalAuth', 'authType', 'additionalLabelsToMirror',
-        'allLabels', 'backupExternal']:
+        'allLabels', 'backupExternal', 'backgroundMirror']:
         kwargs[var] = kwargs.get(var, initialKwargs.get(var, ''))
 ?>
     <head>
@@ -129,6 +129,11 @@
                         py:attrs="{'checked': kwargs['useMirror'] == 'net' and 'checked' or None}" /></td>
                 <td>
                 <label for="useMirror_net">Mirror the contents of this repository over the network. (Requires authentication.)</label></td>
+            </tr>
+            <tr>
+                <td width="22"><input type="checkbox" id="backgroundMirror" name="backgroundMirror" value="1"
+                        py:attrs="{'checked': kwargs['backgroundMirror'] and 'checked' or None}" /></td>
+                <td><label>Run in cached mode until the mirror completes</label></td>
             </tr>
             <tr>
                <td><input class="radio" type="checkbox" name="allLabels" value="1"

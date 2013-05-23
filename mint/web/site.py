@@ -310,14 +310,14 @@ class SiteHandler(WebHandler):
 
     def conaryrc(self, auth):
         out = ''
-        if 'repomap' in self.req.params:
+        if self.req.params.get('repositoryMap') != 'no':
             repoMap = {}
-            for handle in self.reposShim.iterRepositories(
-                    'NOT hidden AND NOT disabled'):
+            for handle in self.reposShim.iterRepositories('NOT disabled'):
                 repoMap[handle.fqdn] = handle.getURL()
             for name, url in sorted(repoMap.items()):
                 out += 'repositoryMap %s %s\n' % (name, url)
-        proxy = 'conarys://' + self.req.application_url.split('://')[-1]
-        out += 'proxyMap * %s\n' % proxy
+        if self.req.params.get('proxyMap') != 'no':
+            proxy = 'conarys://' + self.req.application_url.split('://')[-1]
+            out += 'proxyMap * %s\n' % proxy
         self.response.content_type = 'text/plain'
         return out
