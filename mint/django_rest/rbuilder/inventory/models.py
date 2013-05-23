@@ -945,7 +945,9 @@ class System(modellib.XObjIdModel):
         # Note that you must be able to update systems that don't have a survey
         # in the case of adding a windows system with no software installed.
         updateEnabled = bool(self.latest_survey is None or
-            not self.latest_survey.has_system_model)
+            self.latest_survey.has_system_model)
+        noSystemModelUpdateEnabled = bool(self.latest_survey is not None and
+                not self.latest_survey.has_system_model)
 
         # Disable config action if no config is saved, or if the system
         # is based on a system model
@@ -992,7 +994,25 @@ class System(modellib.XObjIdModel):
                 actionName="Update Software",
                 descriptorModel=self,
                 descriptorHref="descriptors/update",
+                enabled=noSystemModelUpdateEnabled,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_UPDATE,
+                actionKey="system_preview_software_update",
+                actionName="Preview Software Update",
+                actionDescription="Preview software update",
+                descriptorModel=self,
+                descriptorHref="descriptors/preview",
                 enabled=updateEnabled,
+            ),
+            jobmodels.EventType.makeAction(
+                jobmodels.EventType.SYSTEM_UPDATE,
+                actionKey="system_apply_update_software",
+                actionName="Apply Software Update",
+                actionDescription="Apply software update",
+                descriptorModel=self,
+                descriptorHref="descriptors/apply_update",
+                enabled=False,
             ),
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_CONFIGURE,
@@ -1057,6 +1077,7 @@ class SystemDesiredTopLevelItem(DesiredTopLevelItem):
     class Meta:
         db_table = 'inventory_system_desired_top_level_item'
         unique_together = [ ('system', 'trove_spec') ]
+        ordering = [ 'id' ]
 
     _xobj = xobj.XObjMetadata(tag = 'desired_top_level_item')
     system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'desired_top_level_items'))
@@ -1065,6 +1086,7 @@ class SystemObservedTopLevelItem(DesiredTopLevelItem):
     class Meta:
         db_table = 'inventory_system_observed_top_level_item'
         unique_together = [ ('system', 'trove_spec') ]
+        ordering = [ 'id' ]
 
     _xobj = xobj.XObjMetadata(tag = 'observed_top_level_item')
     system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'observed_top_level_items'))
