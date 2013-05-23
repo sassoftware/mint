@@ -2069,9 +2069,8 @@ ZcY7o9aU
         self._testLaunchSystem(targets, img)
 
     def testLaunchSystemDifferentManagementZone(self):
-        from rbuilder.inventory import zones as zonemodels
         zname = str(self.uuid4())
-        zone = zonemodels.Zone.objects.create(name=zname,
+        zone = zmodels.Zone.objects.create(name=zname,
                 description="Description for %s" % zname)
         targets = self._setupImages()
         imgName = "image 02"
