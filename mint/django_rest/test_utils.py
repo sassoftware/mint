@@ -416,10 +416,12 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def _post(self, path, data={}, content_type='application/xml',
              username=None, password=None, follow=False, headers=None,
-             jobToken=None):
+             jobToken=None, zone=None):
         path = self._fixPath(path)
         extra = self._addRequestAuth(username, password, jobToken=jobToken)
         extra.update(headers or {})
+        if zone is not None:
+            extra['X-rPath-Management-Zone'] = base64.b64encode(zone.name)
         return self.client.post(path, data, content_type, follow, **extra)
 
     def _put(self, path, data={}, content_type='application/xml',

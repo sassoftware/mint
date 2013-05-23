@@ -2068,6 +2068,16 @@ ZcY7o9aU
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
         self._testLaunchSystem(targets, img)
 
+    def testLaunchSystemDifferentManagementZone(self):
+        from rbuilder.inventory import zones as zonemodels
+        zname = str(self.uuid4())
+        zone = zonemodels.Zone.objects.create(name=zname,
+                description="Description for %s" % zname)
+        targets = self._setupImages()
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        self._testLaunchSystem(targets, img, zone=zone)
+
     def testLaunchSystemFromDeferredImage(self):
         targets = self._setupImages()
         imgName = "image 02"
@@ -2077,7 +2087,7 @@ ZcY7o9aU
 
 
     def _testLaunchSystem(self, targets, img, baseImg=None, configData=None,
-            expectedStatusCode=200):
+            expectedStatusCode=200, zone=None):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
 
         # Post a job
@@ -2185,11 +2195,18 @@ ZcY7o9aU
 
         # POST the system, that should create the artifacts
         url = 'jobs/%s/systems' % (job.job_uuid, )
-        response = self._post(url, data=systemsXml, jobToken=jobToken)
+        response = self._post(url, data=systemsXml, jobToken=jobToken,
+                zone=zone)
         self.assertEquals(response.status_code, 200)
+        if zone is None:
+            expZones = [ self.mgr.getLocalZone().name ]
+        else:
+            expZones = [ zone.name ]
 
         artifacts = jmodels.JobSystemArtifact.objects.all()
-        self.failUnlessEqual(len(artifacts), 1)
+        self.assertEquals(
+                [ j.system.managing_zone.name for j in artifacts ],
+                expZones)
         if configDataXml is None:
             self.assertEquals([j.system.configuration for j in artifacts],
                 [configDataXml] * len(artifacts))

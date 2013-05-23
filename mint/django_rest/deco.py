@@ -117,7 +117,8 @@ def xObjRequires(model_names):
     return decorate
 
 def _injectZone(request, etreeModel, modelName, modelClass):
-    if modelName != 'system' or request.method != 'POST':
+    systemModels = set(['system', 'systems'])
+    if request.method != 'POST' or modelName not in systemModels:
         return
     headerName = 'X-rPath-Management-Zone'
     encZoneName = getHeaderValue(request, headerName)
@@ -131,10 +132,16 @@ def _injectZone(request, etreeModel, modelName, modelClass):
     zone = zones[0]
     propName = 'managing_zone'
     # Inject zone into model. First remove all existing zones
-    for n in list(etreeModel.iterchildren(propName)):
-        etreeModel.remove(n)
-    etreeModel.append(etreeModel.makeelement(propName,
-        id=zone.get_absolute_url(request)))
+    if modelName == 'system':
+        systemEtrees = [ etreeModel ]
+    else:
+        systemEtrees = etreeModel.iterchildren('system')
+    for systemEtree in systemEtrees:
+        # Convert to a list since we're changing the model underneath
+        for n in list(systemEtree.iterchildren(propName)):
+            systemEtree.remove(n)
+        systemEtree.append(systemEtree.makeelement(propName,
+            id=zone.get_absolute_url(request)))
 
 HttpAuthenticationRequired = http.HttpResponse(status=401)
 HttpAuthorizationRequired  = http.HttpResponse(status=403)
