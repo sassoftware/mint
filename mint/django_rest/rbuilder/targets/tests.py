@@ -2547,13 +2547,14 @@ ZcY7o9aU
 
         # Create launch profile
         # Default propulsion is gas, we're overriding it with coals
-        jobXml = """
+        jobXmlTemplate = """
 <job>
   <job_type id="%(jobType)s"/>
   <descriptor id="%(descriptorId)s"/>
   <descriptor_data>%(descriptorData)s</descriptor_data>
 </job>
-""" % dict(jobType=jobType, descriptorId=descriptorId,
+"""
+        jobXml = jobXmlTemplate % dict(jobType=jobType, descriptorId=descriptorId,
         descriptorData="<__name>Acme Profile</__name><__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")
 
         response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
@@ -2658,3 +2659,14 @@ ZcY7o9aU
         # default for device is the target's default
         self.assertEquals([ x.default for x in descr.getDataFields() ],
                 [['7'], ['modulatoor'], ['coals'], ['False'], []])
+
+        # RCE-1712: constraint violations should not result in a 500
+        jobXml = jobXmlTemplate % dict(jobType=jobType, descriptorId=descriptorId,
+        descriptorData="<__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")
+
+        response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 400)
+        doc = etree.fromstring(response.content)
+        self.assertEquals(doc.find('message').text, '''["Missing field: '__name'"]''')
+        self.assertEquals(doc.find('code').text, '400')

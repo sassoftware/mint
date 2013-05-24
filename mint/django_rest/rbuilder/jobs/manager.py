@@ -358,7 +358,10 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
-        descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        try:
+            descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        except smartdescriptor.errors.ConstraintsValidationError, e:
+            raise errors.InvalidData(msg=str(e))
 
         descrXml = self._serializeDescriptor(descriptor)
         job._descriptor = descrXml
