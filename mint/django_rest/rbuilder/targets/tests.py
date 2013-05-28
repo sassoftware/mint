@@ -2660,6 +2660,15 @@ ZcY7o9aU
         self.assertEquals([ x.default for x in descr.getDataFields() ],
                 [['7'], ['modulatoor'], ['coals'], ['False'], []])
 
+        # RCE-1712: duplicate name violation
+        response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 409)
+        doc = etree.fromstring(response.content)
+        self.assertEquals(doc.find('message').text, '''duplicate key value violates unique constraint "target_launch_profile_name_uq"\nDETAIL:  Key (name)=(Acme Profile) already exists.\n''')
+        self.assertEquals(doc.find('code').text, '409')
+
+
         # RCE-1712: constraint violations should not result in a 500
         jobXml = jobXmlTemplate % dict(jobType=jobType, descriptorId=descriptorId,
         descriptorData="<__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")

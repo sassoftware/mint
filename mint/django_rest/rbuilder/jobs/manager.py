@@ -144,10 +144,15 @@ class JobManager(basemanager.BaseManager):
 
     @exposed
     def finishJob(self, job):
-        state = models.JobState.COMPLETED
-        job.update(job_state = self.getJobStateByName(state),
-            status_text = "Completed",
-            status_code = 200)
+        return self.updateJobState(job, stateName=models.JobState.COMPLETED,
+            statusText="Completed", statusCode=200)
+
+    @exposed
+    def updateJobState(self, job, stateName=models.JobState.COMPLETED,
+            statusText="Completed", statusCode=200):
+        job.update(job_state = self.getJobStateByName(stateName),
+            status_text = statusText,
+            status_code = statusCode)
 
 class AbstractHandler(object):
     __slots__ = [ 'mgrRef', 'extraArgs', ]
@@ -1306,5 +1311,21 @@ class JobHandlerRegistry(HandlerRegistry):
             return self.mgr.mgr.getDescriptorCreateLaunchProfile
 
         def postCreateJob(self, job):
-            self.mgr.mgr.createTargetLaunchProfile(self.target, job, self.descriptorData)
+            try:
+                self.mgr.mgr.createTargetLaunchProfile(self.target, job, self.descriptorData)
+            except (IntegrityError, errors.Conflict), e:
+                self.mgr.mgr.rollback()
+                self.mgr.updateJobState(job,
+                        stateName=models.JobState.FAILED,
+                        statusText=str(e),
+                        statusCode=409)
+                raise errors.Conflict(msg=job.status_text)
             self.mgr.finishJob(job)
+
+        def handleError(self, job, exc):
+            if isinstance(exc, (IntegrityError, errors.Conflict)):
+                job.job_state = self.mgr.getJobStateByName(models.JobState.FAILED)
+                job.status_text = "Duplicate Launch Profile"
+                job.status_code = 409
+                return True
+            return False
