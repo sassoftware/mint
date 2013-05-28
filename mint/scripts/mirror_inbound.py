@@ -35,6 +35,8 @@ class Script(MirrorScript):
                     sourceEntitlement, mirrorOrder, allLabels = label
             targetProject = projects.Project(self.server, targetProjectId)
             reposHost = targetProject.fqdn
+            targetUrl = self.server.labels.getLabelsForProject(
+                    targetProjectId)[1][reposHost]
             log.info("Mirroring %s", targetProject.name)
 
             try:
@@ -60,11 +62,18 @@ class Script(MirrorScript):
                 # creds.
                 targetCfg = conarycfg.ConaryConfiguration(False)
                 targetCfg.includeConfigFile('https://localhost/conaryrc')
+                targetCfg.repositoryMap[reposHost] = targetUrl
                 targetCfg.user.addServerGlob(reposHost,
                         self.cfg.authUser, self.cfg.authPass)
                 targetRepos = conaryclient.ConaryClient(targetCfg).repos
 
                 self._doMirror(cfg, sourceRepos, targetRepos)
+
+                # Disable background mirroring now that mirror is done
+                if self.server.getBackgroundMirror(targetProjectId):
+                    log.info("Switching project from background mirror mode to "
+                            "full mirror mode")
+                    self.server.setBackgroundMirror(targetProjectId, False)
 
             except KeyboardInterrupt:
                 log.info("Inbound mirror terminated by user")

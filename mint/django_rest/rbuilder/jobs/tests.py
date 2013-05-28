@@ -5,6 +5,7 @@
 # All rights reserved.
 #
 
+from conary import trovetup
 import uuid
 from lxml import etree
 
@@ -670,14 +671,15 @@ Some more errors here
 
         return jobXml
 
-    def _createSyncXml(self, systemId, topLevelGroup=None, previewId=None):
+    def _createSyncXml(self, systemId, topLevelGroups=None, previewId=None):
         jobType = self.mgr.sysMgr.eventType(models.EventType.SYSTEM_UPDATE)
         if previewId is None:
-            assert topLevelGroup is not None
-            data = "<updates><item>%s</item></updates>" % topLevelGroup
+            assert topLevelGroups is not None
+            data = "<updates>%s</updates>" % ''.join(
+                    "<item>%s</item>" % x for x in topLevelGroups)
             opType = "preview"
         else:
-            assert topLevelGroup is None
+            assert topLevelGroups is None
             data = "<preview_id>%s</preview_id>" % previewId
             opType = "apply_update"
         jobXml = """
@@ -757,26 +759,41 @@ Some more errors here
 
         return response.content
 
+    @classmethod
+    def _troveRepr(cls, tag, troveTup):
+        node = etree.Element(tag)
+        etree.SubElement(node, 'name').text = troveTup.name
+        etree.SubElement(node, 'version').text = troveTup.version.freeze()
+        return node
+
+    def _makePreview(self, changesSpec, observed, desired, previewId="sikrit"):
+        preview = etree.Element('preview')
+        preview.attrib['id'] = previewId
+        changes = etree.SubElement(preview, 'conary_package_changes')
+        for fromStr, toStr in changesSpec:
+            fromSpec = trovetup.TroveTuple(fromStr)
+            toSpec = trovetup.TroveTuple(toStr)
+            node = etree.SubElement(changes, 'conary_package_change')
+            node.append(self._troveRepr('from_conary_package', fromSpec))
+            node.append(self._troveRepr('to_conary_package', toSpec))
+            etree.SubElement(node, 'type').text = 'changed'
+        for trvStr in observed:
+            trvSpec = trovetup.TroveTuple(trvStr)
+            etree.SubElement(preview, 'observed').text = trvSpec.asString(withTimestamp=True)
+        # RCE-1553: add some white spaces around the trove spec, make
+        # sure they get properly stripped
+        for trvStr in desired:
+            trvSpec = trovetup.TroveTuple(trvStr)
+            etree.SubElement(preview, 'desired').text = \
+                    "\n\t%s  \n  \n" % trvSpec.asString(withTimestamp=True)
+
+        return etree.tostring(preview, pretty_print=True, xml_declaration=False)
+
     def _testJobSystemSoftwareUpdate(self, oldTopLevelGroup, topLevelGroup,
             dryRun=False, system=None):
-        payload = """
-    <preview>
-      <conary_package_changes>
-        <conary_package_change>
-          <type>changed</type>
-          <from_conary_package>
-            <name>group-fake</name>
-            <version>group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0</version>
-          </from_conary_package>
-          <to_conary_package>
-            <name>group-fake</name>
-            <version>group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0</version>
-          </to_conary_package>
-        </conary_package_change>
-      </conary_package_changes>
-      <observed>%(old)s</observed>
-      <desired>%(new)s</desired>
-    </preview>""" % dict(old=oldTopLevelGroup, new=topLevelGroup)
+        payload = self._makePreview(
+            [ (oldTopLevelGroup, topLevelGroup) ],
+            [oldTopLevelGroup], [topLevelGroup])
         if system is None:
             system = self._makeSystem()
 
@@ -795,23 +812,21 @@ Some more errors here
     def testJobSystemSoftwareUpdateWithPreview(self):
         old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        system, payload, content = self._testJobSystemSoftwareUpdate(old, new, dryRun=True)
+        system, payload, _ = self._testJobSystemSoftwareUpdate(old, new, dryRun=True)
 
-        observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         self.assertEquals(topLevelItems, [ old ])
 
         # Confirm <observed> is still on original version in accordance with dryRun=True.
         frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
         f_ver = getattr(frum, 'version')
-        self.assertEquals(observed, f_ver + '[]')
+        self.assertEquals(f_ver, trovetup.TroveTuple(old).version.freeze())
 
     def testJobSystemSoftwareUpdateWithUpdate(self):
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        system, payload, content = self._testJobSystemSoftwareUpdate(new, new,
+        system, payload, _ = self._testJobSystemSoftwareUpdate(new, new,
                 dryRun=False)
 
-        observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
 
         self.assertEquals(topLevelItems, [ new ])
@@ -819,7 +834,7 @@ Some more errors here
         # Confirm <observed> is now on desired version in accordance with dryRun=False.
         to = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'to_conary_package')
         t_ver = getattr(to, 'version')
-        self.assertEquals(observed, t_ver + '[]')
+        self.assertEquals(t_ver, trovetup.TroveTuple(new).version.freeze())
 
     def _makeSystemWithSystemModel(self):
         self._mockConfigDescriptorCache()
@@ -842,20 +857,16 @@ Some more errors here
 
         old = "group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]"
         new = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        # RCE-1553: add some white spaces around the trove spec, make
-        # sure they get properly stripped
-        newS = "\n\t%s  \n  \n" % new
-        system, payload, content = self._testJobSystemSoftwareUpdate(old, newS,
+        system, payload, _ = self._testJobSystemSoftwareUpdate(old, new,
                 dryRun=True, system=system)
 
-        observed = xobj.parse(content).preview.observed
         topLevelItems = sorted(x.trove_spec for x in system.desired_top_level_items.all())
         self.assertEquals(topLevelItems, [ old ])
 
         # Confirm <observed> is still on original version in accordance with dryRun=True.
         frum = getattr(xobj.parse(payload).preview.conary_package_changes.conary_package_change, 'from_conary_package')
         f_ver = getattr(frum, 'version')
-        self.assertEquals(observed, f_ver + '[]')
+        self.assertEquals(f_ver, trovetup.TroveTuple(old).version.freeze())
 
         callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.assertEquals(callList[0].kwargs['systemModel'],
@@ -889,19 +900,45 @@ Some more errors here
 
     def testPreviewSystemModel(self):
         system = self._makeSystemWithSystemModel()
-        topLevelGroup = "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]"
-        jobXml = self._createSyncXml(system.system_id, topLevelGroup)
+        self.assertEquals(
+            [ x.trove_spec for x in system.observed_top_level_items.all() ],
+            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
+        self.assertEquals(
+            [ x.trove_spec for x in system.desired_top_level_items.all() ],
+            ['group-fake=/fake.rpath.com@rpath:fake-0/1234.000:0-0-0[]'])
+
+        topLevelItems = [
+            "group-fake=/fake.rpath.com@rpath:fake-1/1357.000:2-0-0[]",
+            "bar=/fake.rpath.com@rpath:fake-1/1337.000:2-0-0[]",
+        ]
+        changeSpec = [ (x.replace('2-0-0', '1-0-0'), x) for x in topLevelItems ]
+        jobXml = self._createSyncXml(system.system_id, topLevelItems)
         job = self._postJob(jobXml, system.system_id)
         callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.assertEquals(callList[0].kwargs['systemModel'],
-            "install %s" % topLevelGroup)
+            "\n".join("install %s" % x for x in topLevelItems))
 
-        # Create a preview artifact
         dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
+
+        # pretend to be rMake putting CIM job results back to mint.
         intPreviewId = "updates/%s" % uuid.uuid4()
-        previewXml = '<preview id="%s"><blah/></preview>' % intPreviewId
-        preview = models.JobPreviewArtifact.objects.create(job=dbjob,
-                preview=previewXml, system=system)
+        payload = self._makePreview(changeSpec,
+                [x[0] for x in changeSpec],
+                topLevelItems, previewId=intPreviewId)
+
+        # This will create the pewview as a side-effect
+        self._confirmRmakePost(payload, dbjob)
+
+        self.assertEquals(dbjob.systems.all()[0].system_id,
+                system.system_id)
+
+        # Compute preview ID
+        preview = dbjob.created_previews.all()[0]
+
+        self.assertEquals(
+            sorted(x.trove_spec for x in system.observed_top_level_items.all()),
+            sorted(x[0] for x in changeSpec))
+
         # Make up a proper URL for the preview
         previewId = job.id.rsplit('/', 2)[0] + "/inventory/previews/%s" % preview.creation_id
 
@@ -910,6 +947,21 @@ Some more errors here
         job = self._postJob(jobXml, system.system_id)
         callList = self.mgr.repeaterMgr.repeaterClient.getCallList()
         self.assertEquals(callList[-1].kwargs['previewId'], intPreviewId)
+
+        # pretend to be rMake putting CIM job results back to mint.
+        dbjob = models.Job.objects.get(job_uuid=unicode(job.job_uuid))
+        payload = self._makePreview(changeSpec,
+                topLevelItems, topLevelItems)
+        self._confirmRmakePost(payload, dbjob)
+        # Make sure the desired and observed items were updated
+        self.assertEquals(dbjob.systems.all()[0].system_id,
+                system.system_id)
+        self.assertEquals(
+            [ x.trove_spec for x in system.observed_top_level_items.all() ],
+            topLevelItems)
+        self.assertEquals(
+            [ x.trove_spec for x in system.desired_top_level_items.all() ],
+            topLevelItems)
 
     def testJobSystemScan_systemModel(self):
         system = self._makeSystemWithSystemModel()

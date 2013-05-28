@@ -142,6 +142,12 @@ class JobManager(basemanager.BaseManager):
         systemModelLines.extend("install %s" % x.strip() for x in topLevelItems)
         return "\n".join(systemModelLines)
 
+    @exposed
+    def finishJob(self, job):
+        state = models.JobState.COMPLETED
+        job.update(job_state = self.getJobStateByName(state),
+            status_text = "Completed",
+            status_code = 200)
 
 class AbstractHandler(object):
     __slots__ = [ 'mgrRef', 'extraArgs', ]
@@ -352,10 +358,17 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
         # relationship
         job._relatedResource = self.getRelatedResource(descriptor)
         job._relatedThroughModel = self.getRelatedThroughModel(descriptor)
-        descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        try:
+            descriptorDataObj = self._processDescriptor(descriptor, descriptorDataXml)
+        except smartdescriptor.errors.ConstraintsValidationError, e:
+            raise errors.InvalidData(msg=str(e))
 
         descrXml = self._serializeDescriptor(descriptor)
         job._descriptor = descrXml
+        if hasattr(descriptorDataObj, 'toxml'):
+            # Re-serialize descriptor data to make sure extra fields get
+            # filtered out
+            descriptorDataXml = descriptorDataObj.toxml()
         job._descriptor_data = descriptorDataXml
 
         return descriptor, descriptorDataObj
@@ -365,10 +378,10 @@ class DescriptorJobHandler(BaseJobHandler, ResultsProcessingMixIn):
 
     def _processDescriptor(self, descriptor, descriptorDataXml):
         descriptor.setRootElement("descriptor_data")
+        # This will also validate the descriptor data
         descriptorDataObj = smartdescriptor.DescriptorData(
             fromStream=descriptorDataXml,
-            descriptor=descriptor,
-            validate=False)
+            descriptor=descriptor)
         return descriptorDataObj
 
     def _serializeDescriptor(self, descriptor):
@@ -1153,8 +1166,8 @@ class JobHandlerRegistry(HandlerRegistry):
         def _updateDesiredInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
-            previewId = descriptorData.getField('preview_id')
-            if test or (previewId is not None):
+            sysModelTopLevelItems = descriptorData.getField('updates')
+            if test or (sysModelTopLevelItems is not None):
                 return
             topLevelItems = set(topLevelItems)
             self.mgr.mgr.sysMgr.setDesiredTopLevelItems(system, topLevelItems)
@@ -1162,8 +1175,6 @@ class JobHandlerRegistry(HandlerRegistry):
         def _updateObservedInstalledSoftware(self, system, job, topLevelItems):
             descriptorData = self.loadDescriptorData(job)
             test = descriptorData.getField('dry_run')
-            if test:
-                return
             topLevelItems = set(topLevelItems)
             self.mgr.mgr.sysMgr.setObservedTopLevelItems(system, topLevelItems)
 
@@ -1282,3 +1293,18 @@ class JobHandlerRegistry(HandlerRegistry):
                 job.status_code = 400
                 job.status_text = stderr
             return system
+
+    class TargetLaunchProfileHandler(_TargetDescriptorJobHandler):
+        jobType = models.EventType.TARGET_CREATE_LAUNCH_PROFILE
+        ResultsTag = 'launch_profile'
+
+        def createRmakeJob(self, job):
+            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
+            return job.job_uuid, None
+
+        def _getDescriptorMethod(self):
+            return self.mgr.mgr.getDescriptorCreateLaunchProfile
+
+        def postCreateJob(self, job):
+            self.mgr.mgr.createTargetLaunchProfile(self.target, job, self.descriptorData)
+            self.mgr.finishJob(job)

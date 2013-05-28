@@ -282,6 +282,8 @@ class MintConfig(conarycfg.ConfigFile):
     imageImportEnabled = (CfgBool, True, "Whether or not base images can be imported directly as project images")
     metadataDescriptorPath = (CfgPath, RBUILDER_DATA + 'data/metadataDescriptor.xml')
 
+    rwbsLabel = (CfgString, 'infra.rpath.com@rpath:infra-rwbs7')
+
     # *** BEGIN DEPRECATED VALUES ***
     # These values are no longer in active use but must remain here so that
     # old configurations do not raise an error. Some of them may have their

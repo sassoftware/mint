@@ -1156,8 +1156,7 @@ class PlatformManager(manager.Manager):
         # Local or mirrored project is accessible
         return False
 
-    def _lookupFromRepository(self, platform, createPlatDef):
-        platformLabel = platform.label
+    def _lookupFromRepository(self, platformLabel, createPlatDef):
         if self.isOffline(platformLabel):
             return None
 
@@ -1231,7 +1230,7 @@ class PlatformManager(manager.Manager):
             createPlatDef = False
 
         if createPlatDef:
-            pl = self._lookupFromRepository(platform, createPlatDef)
+            pl = self._lookupFromRepository(platform.label, createPlatDef)
         else:
             pl = None
 

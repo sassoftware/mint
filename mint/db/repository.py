@@ -623,14 +623,16 @@ class RepositoryHandle(object):
                 roleName = ROLE_PERMS[level][0]
                 allRoles.add(roleName)
             if not allRoles:
-                # No permissions -> pretend the project doesn't exist.
-                raise ProductNotFound(self.shortName)
-            # Preserve the username for commit messages, etc.
-            originalUser = None
-            if authToken.user != 'anonymous':
-                originalUser = authToken.user
-            authToken.user = ValidUser(*allRoles, username=originalUser)
-            authToken.password = None
+                # No permission
+                authToken.user = 'anonymous'
+                authToken.password = 'anonymous'
+            else:
+                # Preserve the username for commit messages, etc.
+                originalUser = None
+                if authToken.user != 'anonymous':
+                    originalUser = authToken.user
+                authToken.user = ValidUser(*allRoles, username=originalUser)
+                authToken.password = None
         else:
             # Proxied repositories require no authentication, but they may have
             # a password configured for outbound requests.
