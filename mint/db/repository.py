@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 """
@@ -26,6 +26,7 @@ from conary.build import nextversion
 from conary.conaryclient import filetypes
 from conary.dbstore.sqlerrors import CursorError
 from conary.lib import util
+from conary.lib.http import request
 from conary.repository import changeset
 from conary.repository import errors as reposerrors
 from conary.repository import netclient
@@ -279,9 +280,10 @@ class RepomanMixin(object):
 
 class RepositoryManager(RepomanMixin):
 
-    def __init__(self, cfg, db, bypass=False):
+    def __init__(self, cfg, db, bypass=False, baseUrl=None):
         self.cfg = cfg
         self.db = db
+        self.baseUrl = baseUrl
         self._repoInit(bypass)
 
     def iterRepositories(self, whereClause='', *args):
@@ -313,11 +315,12 @@ class RepositoryManager(RepomanMixin):
                     commitEmail, database, url, authType, username, password,
                     entitlement, %s AS hasContentSources
                 FROM Projects LEFT JOIN Labels USING ( projectId )
-                %s ORDER BY projectId ASC""" % (sourceClause, whereClause),
+                %s ORDER BY hidden ASC, projectId ASC
+                """ % (sourceClause, whereClause),
                 *args)
 
         for row in cu:
-            yield RepositoryHandle(self, row)
+            yield RepositoryHandle(self, row, baseUrl=self.baseUrl)
 
     def _getRepository(self, whereClause, *args):
         """
@@ -341,11 +344,12 @@ class RepositoryManager(RepomanMixin):
 
 class RepositoryHandle(object):
 
-    def __init__(self, manager, projectInfo):
+    def __init__(self, manager, projectInfo, baseUrl=None):
         self._manager = weakref.ref(manager)
         self._cfg = manager.cfg
         self._db = manager.db
         self._projectInfo = projectInfo
+        self._baseUrl = baseUrl
 
         # Switch to a subclass for whichever database driver is needed.
         if self.hasDatabase:
@@ -401,27 +405,22 @@ class RepositoryHandle(object):
 
 
     # Getters for repository objects
-    def _getURLPieces(self):
-        if self._cfg.SSL:
-            protocol, port = 'https', 443
-            host = self._cfg.secureHost
+    def _getBaseUrl(self):
+        if self._baseUrl:
+            url = request.URL(self._baseUrl)
+            # Upgrade to HTTPS
+            if url.scheme == 'http' and url.hostport.port in (80, None):
+                hostport = url.hostport._replace(port=443)
+                url = url._replace(scheme='https', hostport=hostport)
+            return url
         else:
-            protocol, port = 'http', 80
-            host = self._cfg.siteHost
-
-        if ':' in host:
-            host, port = host.split(':')
-            port = int(port)
-
-        return protocol, host, port
+            return request.URL('https://' + self._cfg.secureHost)
 
     def getURL(self):
         if self.hasDatabase:
             # Local databases (including mirrors) are constructed based on the
             # rBuilder configuration.
-            protocol, host, port = self._getURLPieces()
-            return '%s://%s:%d/repos/%s/' % (protocol, host, port,
-                    self.shortName)
+            return '%s/repos/%s/' % (self._getBaseUrl(), self.shortName)
         else:
             # Remote repositories' info comes from the Projects table.
             return self._projectInfo['url']
@@ -431,11 +430,11 @@ class RepositoryHandle(object):
         Return the "database tuple" for this project. Don't call this
         directly if you intend to open the database; use getReposDB().
         """
-        database = self._projectInfo['database']
-        if database is None:
+        if not self.hasDatabase:
             raise RuntimeError("Cannot open database for external project %r"
                     % (self.shortName,))
-        elif ' ' in database:
+        database = self._projectInfo['database'] or 'default'
+        if ' ' in database:
             # It's a connect string w/ driver and path
             driver, path = database.split(' ', 1)
         else:
@@ -678,9 +677,15 @@ class RepositoryHandle(object):
             # If the password is not valid, just ignore it -- the password
             # might actually be intended for something we're proxying to.
             # See RBL-5269
-            maybeUserId = self._getUserIdFromToken(mintToken)
-            if maybeUserId is not None:
-                userId = maybeUserId
+            if (useRepoDb and mintToken.user == self._cfg.authUser
+                    and mintToken.password == self._cfg.authPass):
+                # Allow local scripts (e.g. mirror-inbound) to use mintauth to
+                # authenticate.
+                userId = ANY_WRITER
+            else:
+                maybeUserId = self._getUserIdFromToken(mintToken)
+                if maybeUserId is not None:
+                    userId = maybeUserId
         return self.getAuthToken(userId, level=None, authToken=mintToken,
                 extraRoles=extraRoles)
 
@@ -808,10 +813,10 @@ WHERE level >= 0
         permissions in the repository, otherwise the proxy will have access to
         all roles.
         """
-        protocol, _, port = self._getURLPieces()
+        url = self._getBaseUrl()
         authToken = self.getAuthToken(userId)
         return shimclient.ShimServerProxy(self.getShimServer(),
-                protocol, port, authToken)
+                url.scheme, url.hostport.port, authToken)
 
     def getServerProxy(self, userId=None):
         """
@@ -1359,6 +1364,8 @@ class MultiShimServerCache(object):
         else:
             # Found the project -- use that project's (maybe shim) server proxy
             return repo.getServerProxy(userId=self.userId)
+
+    singleServer = netclient.ServerCache.singleServer.im_func
 
 
 class MultiShimNetClient(shimclient.ShimNetClient):

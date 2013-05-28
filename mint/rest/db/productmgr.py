@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import logging
 import os
 import itertools
 import time
@@ -30,6 +31,9 @@ from mint.rest.db import manager
 from mint.rest.db import reposmgr
 from mint.rest.db import platformmgr
 from mint.templates import groupTemplate
+
+log = logging.getLogger(__name__)
+
 
 class ProductVersionCallback(object):
     def __init__(self, hostname, version, job):
@@ -223,8 +227,6 @@ class ProductManager(manager.Manager):
         except sqlerrors.CursorError, e:
             raise mint_error.InvalidError(e.msg)
 
-        authInfo = models.AuthInfo('userpass',
-                self.cfg.authUser, self.cfg.authPass)
         self.reposMgr.createRepository(projectId)
 
         # can only add members after the repository is set up
@@ -272,7 +274,6 @@ class ProductManager(manager.Manager):
 
         if bool(oldproduct.hidden) == True and hidden == False:
             self.publisher.notify('ProductUnhidden', oldproduct.id)
-            self.reposMgr._generateConaryrcFile()
 
     def createExternalProduct(self, title, hostname, domainname, url,
                               authInfo, mirror=False, backupExternal=False):
@@ -318,6 +319,9 @@ class ProductManager(manager.Manager):
         if self.auth.userId is not None:
             self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
+        cu.execute("""UPDATE querysets_queryset SET tagged_date = NULL
+            WHERE resource_type = 'project_branch_stage'
+            OR resource_type = 'project'""")
 
         return productId
 
@@ -601,12 +605,10 @@ class ProductManager(manager.Manager):
         promoteJob.stage = stageName
         promoteJob.group = str(trove.name)
 
-        client = self.reposMgr.getConaryClient()
         pd = self.getProductVersionDefinition(hostname, version)
-
-        rpath_job.BackgroundRunner(self._promoteAndPublishPlatformDef) (
-                client, pd, job, hostname, version, stageName, trove)
-
+        callback = ProductVersionCallback(hostname, version, job)
+        runner = Runner(self._promoteAndPublishPlatformDef, self.db, callback)
+        runner(pd, callback, hostname, version, stageName, trove)
         return promoteJob
 
     def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
@@ -769,11 +771,11 @@ class ProductManager(manager.Manager):
                                    allowMissing=allowMissing)
         return dict((specMap[x[0]], x[1]) for x in results.items())
 
-    def _promoteAndPublishPlatformDef(self, client, pd, job, hostname, version, stageName, trv):
-        callback = ProductVersionCallback(hostname, version, job)
-
-        shouldPublish, targetLabels = self._promoteGroup(client, pd, job,
-                hostname, version, stageName, trv, callback)
+    def _promoteAndPublishPlatformDef(self, pd, callback, hostname, version,
+            stageName, trv):
+        client = self.reposMgr.getUserClient()
+        shouldPublish, targetLabels = self._promoteGroup(client, pd, callback,
+                hostname, version, stageName, trv)
 
         # Republish platform definitions if this project is a platform and we
         # are promoting to the release stage.
@@ -782,16 +784,11 @@ class ProductManager(manager.Manager):
 
         callback.done()
 
-    def _promoteGroup(self, client, pd, job, hostname, version, stageName, trv,
-        callback=None):
-
+    def _promoteGroup(self, client, pd, callback, hostname, version, stageName,
+            trv):
         nextStage = str(stageName)
         activeStage = None
         activeLabel = str(trv.label)
-
-        if callback is None:
-            callback = ProductVersionCallback(hostname, version, job)
-
         for stage in pd.getStages():
             if str(stage.name) == nextStage:
                 break
@@ -880,3 +877,19 @@ class ProductManager(manager.Manager):
             callback._message('Published')
         else:
             callback.error('Error publising platform definition')
+
+
+class Runner(rpath_job.BackgroundRunner):
+
+    def __init__(self, func, db, callback):
+        rpath_job.BackgroundRunner.__init__(self, func)
+        self.db = db
+        self.callback = callback
+
+    def postFork(self):
+        """Unshare database connection with parent process."""
+        self.db.reopen_fork()
+
+    def handleError(self, exc_info):
+        log.error("Unhandled error in background job:", exc_info=exc_info)
+        self.callback.error(exc_info[1])

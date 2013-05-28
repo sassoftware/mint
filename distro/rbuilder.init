@@ -1,15 +1,6 @@
 #!/bin/bash
-# chkconfig: 345 25 65
+# chkconfig: 345 70 30
 # description: Configure the system for rBuilder Appliance on startup
-#
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
-#
-
-# NB: the above chkconfig line is overridden via chkconfig.d so it can be
-# adjacent to all the other overrides.
-
 
 check_postgres() {
     psql -U postgres -l &>/dev/null
@@ -33,18 +24,15 @@ wait_for_postgres() {
 
 case "$1" in
 start)
-  if [ "`ps -A | grep httpd | grep -v lighttpd | grep -v grep`" != "" ]
-  then
-    echo "httpd is running. Please stop that service before running this script" > /dev/stderr
-    exit 1
-  fi
-
   . /etc/sysconfig/pgsql/postgresql-rbuilder
   export PGPORT
   wait_for_postgres || exit 1
 
   # Generate SSL certs for various things on initial boot.
   /usr/share/rbuilder/scripts/generate-certs.sh
+
+  # Start nginx now that certs exist
+  [ -f /var/lock/subsys/nginx ] || /sbin/service nginx start
 
   # Configure the local rmake node's identity and add it to the dispatcher's
   # whitelist.

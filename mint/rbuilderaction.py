@@ -23,7 +23,6 @@ from mint.lib import mintutils
 from mint.mint_error import ItemNotFound
 from mint.logerror import logErrorAndEmail
 from mint.scripts import repository_sync
-from mint.notices_callbacks import PackageNoticesCallback
 
 log = logging.getLogger(__name__)
 
@@ -128,7 +127,3 @@ def registerCommits(argSet, commitList):
         tool = repository_sync.SyncTool(cfg, db)
         for hostname in proddefHosts:
             tool.syncReposByFQDN(hostname)
-
-
-    if groups:
-        PackageNoticesCallback.refreshCachedUpdates(groups)

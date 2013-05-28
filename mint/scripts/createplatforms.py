@@ -1,12 +1,7 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-"""
-This script can be used to import running systems from predefined targets
-"""
 
 import os
 import sys
@@ -21,20 +16,14 @@ from mint.rest.db.database import Database as RestDatabase
 from mint.rest.api.models.platforms import Platform
 from mint.rest.modellib import converter
 
-#from catalogService import handler
-#from catalogService.rest.api.clouds import CloudTypeController, SUPPORTED_MODULES
 
 class Script(scriptlibrary.SingletonScript):
     cfgPath = config.RBUILDER_CONFIG
     logFileName = 'platforms.log'
     newLogger = True
-    
+
     PLATFORM_DIR = "/usr/share/rbuilder/platforms"
     def action(self):
-        if sys.argv[0].startswith('--xyzzy='):
-            self.cfgPath = sys.argv.pop(0).split('=')[1]
-            print "Test mode using configuration from %s" % self.cfgPath
-            
         quietMode = False
         if "-q" in sys.argv:
             quietMode = True

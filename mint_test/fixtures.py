@@ -93,7 +93,6 @@ class FixtureCache(object):
         cfg.storagePath = os.path.join(cfg.dataPath, 'jobs')
         util.mkdirChain(cfg.storagePath)
         cfg.sendNotificationEmails = False
-        cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
         cfg.ec2AccountId = '012345678901'
@@ -113,8 +112,6 @@ class FixtureCache(object):
                                     'localhost@rpath:plat-2']
 
         cfg.reposLog = False
-        f = open(cfg.conaryRcFile, 'w')
-        f.close()
         cfg.postCfg()
 
         util.mkdirChain(cfg.logPath)
@@ -592,7 +589,6 @@ class SqliteFixtureCache(FixtureCache):
         reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.configLine('database default sqlite ' + reposDBPath)
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
-        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)
@@ -616,7 +612,7 @@ class SQLServerFixtureCache(FixtureCache):
         return os.path.join(self.harness.conn, dbName)
 
     def newMintCfg(self, name):
-        dbName = ("mf%s" % name).lower()
+        dbName = ("mf%s" % name).lower().replace('.', '__')
         self.keepDbs.append(dbName)
         db = self.harness.getDB(dbName)
 
@@ -676,7 +672,6 @@ class MySqlFixtureCache(SQLServerFixtureCache):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
                                               os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
-        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         # restore the mint db into a unique copy
         fixtureMintDbName = ("mf%s" % name).lower()
@@ -758,7 +753,6 @@ class PostgreSqlFixtureCache(SQLServerFixtureCache):
         testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'),
                                               os.path.join(testCfg.dataPath, 'contents2', '%s'))
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
-        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         f = open(os.path.join(testCfg.dataPath, "rbuilder.conf"), 'w')
         testCfg.display(out=f)

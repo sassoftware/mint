@@ -87,7 +87,8 @@ class ImagesManager(basemanager.BaseManager):
             image.trove_version = '/%s/0.1:1-1-1' % versions.CookLabel()
 
         if not image.trove_flavor and image.architecture:
-            image.trove_flavor = "is: %s" % image.architecture
+            flavor = deps.parseFlavor(str('is: ' + image.architecture))
+            image.trove_flavor = flavor.freeze()
 
         # Fill in the redundant information starting with the most
         # specific part
@@ -204,7 +205,8 @@ class ImagesManager(basemanager.BaseManager):
             user__target_user_credentials__target__target_type__name = 'ec2',
             user__target_user_credentials__target__name = 'aws').values_list('level', 'user__target_user_credentials__target_credentials__credentials')
         for level, creds in vals:
-            val = datatypes.unmarshalTargetUserCredentials(creds).get('accountId')
+            val = datatypes.unmarshalTargetUserCredentials(self.cfg, creds
+                    ).get('accountId')
             if val is None:
                 continue
             if level <= 1:
@@ -235,10 +237,11 @@ class ImagesManager(basemanager.BaseManager):
                 fileUrl.delete()
         imageDir = os.path.join(self.cfg.imagesPath, image.project.short_name,
                 str(image_id))
-        for name in ['build.log', 'trace.txt']:
-            path = os.path.join(imageDir, name)
-            if os.path.exists(path):
-                os.unlink(path)
+        if os.path.isdir(imageDir):
+            for name in os.listdir(imageDir):
+                path = os.path.join(imageDir, name)
+                if name in ('build.log', 'trace.txt') or name.endswith('.sha1'):
+                    os.unlink(path)
         # Delete the parent directory, if it's empty.
         try:
             os.rmdir(imageDir)
@@ -323,19 +326,19 @@ class ImagesManager(basemanager.BaseManager):
         targetImages = getattr(obj, 'target_images', None)
         if targetImages is None:
             return
-        targetImages = getattr(targetImages, 'target_image', None)
-        if targetImages is None:
-            return
-        if not isinstance(targetImages, list):
-            targetImages = [ targetImages ]
-        for targetImage in targetImages:
-            targetId = targetImage.target.id
+        for targetImage in targetImages.iterchildren('target_image'):
+            targetIds = targetImage.xpath('target/@id')
+            if not targetIds:
+                continue
+            targetId = targetIds[0]
             match = urlresolvers.resolve(targetId)
             if not match:
                 continue
             targetId = match.kwargs['target_id']
             target = tgtmodels.Target.objects.get(target_id=targetId)
-            img = targetImage.image
+            img = targetImage.find('image')
+            if img is None:
+                continue
             timgModel = self.mgr.addTargetImage(target, img)
             tgtmodels.TargetImagesDeployed.objects.create(target=target,
                 target_image_id=timgModel.target_internal_id,
@@ -381,13 +384,19 @@ class ImagesManager(basemanager.BaseManager):
             fobj.save()
 
             filePath = self._getImageFilePath(hostname, imageId, fobj.file_name)
+            with open(filePath + '.sha1') as sha1file:
+                sha1sum = sha1file.readline().split()[0]
+            if sha1sum != fobj.sha1:
+                raise RuntimeError("Image file was corrupted during "
+                        "upload, check build log")
             url = models.FileUrl.objects.create(url_type=urltypes.LOCAL,
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
 
         installedSizeAttrName =  'attributes.installed_size'
+        Etree = models.modellib.Etree
         if files.attributes is not None:
-            installedSize = getattr(files.attributes, 'installed_size', None)
+            installedSize = Etree.findBasicChild(files.attributes, 'installed_size')
         else:
             installedSize = None
         if installedSize is None:
@@ -402,7 +411,7 @@ class ImagesManager(basemanager.BaseManager):
         return self.getImageBuildFiles(imageId)
 
     def _addImageToRepository(self, imageId, metadata):
-        metadataDict = self.mgr.restDb.imageMgr.getMetadataDict(metadata)
+        metadataDict = metadata.asDict()
         # Find the stage for this image, we need the label to commit to
         buildLabels = projmodels.Stage.objects.filter(
                 images__image_id=imageId).values_list(

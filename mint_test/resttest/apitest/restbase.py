@@ -113,7 +113,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                 architectureRef = archRef,
                 containerTemplateRef = containerTemplateRef,
                 stages = stageRefs)
-        client = db.productMgr.reposMgr.getConaryClientForProduct(shortName)
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
         pd.setPlatformName('localhost@rpath:plat-1')
         pd.saveToRepository(client, 'Product Definition commit\n')
         return pd
@@ -125,7 +125,7 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
         label = self.productDefinition.getDefaultLabel()
         db = self.openRestDatabase()
         self.setDbUser(db, 'adminuser')
-        client = db.productMgr.reposMgr.getConaryClientForProduct(self.productShortName)
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
         repos = client.getRepos()
         self.addComponent("foo:bin=%s" % label, repos=repos)
         self.addCollection("foo=%s" % label, ['foo:bin'], repos=repos)
@@ -172,9 +172,15 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
             if label.startswith('localhost@'):
                 return oldLoadFromRepository(slf, self.cclient, label)
             return oldLoadFromRepository(slf, oldClient, label)
-
         self.mock(proddef.PlatformDefinition, 'loadFromRepository',
             newLoadFromRepository)
+
+        oldGetPlatDef = platformmgr.PlatformDefCache._getPlatDef
+        def newGetPlatDef(slf, labelStr, url=None):
+            if url == 'https://localhost/conary/':
+                url = self.cfg.repositoryMap.find('localhost')
+            return oldGetPlatDef(slf, labelStr, url)
+        self.mock(platformmgr.PlatformDefCache, '_getPlatDef', newGetPlatDef)
 
     def _addPlatform(self, label, platformDef):
         restdb = self.openRestDatabase()
@@ -274,8 +280,8 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
 
     def getTestProjectRepos(self):
         db = self.openMintDatabase()
-        reposMgr = db.productMgr.reposMgr
-        return reposMgr.getRepositoryClientForProduct('testproject')
+        client = db.productMgr.reposMgr.getAdminClient(write=True)
+        return client.repos
 
     def assertBlobEquals(self, actual, expected):
         """
@@ -323,7 +329,8 @@ class Controller(object):
         self.password = password
 
     def call(self, method, uri, body=None, convert=False, headers=None):
-        request = self.RequestFactory(method, uri, body=body)
+        request = self.RequestFactory(method, uri, body=body,
+                username=self.username, password=self.password)
         request._convert = convert
 
         if self.username:
@@ -340,14 +347,19 @@ class Controller(object):
     def convert(self, type, request, object):
         return converter.toText(type, object, self.controller, request)
 
+class WebRequest(object):
+    def __init__(self, authToken):
+        self.environ = { 'mint.authToken' : authToken, }
+
 class MockRequest(request.Request):
     def __init__(self, method, uri, username=None, admin=False,
-                 body=None):
+                 body=None, password=None):
         self.method = method
         self.uri = uri
         self.extension = None
         self.body = body
-        request.Request.__init__(self, None, '/api')
+        authToken = (username, password)
+        request.Request.__init__(self, WebRequest(authToken), '/api')
 
     def _setProperties(self):
         self.headers = CaselessDict()

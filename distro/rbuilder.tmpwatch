@@ -8,11 +8,9 @@
 # clean outdated cache files on the Conary repositories
 find /srv/rbuilder/repos -maxdepth 2 -name tmp -type d -exec /usr/sbin/tmpwatch 720 {} \;
 
-# clean outdated diffs
-/usr/sbin/tmpwatch 720 /srv/rbuilder/diffcache
-
-# catch any stragglers in rbuilder's tmpdir
-/usr/sbin/tmpwatch 24 /srv/rbuilder/tmp
+# clean tmp but don't delete first-level directories
+find /srv/rbuilder/tmp -mindepth 2 -amin +1440 -delete
+find /srv/rbuilder/tmp -type f -amin +1440 -delete
 
 # clean up proxy contents dir after a month of non-access
 /usr/sbin/tmpwatch 720 /srv/rbuilder/proxy-contents

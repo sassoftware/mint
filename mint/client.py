@@ -9,8 +9,6 @@ import StringIO
 import xmlrpclib
 
 from mint import builds
-from mint import ec2
-from mint.db import jobs
 from mint import mint_error
 from mint.rest import errors as rest_error
 from mint import projects
@@ -757,18 +755,6 @@ class MintClient:
     def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
         return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
 
-    def validateEC2Credentials(self, authToken):
-        return self.server.validateEC2Credentials(authToken)
-    
-    def getEC2KeyPair(self, authToken, keyName):
-        return self.getEC2KeyPairs(authToken, [keyName])
-    
-    def getEC2KeyPairs(self, authToken, keyNames):
-        return self.server.getEC2KeyPairs(authToken, keyNames)
-
-    def getFullRepositoryMap(self):
-        return self.server.getFullRepositoryMap()
-
     def getAllProjectLabels(self, projectId):
         return self.server.getAllProjectLabels(projectId)
 
@@ -778,10 +764,6 @@ class MintClient:
                 f[2] = str(f[2])
         return self.server.setBuildFilenamesSafe(buildId, outputToken,
                 filenames)
-
-    def setBuildAMIDataSafe(self, buildId, outputToken, amiId, amiManifestName):
-        return self.server.setBuildAMIDataSafe(buildId, outputToken,
-                amiId, amiManifestName)
 
     def addProductVersion(self, projectId, namespace, name, description=''):
         return self.server.addProductVersion(projectId, namespace, name,
@@ -825,23 +807,11 @@ class MintClient:
     def getBuildTaskListForDisplay(self, versionId, stageName):
         return self.server.getBuildTaskListForDisplay(versionId, stageName)
 
-    def getEC2CredentialsForUser(self, userId):
-        return self.server.getEC2CredentialsForUser(userId)
-
-    def setEC2CredentialsForUser(self, userId, awsAccountNumber,
-            awsPublicAccessKeyId, awsSecretAccessKey, force):
-        return self.server.setEC2CredentialsForUser(userId,
-                awsAccountNumber, awsPublicAccessKeyId,
-                awsSecretAccessKey, force)
-
     def addTarget(self, targetType, targetName, dataDict):
         return self.server.addTarget(targetType, targetName, dataDict)
 
     def deleteTarget(self, targetType, targetName):
         return self.server.deleteTarget(targetType, targetName)
-
-    def removeEC2CredentialsForUser(self, userId):
-        return self.server.removeEC2CredentialsForUser(userId)
 
     def getTargetData(self, targetType, targetName):
         return self.server.getTargetData(targetType, targetName)

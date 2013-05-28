@@ -1,10 +1,21 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 import os
 import sys
-import urllib
 
 from mint import buildtypes
 from mint import urltypes
@@ -14,7 +25,6 @@ from conary import conarycfg
 from conary.dbstore import CfgDriver
 from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
         CfgList, CfgPath, CfgString, CfgEnvironmentError)
-from conary.lib.http import proxy_map
 
 
 RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
@@ -104,8 +114,6 @@ class MintConfig(conarycfg.ConfigFile):
     commitActionEmail       = (CfgString, None)
     commitAction            = (CfgString, None)
     commitEmail             = (CfgString, None)
-    conaryRcFile            = (CfgPath, '/srv/rbuilder/config/conaryrc.generated')
-    createConaryRcFile      = (CfgBool, True)
     dbDriver                = (CfgString, 'sqlite')
     dbPath                  = (CfgString, None)
     debugMode               = (CfgBool, False)
@@ -135,9 +143,9 @@ class MintConfig(conarycfg.ConfigFile):
     siteDomainName          = (CfgString, 'rpath.com',
         "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
     templatePath            = (CfgPath, _templatePath + '/web/templates')
+    sessionTimeout          = (CfgInt, 3600 * 24 * 7)
 
     # Web features
-    diffCacheDir            = (CfgPath, RBUILDER_DATA + '/diffcache/')
     licenseCryptoReports    = (CfgBool, True)
     removeTrovesVisible     = (CfgBool, False)
     hideFledgling           = (CfgBool, False)
@@ -217,7 +225,6 @@ class MintConfig(conarycfg.ConfigFile):
         "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
     supportContactHTML      = (CfgString, 'Contact information in HTML.')
     supportContactTXT       = (CfgString, 'Contact information in text.')
-    noticesRssFeed          = (CfgList(CfgString), [])
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
 
@@ -266,6 +273,7 @@ class MintConfig(conarycfg.ConfigFile):
     launchWaitTime = (CfgInt, 1200,
                         "The number of seconds to wait for a launched system's network information to become available")
     surveyMaxAge = (CfgInt, 30, "The number of days after which a removable survey is deleted")
+    encryptCredentials = (CfgBool, False)
 
     # inventory - configuration
     inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")
@@ -299,6 +307,10 @@ class MintConfig(conarycfg.ConfigFile):
     EnableMailLists         = None
     MailListBaseURL         = None
     MailListPass            = None
+    conaryRcFile            = None
+    createConaryRcFile      = None
+    diffCacheDir            = None
+    noticesRssFeed          = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -420,3 +432,6 @@ class MintConfig(conarycfg.ConfigFile):
         if password:
             out['password'] = password
         return out
+
+    def getSessionDir(self):
+        return os.path.join(self.dataPath, 'sessions')

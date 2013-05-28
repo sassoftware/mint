@@ -1,7 +1,17 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All rights reserved.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 from conary import dbstore
@@ -19,12 +29,10 @@ from mint.db import platforms
 from mint.db import projects
 from mint.db import pubreleases
 from mint.db import requests
-from mint.db import sessiondb
 from mint.db import stats
 from mint.db import targets
 from mint.db import users
 
-from mint.lib import database as dblib
 
 class TableCache(object):
     def __init__(self, db, cfg):
@@ -40,7 +48,6 @@ class TableCache(object):
         self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
         self.pkgIndex = pkgindex.PackageIndexTable(db)
-        self.sessions = sessiondb.SessionsTable(db)
         self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
         self.buildData = builds.BuildDataTable(db)
@@ -89,7 +96,6 @@ class Database(object):
         self.projectUsers = tables.projectUsers
         self.builds = tables.builds
         self.pkgIndex = tables.pkgIndex
-        self.sessions = tables.sessions
         self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
         self.buildData = tables.buildData

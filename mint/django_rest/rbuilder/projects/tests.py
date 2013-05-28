@@ -28,7 +28,6 @@ class ProjectsTestCase(RbacEngine):
         RbacEngine.setUp(self)
         mock.mock(reposmanager.ReposManager, "createRepositoryForProject")
         mock.mock(reposmanager.ReposManager, "createSourceTrove")
-        mock.mock(reposmanager.ReposManager, "generateConaryrcFile")
         MockProdDef = mock.MockObject()
         MockProdDef.getImageGroup._mock.setReturn("group-foo-appliance")
         MockProdDef.loadFromRepository._mock.setReturn(MockProdDef)
@@ -148,7 +147,7 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 401)
 
     def testGetProject(self):
-
+        E = models.modellib.Etree
         # admins and grants can get in
         for username in [ 'admin', 'ExampleDeveloper' ]:
             response = self._get('projects/chater-foo/',
@@ -156,6 +155,9 @@ class ProjectsTestCase(RbacEngine):
             )
             # FIXME: missing XML tests!, need to add
             self.assertEquals(response.status_code, 200)
+            project = E.fromstring(response.content)
+            self.assertEquals(project.xpath('project_branch_stages/@id'),
+                    ['http://testserver/api/v1/projects/chater-foo/project_branch_stages'])
         # other users cannot get this item
         response = self._get('projects/chater-foo/',
             username='ExampleSysadmin', password='password')
@@ -165,10 +167,18 @@ class ProjectsTestCase(RbacEngine):
         response = self._get('projects/chater-foo')
         self.assertEquals(response.status_code, 401)
 
+    def testGetProjectBranch(self):
+        response = self._get('projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1',
+                username='ExampleDeveloper', password='password',
+        )
+        self.assertEquals(response.status_code, 200)
+        project = models.modellib.Etree.fromstring(response.content)
+        self.assertEquals(project.xpath('project_branch_stages/@id'),
+                ['http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages'])
+
     def testGetProjectBranchesFunctionsFromGrant(self):
         self._initProject()
 
-        # FIXME: missing XML tip
         response = self._get('projects/chater-foo/project_branches', username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
@@ -256,8 +266,11 @@ class ProjectsTestCase(RbacEngine):
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         project = xobj.parse(response.content).project
-        self.assertEquals("rPath Windows Build Service", project.name)
-        self.assertEquals("https://rb.rpath.com/repos/rwbs/browse", project.upstream_url)
+        self.assertEquals(project.name, "rPath Windows Build Service")
+        self.assertEquals(project.upstream_url, "https://rb.rpath.com/repos/rwbs/browse")
+        self.assertEquals(project.role, "Owner")
+        self.assertEquals(project.project_branch_stages.id,
+                "http://testserver/api/v1/projects/rwbs/project_branch_stages")
 
     def testUpdateProject(self):
 

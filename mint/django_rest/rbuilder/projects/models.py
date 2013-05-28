@@ -136,33 +136,29 @@ class Project(modellib.XObjIdModel):
     def __unicode__(self):
         return self.hostname
 
-    def serialize(self, request=None):
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        if request is not None:
-            member = self.membership.filter(user=request._authUser)
-            if member:
-                role = userlevels.names[member[0].level]
-                xobjModel.role = role
-
+    def computeSyntheticFields(self, sender, **kwargs):
+        self._computeRepositoryAPI()
         # Attach URL and auth data from Labels if and only if this is a
         # proxy-mode external project. Otherwise these fields are meaningless.
         if not self.database:
             labels = self.labels.all()
             if labels:
                 label = labels[0]
-                xobjModel.upstream_url = label.url
-                xobjModel.auth_type = label.auth_type
-                xobjModel.user_name = label.user_name
-                xobjModel.password = label.password
-                xobjModel.entitlement = label.entitlement
+                self.upstream_url = label.url
+                self.auth_type = label.auth_type
+                self.user_name = label.user_name
+                self.password = label.password
+                self.entitlement = label.entitlement
 
-        # XXX FIXME: this should not be needed
-        xobjModel.project_branch_stages.id = "%s/project_branch_stages" % xobjModel.id
+    def serialize(self, request=None, **kwargs):
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        if request is not None:
+            member = self.membership.filter(user=request._authUser)
+            if member:
+                role = userlevels.names[member[0].level]
+                modellib.Etree.Node('role', parent=etreeModel, text=role)
 
-        return xobjModel
-
-    def computeSyntheticFields(self, sender, **kwargs):
-        self._computeRepositoryAPI()
+        return etreeModel
 
     def _computeRepositoryAPI(self):
         self.repository_api = modellib.HrefField(
@@ -361,7 +357,7 @@ class ProjectVersion(modellib.XObjIdModel):
     def get_url_key(self, *args, **kwargs):
         return [ self.project.short_name, self.label ]
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, **kwargs):
 #        if request is not None:
 #            self._computeRepositoryAPI()
 
@@ -375,11 +371,8 @@ class ProjectVersion(modellib.XObjIdModel):
         self.definition = modellib.HrefField(
             href='/api/products/%s/versions/%s/definition',
             values=oldUrlValues)
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        # XXX FIXME: this should not be needed
-        xobjModel.project_branch_stages.id = "%s/project_branch_stages" % (xobjModel.id, )
-
-        return xobjModel
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        return etreeModel
 
     @classmethod
     def validateProjectBranchName(cls, versionName):
@@ -419,9 +412,11 @@ class Stage(modellib.XObjIdModel):
 
     stage_id = D(models.AutoField(primary_key=True), "Stage id", short="Project Stage id")
     project = D(modellib.DeferredForeignKey(Project,
-        related_name="project_branch_stages", view_name="Stages"), "Project for the stage")
+        related_name="project_branch_stages",
+        related_view_name="ProjectBranchesAllStages"), "Project for the stage")
     project_branch = D(modellib.DeferredForeignKey(ProjectVersion,
-        related_name="project_branch_stages", view_name="ProjectVersion"),
+        related_name="project_branch_stages",
+        related_view_name="ProjectBranchStages"),
         'Project branch for the stage')
     name = D(models.CharField(max_length=256), "Stage name", short="Stage name")
     label = D(models.TextField(null=False), "Stage label, cannot be null", short="Stage label")
@@ -450,7 +445,7 @@ class Stage(modellib.XObjIdModel):
             href='/repos/%s/api' % self.project.short_name,
         )
 
-    def serialize(self, request=None):
+    def serialize(self, request=None, **kwargs):
         if request:
             self._computeRepositoryAPI()
             product = ('https://' + request.get_host().strip('/') +
@@ -467,8 +462,8 @@ class Stage(modellib.XObjIdModel):
                 href=href % (short_name, label),
                 promote_href=promote_href
                     % (short_name, self.project_branch.name, self.name))
-        xobjModel = modellib.XObjIdModel.serialize(self, request)
-        return xobjModel
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        return etreeModel
 
 class InboundMirror(modellib.XObjModel):
     _xobj = xobj.XObjMetadata(tag="inbound_mirror")

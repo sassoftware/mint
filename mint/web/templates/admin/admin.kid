@@ -12,7 +12,7 @@
 
     <div py:def="adminResourcesMenu" id="admin" class="palette">
         <?python
-            lastchunk = req.uri[req.uri.rfind('/')+1:]
+            lastchunk = req.path[req.path.rfind('/')+1:]
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />

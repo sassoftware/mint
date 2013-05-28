@@ -39,8 +39,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
     def createRepositoryForProject(self, project, createMaps=True):
         repos = self.getRepositoryForProject(project)
 
-        self.generateConaryrcFile()
-
         if repos.hasDatabase:
             # Create the repository infrastructure (db, dirs, etc.).
             repos.create()
@@ -54,14 +52,10 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
         # them later - instead we amortize the cost over every commit
         netServer = repos.getNetServer()
         self._getRoleForLevel(netServer, userlevels.USER)
+        self._getRoleForLevel(netServer, userlevels.ADMIN)
         if not repos.isExternal:
             self._getRoleForLevel(netServer, userlevels.DEVELOPER)
             self._getRoleForLevel(netServer, userlevels.OWNER)
-
-        # add the auth user so we can add additional permissions
-        # to this repository
-        self.addUser(repos, self.cfg.authUser,
-                password=self.cfg.authPass, level=userlevels.ADMIN)
 
     def _getRoleForLevel(self, reposServer, level):
         """
@@ -114,57 +108,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
     def changePassword(self, repos, username, password):
         reposServer = repos.getShimServer()
         reposServer.auth.changePassword(username, password)
-
-    def addLabel(self, project, fqdn, url, authInfo):
-        authUser = authPass = entitlement = ''
-        authType = authInfo.auth_type
-        if authType == 'entitlement':
-            entitlement = authInfo.entitlement
-        elif authType == 'userpass':
-            authUser, authPass = authInfo.user_name, authInfo.password
-
-        # This table needs to go away, with the authentication bits moved
-        # into projects and the rest dropped. Until then, we need a dummy
-        # label as too many things depend on it being a label even though
-        # they really just need a FQDN.
-        label = fqdn + "@rpl:2"
-
-        newLabel = models.Label(project=project, label=label, url=url,
-            auth_type=authType, user_name=authUser, password=authPass,
-            entitlement=entitlement)
-        newLabel.save()
-
-    @exposed
-    def generateConaryrcFile(self):
-        global _cachedCfg
-        _cachedCfg = None
-        if not self.cfg.createConaryRcFile:
-            return
-        repoMaps = self._getFullRepositoryMap()
-
-        fObj_v0 = unixutils.atomicOpen(self.cfg.conaryRcFile, 
-                                       chmod=0644)
-        fObj_v1 = unixutils.atomicOpen(self.cfg.conaryRcFile + "-v1", 
-                                       chmod=0644)
-        for host, url in repoMaps.iteritems():
-            fObj_v0.write('repositoryMap %s %s\n' % (host, url))
-            fObj_v1.write('repositoryMap %s %s\n' % (host, url))
-        # add proxy stuff for version 1 config clients
-        if self.cfg.useInternalConaryProxy:
-            fObj_v1.write('conaryProxy http http://%s.%s\n' % (
-                self.cfg.hostName, self.cfg.siteDomainName))
-            fObj_v1.write('conaryProxy https https://%s\n' % (
-                self.cfg.secureHost,))
-        self.cfg.displayKey('proxy', out=fObj_v1)
-
-        fObj_v0.commit()
-        fObj_v1.commit()
-
-    def _getFullRepositoryMap(self):
-        repoMap = {}
-        for handle in self.iterRepositories(hidden=False, disabled=False):
-            repoMap[handle.fqdn] = handle.getURL()
-        return repoMap
 
     @exposed
     def getRepositoryForProject(self, project):

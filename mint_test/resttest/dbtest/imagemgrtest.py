@@ -1,19 +1,11 @@
-#!/usr/bin/python
-import testsetup
-from testutils import mock
-
-from conary.lib import cfgtypes
+#
+# Copyright (c) SAS Institute Inc.
+#
 
 from mint import buildtypes
-from mint import jobstatus
-from mint import mint_error
 from mint.lib import data
-
-from mint.rest import errors
-from mint.rest.api import models
-from mint.rest.db import imagemgr
-
 from mint_test import mint_rephelp
+
 
 class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
     
@@ -249,36 +241,6 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
             [ [ x.get('uniqueImageId') for x in img['files'] ] for img in images],
             [ [None], [None], [2], [3], ])
 
-    def testAddImageStatus(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                name='Image1',
-                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
-
-        # Initial creation -> unknown
-        image = db.getImageForProduct('foo', imageId)
-        self.assertEqual(image.imageStatus.code, jobstatus.UNKNOWN)
-        self.assertEqual(image.imageStatus.message, '')
-        self.assertEqual(image.imageStatus.isFinal, False)
-
-        # Set by build machinery
-        status = models.ImageStatus(code=jobstatus.RUNNING, message='wait plz')
-        db.setImageStatus('foo', imageId, 'abcdef', status)
-
-        image = db.getImageForProduct('foo', imageId)
-        self.assertEqual(image.imageStatus.code, jobstatus.RUNNING)
-        self.assertEqual(image.imageStatus.message, 'wait plz')
-        self.assertEqual(image.imageStatus.isFinal, False)
-
-        status = models.ImageStatus(code=jobstatus.FINISHED, message='Is good!')
-        db.setImageStatus('foo', imageId, 'abcdef', status)
-
-        image = db.getImageForProduct('foo', imageId)
-        self.assertEqual(image.imageStatus.code, jobstatus.FINISHED)
-        self.assertEqual(image.imageStatus.isFinal, True)
-
     def testCreateImage(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
@@ -292,44 +254,3 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         found, value = db.db.buildData.getDataValue(imageId, 'XEN_DOMU')
         assert(found)
         assert(value == 1)
-
-    def testSetImageFiles(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
-
-        imageFiles = models.ImageFileList(files=[models.ImageFile(
-            fileName='filename2', title='title2', size=1024, sha1='sha')])
-        db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
-
-        file, = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(file.title, 'title2')
-        self.assertEqual(file.urls[0].fileId, 1)
-        self.assertEqual(file.urls[0].urlType, 0)
-        self.assertEqual(file.size, 1024)
-        self.assertEqual(file.sha1, 'sha')
-
-    def testSetImageFilesLarge(self):
-        """File size over 2 ** 31 shouldn't crash python-pgsql"""
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                buildData=[('outputToken', 'abcdef', data.RDT_STRING)])
-
-        imageFiles = models.ImageFileList(files=[models.ImageFile(
-            fileName='filename2', title='title2', size=(2 ** 32),
-            sha1='sha')])
-        db.setFilesForImage('foo', imageId, 'abcdef', imageFiles)
-
-        file, = db.getImageForProduct('foo', imageId).files.files
-        self.assertEqual(file.title, 'title2')
-        self.assertEqual(file.urls[0].fileId, 1)
-        self.assertEqual(file.urls[0].urlType, 0)
-        self.assertEqual(file.size, 2 ** 32)
-        self.assertEqual(file.sha1, 'sha')
-
-
-testsetup.main()

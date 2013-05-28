@@ -49,7 +49,7 @@ MEDIA_URL = ''
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
+STATIC_URL = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'o5pks8b=o8zmpr%nu=4$##n*o_6s(t%r%i%h)*(9w)#yg=9*4u'
@@ -66,13 +66,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'mint.django_rest.middleware.ApplicationOctetStreamHandlerMiddleware',
     'mint.django_rest.middleware.RequestLogMiddleware',
+    'mint.django_rest.middleware.QueryParameterMiddleware',
     'mint.django_rest.middleware.RequestSanitizationMiddleware',
     'mint.django_rest.middleware.CachingMiddleware',
-    'mint.django_rest.middleware.SetMintConfigMiddleware',
-    'mint.django_rest.middleware.SetMintAuthMiddleware',
     'mint.django_rest.middleware.SetMethodRequestMiddleware',
-    'mint.django_rest.middleware.SetMintAuthenticatedMiddleware',
-    'mint.django_rest.middleware.SetMintAdminMiddleware',
+    'mint.django_rest.middleware.SetMintConfigMiddleware',
     'mint.django_rest.middleware.ExceptionLoggerMiddleware',
     'mint.django_rest.middleware.AddCommentsMiddleware',
     'mint.django_rest.middleware.FlashErrorCodeMiddleware',
@@ -105,7 +103,6 @@ INSTALLED_APPS = (
     'mint.django_rest.rbuilder.packageindex',
     'mint.django_rest.rbuilder.projects',
     'mint.django_rest.rbuilder.users',
-    'mint.django_rest.rbuilder.notices',
     'mint.django_rest.rbuilder.jobs',
     'mint.django_rest.rbuilder.platforms',
     'mint.django_rest.rbuilder.repos',

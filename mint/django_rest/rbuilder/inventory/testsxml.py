@@ -448,6 +448,7 @@ system_type_systems_xml="""
     <name>testsystemname</name>
     <network_address>
       <address>1.1.1.1</address>
+      <pinned/>
     </network_address>
     <networks>
       <network id="http://testserver/api/v1/inventory/networks/2">
@@ -653,6 +654,7 @@ management_nodes_xml = """\
     <has_running_jobs>false</has_running_jobs>
     <network_address>
       <address>2.2.2.2</address>
+      <pinned/>
     </network_address>
     <networks>
       <network id="http://testserver/api/v1/inventory/networks/2">
@@ -730,6 +732,7 @@ management_node_xml = """\
   <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/2">
@@ -843,6 +846,7 @@ management_node_post_response_xml = """\
   <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/1">
@@ -958,6 +962,7 @@ management_node_zone_post_response_xml = """\
   <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>2.2.2.2</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/1">
@@ -1103,6 +1108,7 @@ systems_xml = """\
     <name>rPath Update Service</name>
     <network_address>
       <address>127.0.0.1</address>
+      <pinned/>
     </network_address>
     <networks>
       <network id="http://testserver/api/v1/inventory/networks/1">
@@ -1214,6 +1220,7 @@ systems_xml = """\
     <name>testsystemname</name>
     <network_address>
       <address>1.1.1.1</address>
+      <pinned/>
     </network_address>
     <networks>
       <network id="http://testserver/api/v1/inventory/networks/2">
@@ -1455,6 +1462,7 @@ system_xml = """\
   <hostname/>
   <network_address>
     <address>1.1.1.1</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/2">
@@ -1654,6 +1662,7 @@ system_post_xml_response = """\
   <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/2">
@@ -1846,6 +1855,7 @@ system_target_xml = """\
   <has_running_jobs>false</has_running_jobs>
   <network_address>
     <address>1.1.1.1</address>
+    <pinned/>
   </network_address>
   <networks>
     <network id="http://testserver/api/v1/inventory/networks/2">
@@ -2321,6 +2331,7 @@ system_with_target = """\
   <name>vsphere1 002</name>
   <network_address>
     <address>vsphere1-002</address>
+    <pinned/>
   </network_address>
   <local_uuid/>
   <project_branch/>
@@ -2654,7 +2665,7 @@ survey_output_xml = """
         <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
           <description>Type-R</description>
           <name>jkl</name>
-          <version>7</version>
+          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
           <architecture>ia64</architecture>
           <signature>X</signature>
           <rpm_package_info>
@@ -3121,7 +3132,7 @@ survey_input_xml_template = """
         <conary_package_info>
           <description>Type-R</description>
           <name>jkl</name>
-          <version>7</version>
+          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
           <architecture>ia64</architecture>
           <signature>X</signature>
           <rpm_package_info id="1">
@@ -3199,7 +3210,7 @@ survey_output_xml2 = """
           <version>5</version>
         </rpm_package_info>
         <signature>X</signature>
-        <version>7</version>
+        <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
       </conary_package_info>
       <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
       <is_top_level>True</is_top_level>

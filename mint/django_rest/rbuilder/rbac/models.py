@@ -220,10 +220,10 @@ class RbacUserRoles(modellib.Collection):
     def save(self):
         return [s.save() for s in self.role]
 
-    def serialize(self, request):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
+    def serialize(self, request, **kwargs):
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
         # TODO: add permission info here
-        return xobj_model
+        return etreeModel
  
 class RbacUserRole(modellib.XObjIdModel):
     '''
@@ -256,10 +256,10 @@ class RbacUserRole(modellib.XObjIdModel):
         related_name='+', db_column='modified_by', serialized_as='modified_by')),
         'user who last modified this resource, null by default')
 
-    def serialize(self, request):
-        xobj_model = modellib.XObjIdModel.serialize(self, request)
-        xobj_model.id = self.get_absolute_url(request)
-        return xobj_model
+    def serialize(self, request, **kwargs):
+        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
+        etreeModel.attrib['id'] = self.get_absolute_url(request)
+        return etreeModel
 
     def get_absolute_url(self, request, *args, **kwargs):
         return reverse('RbacUserRole', args=[self.user.pk, self.role.pk])

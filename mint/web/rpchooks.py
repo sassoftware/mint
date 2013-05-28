@@ -1,106 +1,72 @@
 #
-# Copyright (c) 2005-2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-import logging
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import json
-import sys
 import xmlrpclib
+from conary.lib import util
+from conary.repository import errors
+from webob import exc as web_exc
 
-from mod_python import apache
-
-from mint import config
 from mint import mint_error
 from mint import server
-from mint import maintenance
-from mint.lib import mintutils
-from mint.logerror import logWebErrorAndEmail
-from mint.web.webhandler import getHttpAuth
-
-from conary import dbstore
-from conary.lib import coveragehook
-from conary.repository import errors
 
 
 def rpcHandler(context):
-    return _rpcHandler(context.req, context.db, context.cfg)
-
-
-def _rpcHandler(req, db, cfg, pathInfo = None):
-    mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
-
-    maintenance.enforceMaintenanceMode(cfg)
-    isJSONrpc = isXMLrpc = allowPrivate = False
-
+    req = context.req
     # only handle POSTs
     if req.method.upper() != 'POST':
-        return apache.HTTP_METHOD_NOT_ALLOWED
-
-    if "allowPrivate" in req.get_options():
-        allowPrivate = req.get_options()['allowPrivate']
-    elif "xmlrpc-private" in req.uri.split("/")[1]:
-        allowPrivate = True
-
-    if req.headers_in['Content-Type'].startswith('text/xml'):
-        isXMLrpc = True
-    elif req.headers_in['Content-Type'].startswith('application/x-json'):
-        isJSONrpc = True
+        raise web_exc.HTTPMethodNotAllowed(allow='POST')
+    if req.content_type == 'text/xml':
+        kind = 'xml'
+    elif req.content_type == 'application/x-json':
+        kind = 'json'
     else:
-        return apache.HTTP_BAD_REQUEST
-
-    authToken = getHttpAuth(req)
-
-    if type(authToken) is list:
-        authToken = authToken[0:2] # throw away entitlement
+        raise web_exc.HTTPBadRequest()
     # instantiate a MintServer
-    srvr = server.MintServer(cfg, allowPrivate=allowPrivate, req=req, db=db)
-
-    # switch on XML/JSON here
-    if isXMLrpc:
-        (args, method) = xmlrpclib.loads(req.read())
-    if isJSONrpc:
-        (method, args) = json.loads(req.read())
+    srvr = server.MintServer(context.cfg, allowPrivate=True, req=req,
+            db=context.db)
+    stream = req.body_file
+    encoding = req.headers.get('Content-Encoding', 'identity')
+    if encoding == 'deflate':
+        stream = util.decompressStream(stream)
+        stream.seek(0)
+    elif encoding != 'identity':
+        raise web_exc.HTTPBadRequest()
+    if kind == 'xml':
+        (args, method) = util.xmlrpcLoad(stream)
+    else:
+        (method, args) = json.load(stream)
 
     # coax parameters into something MintServer likes
-    params = [method, authToken, args]
+    params = [method, context.authToken, args]
 
     # go for it; return 403 if permission is denied
     try:
         # result is (isError, returnValues)
         result = srvr.callWrapper(*params)
     except (errors.InsufficientPermission, mint_error.PermissionDenied):
-        return apache.HTTP_FORBIDDEN
+        return context.responseFactory(
+                "<h1>Forbidden</h1>\n"
+                "<p>Access denied by the server.</p>\n",
+                status='403 Forbidden',
+                content_type='text/html')
 
     # create a response
-    if isXMLrpc:
+    if kind == 'xml':
         resp = xmlrpclib.dumps((result,), methodresponse=1)
-        req.content_type = "text/xml"
-    elif isJSONrpc:
+    else:
         resp = json.dumps(result[1])
-        req.content_type = "application/x-json"
-
-    # write repsonse
-    try:
-        req.write(resp)
-    except IOError, err:
-        # Client went away
-        req.log_error('Error writing to client: %s' % err)
-    return apache.OK
-
-def handler(req):
-    coveragehook.install()
-    cfg = config.getConfig(req.filename)
-    db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-
-    try:
-        try:
-            return _rpcHandler(req, db, cfg)
-        except:
-            e_type, e_value, e_tb = sys.exc_info()
-            logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb, 'XMLRPC handler')
-            del e_tb
-            return apache.HTTP_INTERNAL_SERVER_ERROR
-    finally:
-        db.close()
-        logging.shutdown()
+    return context.responseFactory(content_type=req.content_type, body=resp)

@@ -362,8 +362,9 @@ class QuerySetManager(basemanager.BaseManager):
                 self.mgr.rollback()
             except:
                 pass
+            # Rolling back *should* drop the temporary table too
             raise exc[0], exc[1], exc[2]
-        finally:
+        else:
             cu.execute("DROP TABLE tmp_queryset_tags")    
 
     def _tagGeneric_internal(self, querySet, tagTableName, tagResourceField, 
@@ -933,7 +934,7 @@ class QuerySetManager(basemanager.BaseManager):
         An action is a bare job submission that is a request to start
         a real job.   (However, querysets don't really have jobs).
 
-        Job coming in will be xobj only,
+        Job coming in will be etree only,
         containing job_type, descriptor, and descriptor_data.  
 
         Normally, we'd use that data to schedule a completely different job, 
@@ -945,7 +946,11 @@ class QuerySetManager(basemanager.BaseManager):
 
         # get integer job type even if not a django model
         # (because the job isn't fully formed)
-        jt = job.job_type.id
+        jt = job.xpath('job_type/@id')
+        if not jt:
+            raise Exception("Job type not specified")
+        jt = jt[0]
+
         if str(jt).find("/") != -1:
             jt = int(jt.split("/")[-1])
 

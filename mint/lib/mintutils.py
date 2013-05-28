@@ -238,3 +238,25 @@ class CacheWrapper(object):
                     time=self.timeout,
                     )
         return allResults
+
+
+class cached_property(object):
+    """
+    This is used like @property, except that it replaces itself on the first
+    fetch and subsequent fetches thus retrieve the same cached value.
+    """
+
+    def __init__(self, func):
+        self.wrapped_func = func
+        self.name = func.__name__
+        try:
+            self._doc__ = func.__doc__
+        except:
+            pass
+
+    def __get__(self, ownself, owncls):
+        if ownself is None:
+            return self
+        result = self.wrapped_func(ownself)
+        setattr(ownself, self.name, result)
+        return result

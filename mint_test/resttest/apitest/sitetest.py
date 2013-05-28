@@ -8,13 +8,8 @@
 import testsetup
 
 import os
-import re
-import time
 
-from conary import conaryclient
 from conary import constants as conaryConstants
-from conary.lib import util
-from mint import buildtypes
 from mint import constants
 from rmake import constants as rmakeConstants
 
@@ -28,10 +23,8 @@ class SiteTest(restbase.BaseRestTest):
 
     def testGetInfo(self):
 
-        uriTemplate = ''
-        uri = uriTemplate
         client = self.getRestClient()
-        req, response = client.call('GET', uri, convert=True)
+        req, response = client.call('GET', '', convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <rbuilderStatus id="http://%(server)s:%(port)s/api">
@@ -51,10 +44,6 @@ class SiteTest(restbase.BaseRestTest):
   <products href="http://%(server)s:%(port)s/api/products/"/>
   <users href="http://%(server)s:%(port)s/api/users/"/>
   <platforms href="http://%(server)s:%(port)s/api/platforms/"/>
-  <reports href="http://%(server)s:%(port)s/api/reports/"/>
-  <inventory href="http://%(server)s:%(port)s/api/inventory/"/>
-  <query_sets href="http://localhost:8000/api/query_sets/"/>
-  <packages href="http://localhost:8000/api/packages/"/>
   <moduleHooks href="http://%(server)s:%(port)s/api/moduleHooks/"/>
   <maintMode>false</maintMode>
   <proddefSchemaVersion>%(proddefVer)s</proddefSchemaVersion>

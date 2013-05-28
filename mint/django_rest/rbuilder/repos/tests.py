@@ -26,7 +26,6 @@ class LabelTestCase(XMLTestCase):
     def setUpProjects(self):
         dataDir = os.path.join(self.workDir, "rbtop")
         self.mgr.reposMgr.cfg.dataPath = os.path.join(dataDir, "data")
-        self.mgr.reposMgr.cfg.conaryRcFile = os.path.join(dataDir, "conaryrc")
         self.mgr.reposMgr.cfg.reposContentsDir = os.path.join(dataDir, "repos/%s/contents")
         self.mgr.reposMgr.cfg.logPath = os.path.join(dataDir, "logs")
         self.mgr.reposMgr.cfg.authUser = "mintuser"

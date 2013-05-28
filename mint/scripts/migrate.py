@@ -5463,3 +5463,17 @@ class MigrateTo_66(SchemaMigration):
         self.db.createIndex('ProductVersions', 'ProductVersions_uq',
             'projectId,label', unique=True)
         return True
+
+
+class MigrateTo_67(SchemaMigration):
+    '''beryl'''
+    Version = (67, 1)
+
+    def migrate(self):
+        drop_tables(self.db, 'Sessions')
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Platforms ADD upstream_url text")
+        return True

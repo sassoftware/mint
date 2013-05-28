@@ -7,6 +7,7 @@
 Methods for logging and reporting errors.
 """
 
+import logging
 import os
 import socket
 import sys
@@ -18,37 +19,18 @@ from conary.lib import util as conary_util
 from mint.mint_error import MailError
 from mint.lib import maillib
 
+log = logging.getLogger(__name__)
+
 
 def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
   location='web interface', doEmail=True):
-    from mod_python import apache
-    
-    conn = req.connection
-    req.add_common_vars()
-    info_dict = {
-        'local_addr'     : conn.local_ip + ':' + str(conn.local_addr[1]),
-        'local_host'     : conn.local_host,
-        'protocol'       : req.protocol,
-        'hostname'       : req.hostname,
-        'request_time'   : time.ctime(req.request_time),
-        'status'         : req.status,
-        'method'         : req.method,
-        'headers_in'     : req.headers_in,
-        'headers_out'    : req.headers_out,
-        'uri'            : req.uri,
-        'subprocess_env' : req.subprocess_env,
-        'referer'        : req.headers_in.get('referer', 'N/A')
-    }
-
-    apache.log_error('sending mail to %s and %s' % (cfg.bugsEmail,
-        cfg.smallBugsEmail))
+    log.error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
     try:
-        logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
+        logErrorAndEmail(cfg, e_type, e_value, e_tb, location, req.environ,
            smallStream=sys.stderr, doEmail=doEmail)
     except MailError, error:
-        apache.log_error("Failed to send e-mail to %s, reason: %s" %
+        log.error("Failed to send e-mail to %s, reason: %s" %
             (cfg.bugsEmail, str(error)))
-    sys.stderr.flush()
 
 
 def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
@@ -95,7 +77,10 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
     print >> large
     print >> large, 'Environment:'
     for key, val in sorted(info_dict.items()):
-        print >> large, '%s: %s' % (key, val)
+        try:
+            print >> large, '%s: %s' % (key, val)
+        except:
+            pass
     large.seek(0)
 
     # Format small traceback

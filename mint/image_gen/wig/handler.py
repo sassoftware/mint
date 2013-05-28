@@ -22,8 +22,8 @@ class WigHandler(handler.BaseImageHandler):
     def setup(self):
         # Collect parameters needed for pushing status updates to rBuilder API.
         self.jobData = jobData = json.loads(self.getData())
-        self.imageBase = ('http://localhost/api/products/%s/images/%d/' % (
-            jobData['project']['hostname'], jobData['buildId'])).encode('utf8')
+        self.imageBase = 'http://localhost/api/v1/images/%d/' % (
+                jobData['buildId'])
         self.imageToken = jobData['outputToken'].encode('ascii')
 
     def run(self):

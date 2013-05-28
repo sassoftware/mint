@@ -2436,6 +2436,39 @@
         <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
     </object>
 
+   <object pk="81" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">81</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.81</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+
+    <object pk="82" model="inventory.system">
+        <field type="CharField" name="name">System name 82</field>
+        <field type="CharField" name="description">System description 82</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-82-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-82-local-uuid</field>
+        <field type="CharField" name="_ssl_client_certificate">system-82-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-82-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-82-ssl-server-certificate</field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+
+
    <object pk="82" model="inventory.network">
         <field to="inventory.system" name="system" rel="ManyToOneRel">82</field>
         <field type="CharField" name="ip_address"><None></None></field>
@@ -4544,6 +4577,38 @@
         <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
     </object>
 
+   <object pk="150" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">150</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.150</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+
+    <object pk="151" model="inventory.system">
+        <field type="CharField" name="name">System name 151</field>
+        <field type="CharField" name="description">System description 151</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-151-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-151-local-uuid</field>
+        <field type="CharField" name="_ssl_client_certificate">system-151-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-151-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-151-ssl-server-certificate</field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+
    <object pk="151" model="inventory.network">
         <field to="inventory.system" name="system" rel="ManyToOneRel">151</field>
         <field type="CharField" name="ip_address"><None></None></field>
@@ -5690,6 +5755,39 @@
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
         <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
     </object>
+
+   <object pk="188" model="inventory.network">
+        <field to="inventory.system" name="system" rel="ManyToOneRel">188</field>
+        <field type="CharField" name="ip_address"><None></None></field>
+        <field type="CharField" name="ipv6_address"><None></None></field>
+        <field type="CharField" name="device_name"></field>
+        <field type="CharField" name="dns_name">127.0.0.188</field>
+        <field type="CharField" name="netmask"><None></None></field>
+        <field type="CharField" name="port_type"><None></None></field>
+        <field type="NullBooleanField" name="active"><None></None></field>
+        <field type="NullBooleanField" name="pinned"><None></None></field>
+        <field type="DateTimeField" name="created_date">2010-10-05 18:36:37</field>
+  </object>
+
+    <object pk="189" model="inventory.system">
+        <field type="CharField" name="name">System name 189</field>
+        <field type="CharField" name="description">System description 189</field>
+        <field type="DateTimeField" name="created_date">2010-12-06 22:11:00</field>
+        <field type="DateTimeField" name="launch_date"><None></None></field>
+        <field to="rbuilder.targets" name="target" rel="ManyToOneRel"><None></None></field>
+        <field type="CharField" name="target_system_id"><None></None></field>
+        <field type="DateTimeField" name="registration_date"><None></None></field>
+        <field type="CharField" name="generated_uuid">system-189-generated-uuid</field>
+        <field type="CharField" name="local_uuid">system-189-local-uuid</field>
+        <field type="CharField" name="_ssl_client_certificate">system-189-ssl-client-certificate</field>
+        <field type="CharField" name="_ssl_client_key">system-189-ssl-client-key</field>
+        <field type="CharField" name="ssl_server_certificate">system-189-ssl-server-certificate</field>
+        <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
+        <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
+        <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
+        <field to="inventory.systemtype" name="system_type" rel="ManyToOneRel">1</field>
+    </object>
+
 
    <object pk="189" model="inventory.network">
         <field to="inventory.system" name="system" rel="ManyToOneRel">189</field>

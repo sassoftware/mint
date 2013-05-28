@@ -23,6 +23,22 @@ class Indexer(rpath_capsule_indexer.Indexer):
                 logPath=self.LOGFILE_PATH)
             return logger
 
+    def close(self):
+        """Close database connections started by the indexer"""
+        self.model.sess.bind.dispose()
+
+
+def useIndexer(func):
+    def wrapped(self, *args, **kwargs):
+        indexer = self.getIndexer()
+        try:
+            return func(self, indexer, *args, **kwargs)
+        finally:
+            indexer.close()
+    wrapped.func_name = func.func_name
+    return wrapped
+
+
 class CapsuleManager(manager.Manager):
     SourcesRHN = set(['RHN', 'satellite', 'proxy'])
     SourcesYum = set(['nu', 'SMT', 'repomd'])
@@ -170,10 +186,9 @@ class CapsuleManager(manager.Manager):
             db = None
         return Indexer(cfg, db=db)
 
-    def getIndexerErrors(self, contentSourceName, instanceName):
-        indexer = self.getIndexer()
-
-        errors = indexer.model.getPackageDownloadFailures()
+    @useIndexer
+    def getIndexerErrors(self, _indexer, contentSourceName, instanceName):
+        errors = _indexer.model.getPackageDownloadFailures()
         ret = models.ResourceErrors()
         for err in errors:
             # For now we only have DownloadError as code
@@ -181,7 +196,9 @@ class CapsuleManager(manager.Manager):
             ret.resourceError.append(e)
         return ret
 
-    def getIndexerError(self, contentSourceName, instanceName, errorId):
+    @useIndexer
+    def getIndexerError(self, _indexer, contentSourceName, instanceName,
+            errorId):
         indexer = self.getIndexer()
 
         err = indexer.model.getPackageDownloadFailure(errorId)
@@ -189,8 +206,9 @@ class CapsuleManager(manager.Manager):
             return response.Response(status = 404)
         return self._oneFailure(err, contentSourceName, instanceName)
 
-    def updateIndexerError(self, contentSourceName, instanceName, errorId,
-            resourceError):
+    @useIndexer
+    def updateIndexerError(self, _indexer, contentSourceName, instanceName,
+            errorId, resourceError):
         indexer = self.getIndexer()
 
         err = indexer.model.getPackageDownloadFailure(errorId)

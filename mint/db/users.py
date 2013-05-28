@@ -302,8 +302,8 @@ class UsersTable(database.KeyedTable):
             """
         cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
         results = cu.fetchall()
-        return [ (x[0], data.unmarshalTargetUserCredentials(x[1]).get('accountId'))
-            for x in results ]
+        return [ (x[0], data.unmarshalTargetUserCredentials(self.cfg, x[1]
+            ).get('accountId')) for x in results ]
 
     def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """
@@ -354,23 +354,6 @@ class UsersTable(database.KeyedTable):
         if not username:
             raise ItemNotFound("UserId: %d does not exist!"% userId)
         return username[0]
-
-    def getAMIBuildsForUser(self, userId):
-        cu = self.db.cursor()
-        cu.execute("""\
-            SELECT bd.value as amiId,
-                   b.projectId,
-                   COALESCE(pr.timePublished,0) != 0 as isPublished,
-                   p.hidden as isPrivate,
-                   pu.level
-            FROM projectusers pu
-              JOIN projects p USING (projectId)
-              JOIN builds b USING (projectId)
-              LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
-              JOIN buildData bd ON (bd.buildId = b.buildId)
-            WHERE bd.name = 'amiId'
-              AND pu.userId = ?""", userId)
-        return cu.fetchall()
 
 
 class UserDataTable(data.GenericDataTable):

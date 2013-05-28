@@ -5,7 +5,7 @@
 #
 import base64
 from django import http
-from xobj import xobj
+from lxml import etree
 from mint.django_rest.rbuilder import modellib
 
 # Used by views too
@@ -23,17 +23,16 @@ def D(field, docstring, short=None):
     field.shortname = short
     return field
 
-def _getXobjModel(request, model_names):
+def _getEtreeModel(request, model_names):
     xml = request.raw_post_data
-    built_model = xobj.parse(xml)
+    etreeModel = etree.fromstring(xml)
     if not isinstance(model_names, list):
         model_names = [ model_names ]
     for model_name in model_names:
-        submodel = getattr(built_model, model_name, None)
-        if submodel is None:
+        if etreeModel.tag != model_name:
             continue
         modelCls = modellib.type_map[model_name]
-        return submodel, model_name, modelCls
+        return etreeModel, model_name, modelCls
     raise Exception("Unexpected XML")
 
 def getHeaderValue(request, headerName):
@@ -57,7 +56,7 @@ def requires(model_names, save=True, load=True, flags=None):
 
         def inner(*args, **kw):
             request = args[1]
-            built_model, model_name, modelCls  = _getXobjModel(request, model_names)
+            etreeModel, model_name, modelCls  = _getEtreeModel(request, model_names)
 
             uqFields = dict((x.name, getattr(x, 'UpdatableKey', False))
                 for x in modelCls._meta.fields if x.unique)
@@ -67,16 +66,25 @@ def requires(model_names, save=True, load=True, flags=None):
             if uqkeyvals:
                 keyFieldName, keyFieldValue = uqkeyvals[0]
                 updatable = uqFields[keyFieldName]
-                if getattr(built_model, keyFieldName, None) is None or not updatable:
-                    # This will also overwrite the field if it's present
-                    setattr(built_model, keyFieldName, keyFieldValue)
+                # This will also overwrite the field if it's present
+                if keyFieldName in modelCls._xobj.attributes:
+                    if etreeModel.attrib.get(keyFieldName) is None or not updatable:
+                        etreeModel.attrib[keyFieldName] = keyFieldValue
+                else:
+                    vals = etreeModel.xpath('/*/%s' % keyFieldName)
+                    if not vals or not updatable:
+                        for v in vals:
+                            etreeModel.remove(v)
+                        et = etreeModel.makeelement(keyFieldName)
+                        et.text = keyFieldValue
+                        etreeModel.append(et)
             # XXX This is not the ideal place to handle this
-            _injectZone(request, built_model, model_name, modelCls)
+            _injectZone(request, etreeModel, model_name, modelCls)
             # We need to pass a new copy of the flags object, because
             # it gets modified down the road, and we don't want to
             # pollute further calls.
             model = modelCls.objects.load_from_object(
-                built_model, request, flags=flags.copy())
+                etreeModel, request, flags=flags.copy())
             kw[model_name] = model
             return function(*args, **kw)
         
@@ -99,17 +107,18 @@ def xObjRequires(model_names):
 
         def inner(*args, **kw):
             request = args[1]
-            built_model, model_name, modelCls  = _getXobjModel(request, model_names)
+            etreeModel, model_name, modelCls  = _getEtreeModel(request, model_names)
             # is this needed here?
-            _injectZone(request, built_model, model_name, modelCls)
-            kw[model_name] = built_model
+            _injectZone(request, etreeModel, model_name, modelCls)
+            kw[model_name] = etreeModel
             return function(*args, **kw)
 
         return inner
     return decorate
 
-def _injectZone(request, xobjModel, modelName, modelClass):
-    if modelName != 'system' or request.method != 'POST':
+def _injectZone(request, etreeModel, modelName, modelClass):
+    systemModels = set(['system', 'systems'])
+    if request.method != 'POST' or modelName not in systemModels:
         return
     headerName = 'X-rPath-Management-Zone'
     encZoneName = getHeaderValue(request, headerName)
@@ -120,12 +129,19 @@ def _injectZone(request, xobjModel, modelName, modelClass):
     zones = list(zoneClass.objects.filter(name=zoneName))
     if not zones:
         return
-    # Inject zone into xobjModel
     zone = zones[0]
     propName = 'managing_zone'
-    mzone = zoneClass._xobjClass()
-    mzone.id = zone.get_absolute_url(request)
-    setattr(xobjModel, propName, mzone)
+    # Inject zone into model. First remove all existing zones
+    if modelName == 'system':
+        systemEtrees = [ etreeModel ]
+    else:
+        systemEtrees = etreeModel.iterchildren('system')
+    for systemEtree in systemEtrees:
+        # Convert to a list since we're changing the model underneath
+        for n in list(systemEtree.iterchildren(propName)):
+            systemEtree.remove(n)
+        systemEtree.append(systemEtree.makeelement(propName,
+            id=zone.get_absolute_url(request)))
 
 HttpAuthenticationRequired = http.HttpResponse(status=401)
 HttpAuthorizationRequired  = http.HttpResponse(status=403)

@@ -1,30 +1,35 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 rbuilder_dirs = {
     'capsules':                     (0775, ('root', 'apache')),
     'catalog':                      (0775, ('root', 'apache')),
-    'changesets':                   (0775, ('root', 'apache')),
     'config':                       (0775, ('root', 'apache')),
     'cscache':                      (0775, ('root', 'apache')),
     'data':                         (0775, ('root', 'apache')),
-    'diffcache':                    (0775, ('root', 'apache')),
-    'entitlements':                 (0775, ('root', 'apache')),
+    'data/credstore':               (0770, ('credstore', 'credstore')),
     'finished-images':              (0775, ('root', 'apache')),
-    'incoming-images':              (0775, ('root', 'apache')),
     'jobs':                         (0775, ('root', 'apache')),
-    'notices':                      (0775, ('root', 'apache')),
-    # Packages are downloaded by rmake, but could be removed from apache
-    'package-creator-downloads':    (0775, ('rmake', 'apache')),
     'proxy-contents':               (0775, ('root', 'apache')),
     'repos':                        (0775, ('root', 'apache')),
     'run':                          (0775, ('root', 'apache')),
+    'sessions':                     (0770, ('root', 'apache')),
     'storage':                      (0775, ('root', 'apache')),
-    'templates':                    (0775, ('root', 'apache')),
     'tmp':                          (0775, ('root', 'apache')),
     '/var/log/rbuilder':            (0775, ('root', 'apache')),
-    '/var/lib/rbuilder':            (0775, ('root', 'apache')),
     }
 
 class rBuilderProduct(CPackageRecipe):
@@ -32,52 +37,49 @@ class rBuilderProduct(CPackageRecipe):
     version = '5.0'
 
     buildRequires = [
-        'bootman:runtime',
         'boto:python',
         'catalog-service:python',
-        'chkconfig:runtime',
         'conary-repository:python', 
         'conary-rest:python',
         'decorator:python',
-        'django:python',
         'django-db-postgres:python',
-        'django-rest-interface:python',
         'django-debug-toolbar:python',
+        'django:python',
+        'django-rest-interface:python',
         'dnspython:python',
-        'docbook-utils:runtime',
-        'elementtree:python',
+        'docbook-utils',
         'jobslave:python',
-        'kid:python',
-        'kid:runtime',
-        'libxml2:python',
-        'm2crypto:python',
+        'libxml2-python',
+        'm2crypto',
         'mcp:python',
         'mod_python:runtime',
         'pcreator:python',
-        'PIL:python',
-        'postgresql:runtime',
-        'psycopg2:python',
-        'pyOpenSSL:python',
-        'python-dateutil:python',
-        'python:devel',
+        'pyOpenSSL',
+        'python-beaker',
+        'python-dateutil',
+        'python-devel',
+        'python-epdb:python',
+        'python-imaging',
+        'python-kid',
         'python-pam:python',
         'python-pgsql:python',
+        'python-psycopg2',
         'python-twisted:python',
+        'python-webob:python',
         'rapa:python',
         'restlib:python',
-        'rmake:python',
         'rmake3:python',
+        'rmake:python',
+        'robj:python',
         'rpath-capsule-indexer:python',
         'rpath-job:python',
         'rpath-models:python',
+        'rpath-product-definition:python',
         'rpath-repeater:python',
         'rpath-storage:python',
-        'rpath-product-definition:python',
-        'simplejson:python',
-        'splashy:runtime',
-        'util-linux:runtime',
+        'util-linux-ng',
         'vobject:python',
-        'xmlto:runtime',
+        'xmlto',
         'xobj:python',
       ]
 
@@ -87,7 +89,7 @@ class rBuilderProduct(CPackageRecipe):
         r.build()
         r.install()
         r.policy()
-        r.macros.pgver = '9.0'
+        r.macros.pgver = '9.2'
 
     def unpack(r):
         r.addMercurialSnapshot()
@@ -138,8 +140,6 @@ class rBuilderProduct(CPackageRecipe):
 
         # allow apache to write to a few "generated" files
         r.Ownership('apache', 'root',
-            '%(servicedir)s/rbuilder/config/conaryrc.generated')
-        r.Ownership('apache', 'root',
             '%(servicedir)s/rbuilder/config/rbuilder-(generated|custom).conf')
         r.Ownership('apache', 'root',
             r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
@@ -147,10 +147,6 @@ class rBuilderProduct(CPackageRecipe):
         # create run directory for authentication service
         r.MakeDirs('/var/lib/twisted-taps/rbuilder-authn')
         r.ExcludeDirectories(exceptions='/var/lib/twisted-taps/rbuilder-authn')
-
-        # known-good mount point for /mnt/mirror/
-        r.MakeDirs('/mnt/mirror')
-        r.ExcludeDirectories(exceptions = '/mnt/mirror')
 
         # documentation and media-template bits
         r.Install('EULA.txt', '/usr/lib/media-template/disc1/')
@@ -167,8 +163,6 @@ class rBuilderProduct(CPackageRecipe):
 
         # These config files are managed at runtime or by the admin, not
         # by conary.
-        r.InitialContents(r'%(servicedir)s/rbuilder/config/'
-            'conaryrc(\.generated)?')
         r.InitialContents(r'%(servicedir)s/rbuilder/config/'
             'rbuilder-(custom|generated).conf')
         r.InitialContents(r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
@@ -189,29 +183,26 @@ class rBuilderProduct(CPackageRecipe):
         r.Transient(r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
         r.Config(exceptions=r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
 
-        # Require mod_python httpd configuration.
-        r.Requires('mod_python:runtime',
-            '%(sysconfdir)s/httpd/conf.d/rbuilder.conf')
+        r.User('credstore', 205, homedir='/srv/rbuilder/data/credstore')
 
         # rBuilder pieces need to work together with the same version
         r.ComponentProvides('%(version)s')
 
-        # WORKAROUND: manually tag bootman files (RPL-3132)
-        r.TagSpec('bootman-config', '/etc/bootloader\.d/.*')
-
+        r.Requires('python-pgsql:python',
+                   '%(sitepkg)s/mint/config.pyc')
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
                    '%(datadir)s/rbuilder/scripts/migrate-config')
 
         # Our rAPA plugins require rapa-plugin-rPath
-        r.Requires('rapa-plugin-rPath:python',
+        r.Requires('rapa-plugin-rPath:lib',
             '%(libdir)s/raa/rPath/[^/]+/__init__.pyc')
 
         # Script runtime dependencies
-        r.Requires('tmpwatch:runtime',
+        r.Requires('/usr/sbin/tmpwatch',
             r'%(sysconfdir)s/cron.daily/rbuilder.tmpwatch')
-        r.Requires('logrotate:runtime',
+        r.Requires('/usr/sbin/logrotate',
             r'%(sysconfdir)s/logrotate.d/')
         r.Requires('/usr/bin/qemu-img', '.*/wig/bootable.py.*')
         r.Requires('/usr/bin/twistd', '.*/twisted/plugins/.*')
@@ -223,7 +214,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires(exceptDeps='python: amiconfig.*')
 
         # Windows ISO builds requires mkisofs
-        r.Requires('cdrkit:runtime', '%(libdir)s/rmake3/.*')
+        r.Requires('/usr/bin/mkisofs', '%(libdir)s/rmake3/.*')
 
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
@@ -233,6 +224,3 @@ class rBuilderProduct(CPackageRecipe):
         # Attempt to isolate things that don't work when mint is just a library
         r.ComponentSpec('appliance', '/usr/share/raa/')
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
-
-        # Bootsplash customization
-        r.ComponentSpec('splashy-theme:runtime', r'/usr/share/splashy/')

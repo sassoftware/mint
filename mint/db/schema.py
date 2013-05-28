@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(66, 2)
+RBUILDER_DB_VERSION = sqllib.DBversion(67, 1)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -623,19 +623,6 @@ def _createMirrorInfo(db):
         db.tables['OutboundMirrorsUpdateServices'] = []
 
 
-def _createSessions(db):
-    cu = db.cursor()
-
-    if 'Sessions' not in db.tables:
-        cu.execute("""
-        CREATE TABLE Sessions (
-            sessIdx             %(PRIMARYKEY)s,
-            sid                 varchar(64)         NOT NULL    UNIQUE,
-            data                text
-        ) %(TABLEOPTS)s """ % db.keywords)
-        db.tables['Sessions'] = []
-
-
 def _createProductVersions(db):
     cu = db.cursor()
 
@@ -879,6 +866,7 @@ def _createPlatforms(db):
                 abstract        boolean NOT NULL DEFAULT false,
                 isFromDisk      boolean NOT NULL DEFAULT false,
                 hidden          boolean NOT NULL DEFAULT false,
+                upstream_url    text,
                 time_refreshed  timestamp with time zone NOT NULL
                                 DEFAULT current_timestamp
             ) %(TABLEOPTS)s""" % db.keywords)
@@ -3359,7 +3347,6 @@ def createSchema(db, doCommit=True, cfg=None):
     _createCommits(db)
     _createPackageIndex(db)
     _createMirrorInfo(db)
-    _createSessions(db)
     _createZoneSchema(db)
     _createTargets(db)
     _createCapsuleIndexerSchema(db)

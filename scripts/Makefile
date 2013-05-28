@@ -16,14 +16,10 @@ static_files =				\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
-	mirror-inbound			\
-	mirror-outbound			\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\
-	rss-update			\
 	set-authuserpass		\
-	update-bulletin			\
 	update-package-index		\
 	update-package-index-external	\
 	set-password                    \
@@ -35,6 +31,8 @@ generated_files = $(generic_scripts)
 generic_scripts = \
 	job-cleanup			\
 	migrate-config			\
+	mirror-inbound			\
+	mirror-outbound			\
 	pki-tool			\
 	postgres-auto-update		\
 	postgres-major-migrate		\
@@ -46,16 +44,12 @@ generic_scripts = \
 	system-resolver			\
 	target-systems-import		\
 
-cgi_files =				\
-	fileupload.cgi			\
-	urldownloader.cgi
 
 override STATICDEST = /usr/share/rbuilder/scripts
-override CGIDEST = /srv/www/cgi-bin
 
 all: default-all $(generated_files)
 
-install: static-install cgi-install default-install
+install: static-install default-install
 
 clean: default-clean
 

@@ -3,7 +3,7 @@
 # All rights reserved
 #
 
-loadSuperClass('testpackage=testbits.rb.rpath.com@rpl:1')
+loadSuperClass('testpackage')
 class rBuilderTest(TestPackageRecipe):
     name = 'rbuilder-test'
     version = '5.0'
@@ -13,40 +13,28 @@ class rBuilderTest(TestPackageRecipe):
 
     buildRequires = [
         'rbuilder',
-        'rbuilder-sources', # stripped .py files
 
-        'chkconfig:runtime',
+        'chkconfig',
         'conary-repository:python', 
         'django:python',
         'django-db-postgres:python',
-        'django-db-sqlite3:python',
         'django-rest-interface:python',
         'dnspython:python',
         'decorator:python',
         'elementtree:python',
-        'kid:runtime',
-        'kid:python',
-        'm2crypto:python',
+        'python-kid',
+        'm2crypto',
         'mcp:python',
-        'mcp-sources:python',
         'python-memcached:python',
-        'mod_python:runtime',
-        'PIL:python',
-        'python:devel',
+        'python-devel',
         'rapa:python',
         'rapa-plugin-rPath',
-        'renderPM:python',
-        'reportlab:python',
-        'simplejson:python',
-        'util-linux:runtime',
-        'webunit:python',
-        'net-tools:runtime',
-        'httpd:runtime',
-        'mod_ssl:runtime',
+        'rapa-test:lib',
+        'util-linux-ng',
+        'python-webunit',
+        'python-reportlab',
         'rbuilder-hostsfile',
         'restlib:python',
-        'sqlite:runtime',
-        'renderPM:fonts', 
         'testutils:runtime',
         'testutils:python',
         'XenAPI:python',
@@ -56,7 +44,6 @@ class rBuilderTest(TestPackageRecipe):
         # testsuites
         'conary-factory-test:lib',
         'conary-test:python',
-        'rapa-test:lib',
         'rpath-capsule-indexer-test:python',
       ]
 
@@ -71,7 +58,7 @@ class rBuilderTest(TestPackageRecipe):
       }
 
     # DB (default sqlite)
-    Flags.db_pgsql = False
+    Flags.db_pgsql = True
 
     def setup(r):
         r.addMercurialSnapshot()

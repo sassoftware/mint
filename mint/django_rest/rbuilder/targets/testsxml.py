@@ -312,7 +312,9 @@ job_xml_with_artifacts="""
   <status_code>200</status_code>
   <job_state id="http://testserver/api/v1/job_states/3">Completed</job_state>
   <job_type id="http://testserver/api/v1/inventory/event_types/17">deploy image on target</job_type>
-  <results id="http://testserver/api/v1/images/9"/>
+  <results>
+    <image id="http://testserver/api/v1/images/9"/>
+  </results>
   <created_by id="http://testserver/api/v1/users/2002">
     <user_name>ExampleDeveloper</user_name>
     <full_name>ExampleDeveloper</full_name>

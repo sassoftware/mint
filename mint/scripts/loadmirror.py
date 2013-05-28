@@ -179,10 +179,7 @@ class LoadMirror:
     def _addUsers(self, serverName, mintCfg):
         mintDb = database.Database(mintCfg)
         restDb = restDatabase.Database(mintDb)
-        restDb.productMgr.reposMgr.addUser(serverName, 'anonymous',
-                                          'anonymous', userlevel.USER)
-        restDb.productMgr.reposMgr.addUser(serverName, mintCfg.authUser,
-                                           mintCfg.authPass, userlevel.ADMIN)
+        restDb.productMgr.reposMgr.populateUsers()
 
     def copyFiles(self, serverName, project, targetOwner = None, callback = None):
         labelIdMap, _, _, _ = self.client.getLabelsForProject(project.id)
@@ -203,9 +200,5 @@ class LoadMirror:
         call("chown -R apache.apache %s" % targetPath)
 
         self._addUsers(serverName, self.cfg)
-        localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or \
-                   '', self.cfg.siteHost, self.cfg.basePath, project.hostname)
-
-        # set the internal label to our authUser and authPass
-        project.editLabel(labelId, label, localUrl, "userpass", self.cfg.authUser, self.cfg.authPass, "")
+        project.editLabel(labelId, label, None, 'none', None, None, None)
         self.client.addInboundMirror(project.id, [label], "http://%s/conary/" % serverName, "none", "", "")

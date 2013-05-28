@@ -1,5 +1,17 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 import logging
@@ -7,12 +19,12 @@ import json
 from conary import conarycfg
 from conary import conaryclient
 from conary.repository import errors
+from webob import exc as web_exc
 
-from mint import users
 from mint import maintenance
 from mint.helperfuncs import getProjectText, configureClientProxies
 from mint.scripts import mirror as mirrormod
-from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
+from mint.web.webhandler import normPath, WebHandler
 from mint.web.fields import strFields, intFields, listFields, boolFields
 
 from conary import versions
@@ -27,7 +39,7 @@ class AdminHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
         if not self.auth.admin:
-            raise HttpForbidden
+            raise web_exc.HTTPForbidden()
 
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
@@ -37,10 +49,10 @@ class AdminHandler(WebHandler):
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         if not callable(method):
-            raise HttpNotFound
+            raise web_exc.HTTPNotFound()
 
         return method
 
@@ -176,13 +188,8 @@ class AdminHandler(WebHandler):
 
             # set up the mirror, if requested
             if useMirror == 'net':
-                localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
-                           '', self.cfg.siteHost, self.cfg.basePath, 
-                           hostname)
-
-                # set the internal label to our authUser and authPass
-                project.editLabel(labelId, str(extLabel), localUrl,
-                    'userpass', self.cfg.authUser, self.cfg.authPass, '')
+                project.editLabel(labelId, str(extLabel),
+                        '', 'none', '', '', '')
 
                 if inboundMirror and editing:
                     mirrorId = inboundMirror['inboundMirrorId']
@@ -219,7 +226,6 @@ class AdminHandler(WebHandler):
         labelIdMap = self.client.getLabelsForProject(projectId)[0]
         label, labelId = labelIdMap.items()[0]
         labelInfo = self.client.getLabel(labelId)
-        conaryCfg = project.getConaryConfig()
 
         initialKwargs = {}
         initialKwargs['name'] = project.name
@@ -227,9 +233,7 @@ class AdminHandler(WebHandler):
         initialKwargs['label'] = label
         initialKwargs['backupExternal'] = project.backupExternal
 
-        fqdn = versions.Label(label).getHost()
-        initialKwargs['url'] = conaryCfg.repositoryMap[fqdn]
-
+        initialKwargs['url'] = labelInfo['url']
         initialKwargs['authType'] = labelInfo['authType']
         initialKwargs['externalUser'] = labelInfo['username']
         initialKwargs['externalPass'] = labelInfo['password']

@@ -19,33 +19,13 @@ onload = "javascript:;"
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery-1.2.6.min.js?v=${cacheFakeoutVersion}" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery.ui-1.5.2.all.min.js?v=${cacheFakeoutVersion}" />
-        <!--[if lte IE 6.5]><script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jquery.bgiframe.min.js?v=${cacheFakeoutVersion}"></script><![endif]-->
-        <script type="text/javascript">
-            <![CDATA[
-                jQuery.noConflict();
-                var BaseUrl = '${cfg.basePath}';
-                var staticPath = "${cfg.staticPath}";
-
-                /* fade out info messages after 5s */
-                jQuery(document).ready(function() {
-                    jQuery('#info')
-                        .animate({'opacity': 1}, 5000)
-                        .fadeOut('slow');
-                });
-
-            ]]>
-        </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js?v=${cacheFakeoutVersion}" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js?v=${cacheFakeoutVersion}" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/dialogs.js?v=${cacheFakeoutVersion}"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css?v=${cacheFakeoutVersion}" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css?v=${cacheFakeoutVersion}" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css?v=${cacheFakeoutVersion}" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/tables.css?v=${cacheFakeoutVersion}" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/dialogs.css?v=${cacheFakeoutVersion}" />
 
         <link rel="shortcut icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
         <link rel="icon" href="${cfg.staticPath}apps/mint/images/favicon.ico" />
@@ -91,14 +71,6 @@ onload = "javascript:;"
                 <div id="layout" py:replace="item[:]" />
                 ${layoutFooter()}<br />
             </div>
-        </div>
-        <div py:if="cfg.googleAnalyticsTracker" py:strip="True">
-<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
-</script>
-<script type="text/javascript">
-_uacct = "UA-284172-1";
-urchinTracker();
-</script>
         </div>
     </body>
 </html>

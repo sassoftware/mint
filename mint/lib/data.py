@@ -1,10 +1,21 @@
 #
-# Copyright (c) 2005-2007 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 import base64
+from mint.lib import cred_client
 from mint.lib import database
 
 (RDT_STRING,
@@ -98,8 +109,9 @@ def marshalGenericData(genericDataDict):
     if not genericDataDict:
         return ""
     # Newline-separated fields
-    data = '\n'.join("%s:%s" % (k, base64.b64encode(v))
-        for (k, v) in sorted(genericDataDict.iteritems()))
+    data = '\n'.join(["%s:%s" % (k, base64.b64encode(v))
+        for (k, v) in sorted(genericDataDict.iteritems())
+        if v is not None])
     return data
 
 def unmarshalGenericData(genericData):
@@ -111,8 +123,21 @@ def unmarshalGenericData(genericData):
         ret[arr[0]] = base64.b64decode(arr[1])
     return ret
 
-def marshalTargetUserCredentials(creds):
-    return marshalGenericData(creds)
 
-def unmarshalTargetUserCredentials(creds):
+def _getCredClient():
+    return cred_client.CredentialsClient()
+
+
+def marshalCredentials(cfg, creds):
+    value = marshalGenericData(creds)
+    if cfg and cfg.encryptCredentials:
+        value = _getCredClient().wrap(value)
+    return value
+marshalTargetUserCredentials = marshalCredentials
+
+
+def unmarshalCredentials(cfg, creds):
+    if creds.startswith('{'):
+        creds = _getCredClient().unwrap(creds)
     return unmarshalGenericData(creds)
+unmarshalTargetUserCredentials = unmarshalCredentials

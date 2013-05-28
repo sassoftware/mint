@@ -187,7 +187,8 @@ class SyncTool(object):
             log.info("Deleted stage information for stage %s on label %s",
                     stage, label)
         cu.execute("""UPDATE querysets_queryset SET tagged_date = NULL
-            WHERE resource_type = 'project_branch_stage'""")
+            WHERE resource_type = 'project_branch_stage'
+            OR resource_type = 'project'""")
 
     def getPlatformMap(self):
         if self._platformMap is None:

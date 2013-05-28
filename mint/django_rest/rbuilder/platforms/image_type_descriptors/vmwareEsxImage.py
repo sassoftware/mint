@@ -58,6 +58,16 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <required>false</required>
         </field>
         <field>
+            <name>options.vmCPUs</name>
+            <descriptions>
+                <desc>CPUs</desc>
+            </descriptions>
+            <help href="@Help_image_cpus@"/>
+            <type>int</type>
+            <default>1</default>
+            <required>false</required>
+        </field>
+        <field>
             <name>options.vmMemory</name>
             <descriptions>
                 <desc>RAM</desc>

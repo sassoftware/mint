@@ -1,8 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 """
 This script can be used to import running systems from predefined targets
@@ -12,15 +10,11 @@ import os
 import sys
 import logging
 
-from mint.db import database
-
 from mint import config
-from catalogService.rest.database import RestDatabase
-from mint.lib import scriptlibrary
-
-from mint.django_rest.rbuilder.manager import rbuildermanager
-
 from mint import users
+from mint.db import database
+from mint.lib import scriptlibrary
+from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.rest.db import authmgr
 
 class Script(scriptlibrary.SingletonScript):
@@ -51,24 +45,13 @@ class Script(scriptlibrary.SingletonScript):
         
         db = database.Database(self.cfg)
         authToken = (self.cfg.authUser, self.cfg.authPass)
-        cu = db.cursor()
-        cu.execute("SELECT MIN(userId) FROM Users WHERE is_admin = true")
-        ret = cu.fetchall()
-        userId = ret[0][0]
         mintAuth = users.Authorization(
                 username=self.cfg.authUser, 
                 token=authToken,
                 admin=True,
-                userId=userId,
                 authorized=True)
         auth = authmgr.AuthenticationManager(self.cfg, db)
         auth.setAuth(mintAuth, authToken)
-        restdb = RestDatabase(self.cfg, db)
-        
-        # do i need these?
-        restdb.auth.userId = userId
-        restdb.auth.setAuth(mintAuth, authToken)
-
         mgr = rbuildermanager.RbuilderManager()
         mgr.enterTransactionManagement()
         mgr.importTargetSystems()

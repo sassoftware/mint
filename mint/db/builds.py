@@ -32,11 +32,6 @@ class BuildsTable(database.KeyedTable):
               'status', 'statusMessage', 'job_uuid', 'base_image',
               ]
 
-    # Not the ideal place to put these, but I wanted to easily find them later
-    # --misa
-    EC2TargetType = 'ec2'
-    EC2TargetName = 'aws'
-
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
             project with ID projectId. The iterator is ordered by the date
@@ -177,37 +172,7 @@ class BuildsTable(database.KeyedTable):
             SELECT * FROM BuildFiles bf
             WHERE bf.buildId = b.buildId
             AND bf.title != 'Failed build log' ) '''
-        if imageType == 'AMI':
-            # Cancel out build file test; AMIs don't have files
-            extraWhere = ''
-
-            # Extra selects:
-            # awsCredentials cannot be a single -
-            # We use it to mark that we did not have credentials set for this
-            # EC2 target (as opposed to None for non-ec2 targets)
-            extraSelect += ''', COALESCE(subq.creds, '-') AS awsCredentials,
-                             bd.value AS amiId'''
-            extraJoin += ''' LEFT OUTER JOIN
-                             (SELECT tuc.userId AS userId,
-                                     tc.credentials AS creds
-                                FROM Targets
-                                JOIN TargetUserCredentials AS tuc
-                                     ON (Targets.targetId = tuc.targetId)
-                                JOIN TargetCredentials AS tc
-                                     ON (tuc.targetCredentialsId = tc.targetCredentialsId)
-                                JOIN target_types AS tt ON (Targets.target_type_id = tt.target_type_id)
-                               WHERE tt.name = '%s'
-                                 AND Targets.name = '%s') as subq
-                              ON (b.createdBy = subq.userId)
-                            ''' % (self.EC2TargetType, self.EC2TargetName)
-
-            # make sure that this build has an amiId.  Since it doesn't
-            # have any files (thus no sha1), we need to know that it
-            # has an amiId to know it uploaded correctly
-            extraJoin += ''' JOIN buildData bd
-                             ON (bd.buildId  = b.buildId
-                                 AND bd.name = 'amiId')'''
-        elif imageType == 'VWS':
+        if imageType == 'VWS':
             # VWS as a build type doesn't currently exist, but any
             # image that is RAW_FS_IMAGE and build as a DOMU works.
             imageType = 'RAW_FS_IMAGE'
@@ -262,7 +227,7 @@ class BuildsTable(database.KeyedTable):
         keys = ['projectId', 'hostname', 'buildId', 'productName',
                 'productDescription', 'buildName', 'buildDescription',
                 'isPublished', 'isPrivate', 'createdBy', 'role',
-                'awsCredentials', 'amiId', 'troveFlavor', 'baseBuildId',
+                'troveFlavor', 'baseBuildId',
                 ]
 
         imageIdToImageHash = {}
@@ -275,15 +240,7 @@ class BuildsTable(database.KeyedTable):
             outRow = {}
             for key in keys:
                 value = row.pop(key, None)
-                if key == 'awsCredentials':
-                    if value == '-':
-                        value = 'Unknown'
-                    elif value:
-                        value = data.unmarshalTargetUserCredentials(value)
-                        value = value.get('accountId')
-                    # Keep the old interface for getAllBuildsByType
-                    key = 'awsAccountNumber'
-                elif key == 'troveFlavor':
+                if key == 'troveFlavor':
                     key = 'architecture'
                     if value:
                         value = helperfuncs.getArchFromFlavor(value)
@@ -336,23 +293,6 @@ class BuildsTable(database.KeyedTable):
             outRow['imageType'] = 'DEFERRED_IMAGE'
             out.append(outRow)
         return out
-
-    def getAMIBuildsForProject(self, projectId):
-        published = []
-        unpublished = []
-        cu = self.db.cursor()
-        cu.execute("""SELECT COALESCE(pr.timePublished,0) != 0 AS isPublished,
-                             bd.value AS amiId
-                      FROM builds b
-                          LEFT OUTER JOIN publishedReleases pr USING (pubReleaseId)
-                          JOIN buildData bd ON (bd.buildId = b.buildId AND bd.name = 'amiId')
-                      WHERE b.projectId = ?""", projectId)
-        for res in cu.fetchall():
-            if res[0]:
-                published.append(res[1])
-            else:
-                unpublished.append(res[1])
-        return published, unpublished
 
 
 class BuildDataTable(data.GenericDataTable):

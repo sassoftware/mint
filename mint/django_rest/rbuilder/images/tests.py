@@ -42,6 +42,12 @@ class ImagesTestCase(RbacEngine):
             user_name='janephoo', full_name='Jane Phoo', email='janephoo@noreply.com')
         user2.save()
 
+        jobUuids = [
+                '7be3373b-38f4-4048-9e30-dce87d8529c9',
+                'c4610ef0-f937-4af3-a8f8-8665451ab416',
+                '540bb963-a655-4c49-bab5-a40c9d67ac28',
+        ]
+
         for i in range(3):
             # make project
             proj = self.addProject("foo%s" % i, domainName='eng.rpath.com')
@@ -64,7 +70,7 @@ class ImagesTestCase(RbacEngine):
             stage.save()
             # images
             image = models.Image(
-                project=proj, _image_type=10, job_uuid='1',
+                project=proj, _image_type=10, job_uuid=jobUuids[i],
                 name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                 trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
                 output_trove=None, project_branch=branch, stage_name='stage%s' % i,
@@ -632,14 +638,18 @@ class ImagesTestCase(RbacEngine):
             ]
         fileContentList = []
         for idx, (fname, content) in enumerate(contentMap):
+            sha1 = hashlib.sha1(content).hexdigest()
             params = dict(
-                sha1 = hashlib.sha1(content).hexdigest(),
+                sha1 = sha1,
                 size = len(content),
                 title = "File %s" % idx,
                 filename = os.path.join(imgPath, fname),
             )
             fileContentList.append(params)
-            file(params['filename'], "w").write(content)
+            with open(params['filename'], 'w') as fobj:
+                fobj.write(content)
+            with open(params['filename'] + '.sha1', 'w') as fobj:
+                fobj.write(sha1 + '\n')
         return fileContentList
 
     def testPutImageBuildFiles(self):
@@ -706,7 +716,8 @@ class ImagesTestCase(RbacEngine):
   </metadata>
 </files>""")
 
-        fileContentList[-1].update(sha1='Fake', title='Fake')
+        # We can't pass an arbitrary sha1 anymore, the code validates it
+        fileContentList[-1].update(title='Fake')
         xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
 
         response = self._put('images/%s/build_files' % img.image_id,
@@ -1034,7 +1045,7 @@ class ImagesTestCase(RbacEngine):
                 ('stop_job', (u'0xDEADBEEF',), {}),
             ])
 
-        response = self._get('jobs/%s' % jobId, user="admin", password="password")
+        response = self._get('jobs/%s' % jobId, username="admin", password="password")
         self.assertEquals(response.status_code, 200)
         doc = xobj.parse(response.content)
         self.assertEquals(doc.job.status_text, "Done")
@@ -1053,8 +1064,8 @@ class ImagesTestCase(RbacEngine):
         models.Image.objects.filter(image_id=imageId).update(project_branch=None,
             project_branch_stage=None)
         transaction.commit()
-        olddb = self.mgr.restDb.db
-        b = builds.BuildsTable(olddb)
+        restDb = self.mgr._makeRestDb(self.mintCfg)
+        b = builds.BuildsTable(restDb.db)
         b.setProductVersion(imageId, projectBranchId, stageName)
 
         img = models.Image.objects.get(image_id=imageId)

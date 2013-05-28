@@ -230,7 +230,8 @@ class Platforms(object):
     def getPlatformModel(self, platform, withRepositoryLookups=True,
             withComputedFields=True):
         if withRepositoryLookups:
-            platformDef = self.platformCache.get(str(platform.label))
+            platformDef = self.platformCache.get(str(platform.label),
+                    platform=platform)
         else:
             platformDef = None
         self._updatePlatformFromPlatformDefinition(platform, platformDef)
@@ -239,7 +240,8 @@ class Platforms(object):
         return platform
 
     def _getPlatformTroveName(self, platform):
-        platformDef = self.platformCache.get(str(platform.label))
+        platformDef = self.platformCache.get(str(platform.label),
+                platform=platform)
         if not platformDef:
             return None
         srcTroves = [s for s in platformDef.getSearchPaths() \
@@ -350,13 +352,14 @@ class Platforms(object):
         sourceTypes = kw.get('sourceTypes', [])
         mode = kw.get('mode', 'manual')
         hidden = kw.get('hidden', None)
+        upstream_url = kw.get('upstream_url', None)
         platformUsageTerms = kw.get('platformUsageTerms')
         platform = models.Platform(platformId=platformId, label=label,
                 platformName=platformName, enabled=enabled,
                 platformUsageTerms=platformUsageTerms,
                 configurable=configurable, mode=mode,
                 repositoryHostname=fqdn, abstract=abstract,
-                hidden=hidden)
+                hidden=hidden, upstream_url=upstream_url)
         platform._sourceTypes = sourceTypes
         platform._buildTypes = platformBuildTypes
         return platform
@@ -370,6 +373,7 @@ class Platforms(object):
             label=platformLabel,
             enabled=int(platformModel.enabled or 0),
             projectId=projectId,
+            upstream_url=platformModel.upstream_url,
         )
 
         # isFromDisk is a field that's not exposed in the API, so treat it
@@ -387,7 +391,8 @@ class Platforms(object):
                       "exist: %s" % (platformLabel, e))
 
         platformModel.platformId = platformId
-        self._updateDatabasePlatformSources(platformModel, platformDef)
+        if platformDef:
+            self._updateDatabasePlatformSources(platformModel, platformDef)
         return platformId
 
     def _update(self, platformModel, platformDef):
@@ -400,10 +405,12 @@ class Platforms(object):
             SET platformName = ?,
                 abstract = ?,
                 configurable = ?,
+                upstream_url = ?,
                 time_refreshed = current_timestamp
             WHERE platformId = ?"""
-        cu.execute(sql, platformName, abstract, configurable, platformId)
-        self._updateDatabasePlatformSources(platformModel, platformDef)
+        cu.execute(sql, platformName, abstract, configurable, platformModel.upstream_url, platformId)
+        if platformDef:
+            self._updateDatabasePlatformSources(platformModel, platformDef)
         return platformId
 
     def _addComputedFields(self, platformModel):
@@ -412,11 +419,8 @@ class Platforms(object):
         # called when fetching a platform.
         if self.db.siteAuth:
             if platformModel.configurable:
-                # XXX this is a hack, we need the platform model passed to the
-                # platform cache somehow
-                self._platformModel = platformModel
-                mirrorPermission = self.platformCache.getMirrorPermission(platformModel.label)
-                del self._platformModel
+                mirrorPermission = self.platformCache.getMirrorPermission(
+                        platformModel.label, platform=platformModel)
             else:
                 mirrorPermission = False
             platformModel.mirrorPermission = mirrorPermission
@@ -457,7 +461,6 @@ class Platforms(object):
     def load(self, platformId, platformLoad):
         platform = self.getById(platformId)
         host = platform.label.split('@')[:1][0]
-        repos = self.db.productMgr.reposMgr.getRepositoryClientForProduct(host)
         loadUri = platformLoad.loadUri.encode('utf-8')
         headers = {}
         fd, outFilePath = tempfile.mkstemp('.tar', 'platform-load-')
@@ -475,11 +478,11 @@ class Platforms(object):
         platLoad.platformId = platformId
         platLoad.loadUri = platformLoad.loadUri
 
-        self.loader(platform, job.id, inFile, outFilePath, loadUri, repos)
+        self.loader(platform, job.id, inFile, outFilePath, loadUri)
 
         return platLoad
 
-    def _load(self, platform, jobId, inFile, outFilePath, uri, repos):
+    def _load(self, platform, jobId, inFile, outFilePath, uri):
         # Open the job and commit after each state change
         job = self.jobStore.get(jobId, commitAfterChange = True)
         job.setFields([('pid', os.getpid()), ('status', job.STATUS_RUNNING) ])
@@ -604,6 +607,8 @@ class Platforms(object):
         if local:
             return 'https://%s/repos/%s/' % \
                 (self.cfg.secureHost, hostname)
+        elif platform.upstream_url:
+            return platform.upstream_url
         else:
             return 'https://%s/conary/' % (hostname)
 
@@ -686,7 +691,7 @@ class Platforms(object):
 
         self.db.db.platforms.update(platformId, enabled=int(platform.enabled),
             mode=platform.mode, configurable=bool(platform.configurable),
-            hidden=bool(platform.hidden))
+            hidden=bool(platform.hidden), upstream_url=platform.upstream_url)
 
         # Clear the cache of status information
         self.platformCache.clearPlatformData(platform.label)
@@ -698,11 +703,8 @@ class Platforms(object):
 
     def _getPlatformSourceStatus(self, platform):
         platStatus = models.PlatformSourceStatus()
-        # XXX this is a hack, we need the platform model passed to the
-        # platform cache somehow
-        self._platformModel = platform
-        valid, connected, message = self.platformCache.getStatus(platform.label)
-        del self._platformModel
+        valid, connected, message = self.platformCache.getStatus(
+                platform.label, platform=platform)
         platStatus.valid = valid
         platStatus.connected = connected
         platStatus.message = message
@@ -731,6 +733,7 @@ class Platforms(object):
         pDefNotFoundMsgLocal = "Repository is empty, please manually load " + \
             "the preload for this platform available from %s."
         successMsg = "Available."
+        url = self._getUrl(platform)
 
         if platform.mode == 'auto':
             client = reposMgr.getAdminClient()
@@ -738,25 +741,24 @@ class Platforms(object):
             entitlement = self.db.productMgr.reposMgr.db.siteAuth.entitlementKey
             # Go straight to the host as defined by the platform, bypassing
             # any local repo map.
-            sourceUrl = self._getUrl(platform)
             try:
                 serverProxy = self.db.reposShim.getServerProxy(host,
-                    sourceUrl, None, [entitlement])
+                    url, None, [entitlement])
                 client.repos.c.cache[host] = serverProxy
                 platDef = proddef.PlatformDefinition()
                 platDef.loadFromRepository(client, platform.label)
             except reposErrors.OpenError, e:
                 remote = False
                 remoteConnected = False
-                remoteMessage = openMsg % sourceUrl
+                remoteMessage = openMsg % url
             except conaryErrors.ConaryError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = connectMsg % (sourceUrl, e)
+                remoteMessage = connectMsg % (url, e)
             except proddef.ProductDefinitionTroveNotFoundError, e:
                 remote = False
                 remoteConnected = True
-                remoteMessage = pDefNotFoundMsg % sourceUrl
+                remoteMessage = pDefNotFoundMsg % url
             except Exception, e:
                 remote = False
                 remoteConnected = False
@@ -766,12 +768,10 @@ class Platforms(object):
                         "commercial license.  You are either missing the " + \
                         "entitlement for this platform or it is no longer valid"
                 else:
-                    remoteMessage = connectMsg % (sourceUrl, e)
+                    remoteMessage = connectMsg % (url, e)
 
         client = reposMgr.getAdminClient()
         platDef = proddef.PlatformDefinition()
-        url = reposMgr._getFullRepositoryMap().get(
-                platform.repositoryHostname, self._getUrl(platform))
 
         try:
             platDef.loadFromRepository(client, platform.label)
@@ -1156,7 +1156,8 @@ class PlatformManager(manager.Manager):
         # Local or mirrored project is accessible
         return False
 
-    def _lookupFromRepository(self, platformLabel, createPlatDef):
+    def _lookupFromRepository(self, platform, createPlatDef):
+        platformLabel = platform.label
         if self.isOffline(platformLabel):
             return None
 
@@ -1229,7 +1230,10 @@ class PlatformManager(manager.Manager):
         if platform.isPlatform and createPlatDef:
             createPlatDef = False
 
-        pl = self._lookupFromRepository(platformLabel, createPlatDef)
+        if createPlatDef:
+            pl = self._lookupFromRepository(platform, createPlatDef)
+        else:
+            pl = None
 
         # Now save the platform
         cu = self.db.db.cursor()
@@ -1258,7 +1262,8 @@ class PlatformManager(manager.Manager):
 
     def getPlatformImageTypeDefs(self, request, platformId):
         platform = self.platforms.getById(platformId)
-        platDef = self.platforms.platformCache.get(platform.label)
+        platDef = self.platforms.platformCache.get(platform.label,
+                platform=platform)
         from mint import buildtypes
         from mint.rest.api import productversion
         buildDefModels = []
@@ -1410,7 +1415,22 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def getReposMgr(self):
         return self.mgr().db.productMgr.reposMgr
 
-    def _getPlatDef(self, client, labelStr):
+    def _getPlatDef(self, labelStr, url=None):
+        reposMgr = self.getReposMgr()
+        client = reposMgr.getAdminClient()
+        if url:
+            fqdn = labelStr.split('@')[0]
+            if reposMgr.db.siteAuth:
+                entitlement = reposMgr.db.siteAuth.entitlementKey
+                if reposMgr.db.isOffline():
+                    # Remote will not be reachable
+                    return None
+            else:
+                entitlement = None
+            serverProxy = reposMgr.db.reposShim.getServerProxy(fqdn, url, None,
+                    [entitlement])
+            client.repos.c.cache[fqdn] = serverProxy
+
         try:
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
@@ -1431,66 +1451,51 @@ class PlatformDefCache(persistentcache.PersistentCache):
         platDef.label = labelStr
         return platDef
 
-    def _refresh(self, labelStr):
+    def _refresh(self, labelStr, platform=None):
         if isinstance(labelStr, tuple):
             if labelStr == self._mirrorKey(labelStr[1]):
-                return self._refreshMirrorPermission(labelStr[1], platform=None)
+                return self._refreshMirrorPermission(labelStr[1],
+                        platform=platform)
             if labelStr == self._statusKey(labelStr[1]):
-                return self._refreshStatus(labelStr[1], platform=None)
+                return self._refreshStatus(labelStr[1], platform=platform)
             raise Exception("XXX")
-        if self.mgr().isOffline(labelStr):
-            # Don't refresh if we're offline and would need to talk to a remote
-            # repository.
-            return None
         reposMgr = self.getReposMgr()
+        fqdn = labelStr.split('@')[0]
         try:
-            client = reposMgr.getAdminClient()
-            platDef = self._getPlatDef(client, labelStr)
-            return platDef
-        except proddef.ProductDefinitionTroveNotFoundError, e:
-            # Need to look at inboundmirrors table to get the sourceurl 
-            # for the platform so that we bypass the local repo.
-            sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
-            host = labelStr.split('@')[0]
-
-            if not sourceUrl:
-                # Try going straight to the platform label
-                sourceUrl = "https://%s/conary/" % host
-
+            handle = reposMgr.db.reposShim.getRepositoryFromFQDN(fqdn)
+        except errors.ProductNotFound:
+            handle = None
+        # If there's a project already configured then use that first.
+        if handle:
             try:
-                if reposMgr.db.siteAuth:
-                    entitlement = reposMgr.db.siteAuth.entitlementKey
-                    if reposMgr.db.isOffline():
-                        # Remote will not be reachable
-                        return None
-                else:
-                    entitlement = None
-                serverProxy = reposMgr.db.reposShim.getServerProxy(host,
-                    sourceUrl, None, [entitlement])
-                client.repos.c.cache[host] = serverProxy
-                platDef = self._getPlatDef(client, labelStr)
+                platDef = self._getPlatDef(labelStr)
                 return platDef
-            except (proddef.ProductDefinitionTroveNotFoundError,
-                    reposErrors.InsufficientPermission):
-                log.info("Platform %s is not accessible because "
-                        "it is not entitled.", labelStr)
-                return None
-            except:
-                log.exception("Failed to lookup platform definition "
-                        "on label %s:", labelStr)
-                return None
-
-    def _getPlatform(self, labelStr, platform, commit=True):
-        # Helper function to reduce code duplication - if a platform is not
-        # presented, attempt to fetch it from the cache; if not available,
-        # clear the caches
-        if platform is not None:
-            return platform
-        platform = self.get(labelStr)
-        if platform is None:
-            self.clearPlatformData(labelStr, commit=commit)
+            except proddef.ProductDefinitionTroveNotFoundError, err:
+                pass
+        # Bail out now if the project is local, because there is no upstream.
+        if handle and not handle.isExternal:
+            log.error("No platform definition found on label %s", labelStr)
             return None
-        return platform
+        # Don't refresh if we're offline and would need to talk to a remote
+        # repository.
+        if reposMgr.db.isOffline():
+            return None
+        # Use inbound mirror URL if available, or the platform stub's upstream
+        # URL otherwise.
+        sourceUrl = reposMgr.getIncomingMirrorUrlByLabel(labelStr)
+        if not sourceUrl and platform:
+            sourceUrl = platform.upstream_url
+        if not sourceUrl:
+            sourceUrl = "https://%s/conary/" % fqdn
+        try:
+            platDef = self._getPlatDef(labelStr, sourceUrl)
+            return platDef
+        except (proddef.ProductDefinitionTroveNotFoundError,
+                reposErrors.InsufficientPermission):
+            log.info("Platform %s is not accessible because "
+                    "it is not entitled.", labelStr)
+            return None
+        return None
 
     @classmethod
     def _mirrorKey(cls, labelStr):
@@ -1502,17 +1507,15 @@ class PlatformDefCache(persistentcache.PersistentCache):
 
     def _refreshMirrorPermission(self, labelStr, platform=None, commit=True):
         platformMgr = self.mgr()
-        platformModel = platformMgr.platforms._platformModel
-        mirrorPermission = platformMgr.platforms._checkMirrorPermissions(platformModel)
+        mirrorPermission = platformMgr.platforms._checkMirrorPermissions(platform)
         self._update(self._mirrorKey(labelStr), mirrorPermission,
             commit=commit)
         return mirrorPermission
 
     def _refreshStatus(self, labelStr, platform=None, commit=True):
         platformMgr = self.mgr()
-        platformModel = platformMgr.platforms._platformModel
         (valid, connected, message) = platformMgr.platforms._getPlatformStatus(
-            platformModel)
+                platform)
         self._update(self._mirrorKey(labelStr), (valid, connected, message),
             commit=commit)
         return (valid, connected, message)
@@ -1523,11 +1526,11 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def _clearStatus(self, labelStr, commit=True):
         self.clearKey(self._statusKey(labelStr), commit=commit)
 
-    def getMirrorPermission(self, labelStr):
-        return self.get(self._mirrorKey(labelStr))
+    def getMirrorPermission(self, labelStr, platform=None):
+        return self.get(self._mirrorKey(labelStr), platform=platform)
 
-    def getStatus(self, labelStr):
-        return self.get(self._statusKey(labelStr))
+    def getStatus(self, labelStr, platform=None):
+        return self.get(self._statusKey(labelStr), platform=platform)
 
     def clearPlatformData(self, labelStr, commit=True):
         self._clearMirrorPermission(labelStr, commit=commit)

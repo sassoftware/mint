@@ -1,17 +1,14 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
 from django.db import transaction
 
 from mint import config
-from mint import mint_error
-
 from mint.db import database
 from mint.django_rest.rbuilder.users import models as usersmodels
+from mint.lib.mintutils import cached_property
 from mint.rest.db.database import Database as RestDatabase
 
 log = logging.getLogger(__name__)
@@ -51,56 +48,44 @@ class BaseRbuilderManager(object):
     MANAGERS = {}
 
     def __init__(self, cfg=None, userName=None):
-        self.cfg = cfg
+        if cfg:
+            self.cfg = cfg
         self._auth = None
         self.managers = []
-        
-        if not self.cfg:
-            try:
-                cfgPath = config.RBUILDER_CONFIG
-                self.cfg = config.getConfig(cfgPath)
-            except mint_error.ConfigurationMissing:
-                log.info("Failed to build mint configuration, "
-                        "expected in local mode only")
-                # Use an empty config object
-                self.cfg = None
-        
         if userName is None:
             self.user = None
         else:
             self.user = usersmodels.User.objects.get(user_name=userName)
 
-        # We instantiate _restDb lazily
-        self._restDb = None
+    @cached_property
+    def cfg(self):
+        # NOTE: this path should only be used in the testsuite. Normally
+        # mint.web.wsgi_hook should be the only place MintConfig is ever
+        # instantiated.
+        cfgPath = config.RBUILDER_CONFIG
+        return config.getConfig(cfgPath)
 
-    def setAuth(self, auth, user):
+    @cached_property
+    def restDb(self):
+        # NOTE: this path should only be used in the testsuite. Normally
+        # mint.web.wsgi_hook should be the only place Database is ever
+        # instantiated.
+        return self._makeRestDb(self.cfg)
+
+    def _makeRestDb(self, cfg, db=None):
+        mintDb = database.Database(cfg, db)
+        restDb = RestDatabase(cfg, mintDb, dbOnly=True)
+        return restDb
+
+    def setAuth(self, request, auth, user):
         self._auth = auth
         self.user = user
 
-    @property
-    def restDb(self):
-        if self.cfg is None:
-            return None
-        if self._restDb is None:
-            self.setRestDbPath()
-            mint_db = self.getMintDatabase()
-            self._restDb = RestDatabase(self.cfg, mint_db)
-            if self._auth:
-                self._restDb.setAuth(self._auth, self._auth.getToken())
-        return self._restDb
-
-    def setRestDbPath(self):
-        from django.conf import settings
-        DB = settings.DATABASES['default']
-        if DB['ENGINE'].endswith('sqlite3'):
-            self.cfg.dbPath = DB['NAME']
-        else:
-            self.cfg.dbPath = '%s:%s/%s' % (DB['HOST'], DB['PORT'], DB['NAME'])
-
-    def getMintDatabase(self):
-        return database.Database(self.cfg)
+        context = request.META['mint.wsgiContext']
+        self.restDb = self._makeRestDb(context.cfg, context.db)
+        self.restDb.setAuth(auth, auth.getToken())
 
     def close(self):
-        if self._restDb is not None:
-            self._restDb.close()
-            self._restDb = None
+        if self.restDb is not None:
+            self.restDb.close()
+            self.restDb = None

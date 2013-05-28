@@ -21,6 +21,7 @@ from mint.django_rest.deco import D
 class Platforms(modellib.Collection):
     class Meta:
         abstract = True
+    _xobj = xobj.XObjMetadata(tag='platforms')
         
     list_fields = ['platform']
 
@@ -46,6 +47,7 @@ class Platform(modellib.XObjIdModel):
     abstract = D(models.BooleanField(default=False), 'Boolean, defaults to False')
     is_from_disk = D(models.BooleanField(default=False, db_column='isfromdisk'), 'Boolean, defaults to False')
     hidden = D(models.BooleanField(default=False), 'Boolean, defaults to False')
+    upstream_url = D(models.TextField(), "Upstream repository URL used when creating external project for this platform")
     time_refreshed = D(basemodels.DateTimeUtcField(auto_now_add=True),
         'Time at which the platform was refreshed') # hack, modellib keeps evaluating to None
 

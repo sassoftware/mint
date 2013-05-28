@@ -1,15 +1,9 @@
 #
-# Copyright (c) 2009 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 
-import os
 import urllib
-
 import rpath_capsule_indexer
-
-from mint import notices_store
 from mint.rest.api import base
 from mint.rest.middleware import auth, response
 
@@ -30,19 +24,22 @@ class ContentController(base.BaseController):
         capsuleKey = urllib.unquote(capsuleKey)
         capsuleSha1 = arr[0]
         indexer = self.db.capsuleMgr.getIndexer()
-        if arrLen > 1:
-            filePath = urllib.unquote(arr[1])
-            fileSha1 = arr[2]
-            try:
-                stream = indexer.getFileFromPackage(capsuleKey, capsuleSha1,
-                    filePath, fileSha1)
-            except indexer.DownloadError:
+        try:
+            if arrLen > 1:
+                filePath = urllib.unquote(arr[1])
+                fileSha1 = arr[2]
+                try:
+                    stream = indexer.getFileFromPackage(capsuleKey, capsuleSha1,
+                        filePath, fileSha1)
+                except indexer.DownloadError:
+                    return resp404
+                return response.SeekableStreamResponse(stream)
+            pkg = indexer.getPackage(capsuleKey, capsuleSha1)
+            if pkg is None:
                 return resp404
-            return response.SeekableStreamResponse(stream)
-        pkg = indexer.getPackage(capsuleKey, capsuleSha1)
-        if pkg is None:
-            return resp404
-        absPath = indexer.getFullFilePath(pkg)
+            absPath = indexer.getFullFilePath(pkg)
+        finally:
+            indexer.close()
         return response.SeekableStreamResponse(file(absPath))
 
     @auth.internal
@@ -53,6 +50,8 @@ class ContentController(base.BaseController):
             indexer.refresh()
         except rpath_capsule_indexer.errors.RPCError:
             return response.response.Response(status = 500)
+        finally:
+            indexer.close()
         return response.response.Response(content_type = "text/plain",
             status = 204)
 

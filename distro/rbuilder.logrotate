@@ -6,46 +6,28 @@
 /var/log/rbuilder/package-index-external.log
 /var/log/rbuilder/package-index.log
 /var/log/rbuilder/profiling
+/var/log/rbuilder/system_events.log
+/var/log/rbuilder/target_systems_import.log
 /var/log/rbuilder/scripts.log {
     missingok
     notifempty
-    compress
-    compresscmd /usr/bin/bzip2
     size 10M
+    compress
+    compresscmd /usr/bin/xz
+    compressext xz
 }
 
+/var/log/rbuilder/nginx_access.log
+/var/log/rbuilder/nginx_error.log
 /var/log/rbuilder/repository.log {
-    rotate 12
-    size 100M
     missingok
     notifempty
-    copytruncate
+    size 10M
+    compress
+    compresscmd /usr/bin/xz
+    compressext xz
+    sharedscripts
     postrotate
-        /usr/bin/killall -USR1 httpd
+        [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
     endscript
-    compress
-    compressext .bz2
-    compresscmd /usr/bin/bzip2
-}
-
-/var/log/rbuilder/system_events.log {
-    rotate 12
-    size 10M
-    missingok
-    notifempty
-    copytruncate
-    compress
-    compressext .bz2
-    compresscmd /usr/bin/bzip2
-}
-
-/var/log/rbuilder/target_systems_import.log {
-    rotate 12
-    size 10M
-    missingok
-    notifempty
-    copytruncate
-    compress
-    compressext .bz2
-    compresscmd /usr/bin/bzip2
 }

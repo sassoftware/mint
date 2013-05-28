@@ -40,11 +40,10 @@ class Package(modellib.XObjIdModel):
     trailing_label = modellib.SyntheticField()
     trailing_version = modellib.SyntheticField()
 
-    def serialize(self, *args, **kwargs):
-        xobjModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
-        trailingLabel = \
-            versions.VersionFromString(self.version).trailingLabel().asString()
-        xobjModel.trailing_label = trailingLabel
-        if xobjModel.version:
-            xobjModel.trailing_version = xobjModel.version.split("/")[-1]
-        return xobjModel 
+    def computeSyntheticFields(self, sender, **kwargs):
+        if self.version:
+            ver = versions.VersionFromString(self.version)
+            self.trailing_label = ver.trailingLabel().asString()
+            self.trailing_version = ver.trailingRevision().asString()
+        else:
+            self.trailing_label = self.trailing_version = None

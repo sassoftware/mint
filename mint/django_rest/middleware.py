@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import os
@@ -29,10 +29,8 @@ from django.db.utils import IntegrityError
 from django.db import connection
 import django.core.exceptions as core_exc
 
-from mint import config
 from mint.django_rest import handler
 from mint.django_rest.rbuilder import auth, errors, models
-from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.metrics import models as metricsmodels
 from mint.django_rest.rbuilder.errors import PermissionDenied
 from mint.django_rest.rbuilder.inventory import errors as ierrors
@@ -40,14 +38,7 @@ from mint.lib import mintutils
 
 log = logging.getLogger(__name__)
 
-try:
-    # The mod_python version is more efficient, so try importing it first.
-    from mod_python.util import parse_qsl # pyflakes=ignore
-except ImportError:
-    from cgi import parse_qsl # pyflakes=ignore
-
-if parse_qsl is None:
-    from cgi import parse_qsl
+from cgi import parse_qsl
 
 RBUILDER_DEBUG_SWITCHFILE = "/srv/rbuilder/MINT_LOGGING_ENABLE"
 RBUILDER_DEBUG_LOGPATH    = "/tmp/rbuilder_debug_logging/"
@@ -111,7 +102,7 @@ class SwitchableLogMiddleware(BaseMiddleware):
 
     def getLogFile(self, request):
         ''' returns log file and path for storing XML debug info'''
-        if request.debugFileName is not None:
+        if getattr(request, 'debugFileName', None):
             return file(request.debugFileName, "a"), request.debugFileName
 
         now = time.localtime(request.startTime)
@@ -238,6 +229,7 @@ class RequestLogMiddleware(SwitchableLogMiddleware):
             logFile.write(request.raw_post_data)
 
     def _process_request(self, request):
+        request.startTime = time.time()
         if self.shouldLog():
             self._logRequest(request)
         return None
@@ -351,52 +343,20 @@ class SetMethodRequestMiddleware(BaseMiddleware):
 
         return None
 
-class SetMintAuthMiddleware(BaseMiddleware):
-    """
-    Set the authentication information on the request
-    """
-    def _process_request(self, request):
-        request._auth = auth.getAuth(request)
-        username, password = request._auth
-        request._authUser = authenticate(username=username, password=password,
-                mintConfig=request.cfg)
-        return None
-
-class SetMintAdminMiddleware(BaseMiddleware):
-    """
-    Set a flag on the request indicating whether or not the user is an admin
-    """
-    def _process_request(self, request):
-        request._is_admin = auth.isAdmin(request._authUser)
-        return None
-
-class LocalSetMintAdminMiddleware(BaseMiddleware):
-    def _process_request(self, request):
-        request._is_admin = True
-        request._is_authenticated = True
-        request._authUser = usersmodels.User.objects.get(pk=1)
-        request._auth = ("admin", "admin")
-
-class SetMintAuthenticatedMiddleware(BaseMiddleware):
-    """
-    Set a flag on the request indicating whether or not the user is authenticated
-    """
-    def _process_request(self, request):
-        request._is_authenticated = auth.isAuthenticated(request._authUser)
-        return None
 
 class SetMintConfigMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if not self.isLocalServer(request):
-            cfgPath = request._req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
-        else:
-            cfgPath = config.RBUILDER_CONFIG
-
-        cfg = config.getConfig(cfgPath)
-        request.cfg = cfg
-
+        context = request.META['mint.wsgiContext']
+        request.cfg = context.cfg
+        request._auth = auth.getAuth(request)
+        username, password = request._auth
+        request._authUser = authenticate(username=username, password=password,
+                mintConfig=request.cfg)
+        request._is_admin = auth.isAdmin(request._authUser)
+        request._is_authenticated = auth.isAuthenticated(request._authUser)
         return None
+
 
 class AddCommentsMiddleware(BaseMiddleware):
 
@@ -448,7 +408,7 @@ class FlashErrorCodeMiddleware(BaseMiddleware):
     def _process_response(self, request, response):
         isFlash = False
         try:
-            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION')
+            isFlash = request._meta.get('HTTP_HTTP_X_FLASH_VERSION') or request._meta.get('HTTP_X_WRAP_RESPONSE_CODES')
         except:
              # test code mocking things weirdly?
              pass
@@ -479,36 +439,27 @@ class RedirectMiddleware(BaseMiddleware, redirectsmiddleware.RedirectFallbackMid
         return redirectsmiddleware.RedirectFallbackMiddleware.process_response(self, nPRequest, response)
 
 
-class LocalQueryParameterMiddleware(BaseMiddleware):
+class QueryParameterMiddleware(BaseMiddleware):
 
     def _process_request(self, request):
-        if '?' in request.path:
-            url, questionParams = request.path.split('?', 1)
-            questionParams = parse_qsl(questionParams)
-        else:
-            questionParams = []
-            url = request.path
-
-        if ';' in url:
-            request.path, semiColonParams = url.split(';', 1)
-            request.path_info = request.path
+        script_name = request.META.get('SCRIPT_NAME') or ''
+        path = request.META['PATH_INFO']
+        if ';' in path:
+            path, semiColonParams = path.split(';', 1)
             semiColonParams = parse_qsl(semiColonParams)
         else:
             semiColonParams = []
-
-        qs = request.environ.get('QUERY_STRING', [])
-        if qs:
-            qs = parse_qsl(qs)
-        else:
-            qs = []
-
-        params = questionParams + semiColonParams + qs
+        questionParams = parse_qsl(request.META.get('QUERY_STRING') or '')
+        params = questionParams + semiColonParams
+        request.path = script_name + path
+        request.path_info = path
         request.params = ['%s=%s' % (k, v) for k, v in params]
         request.params = ';' + ';'.join(request.params)
         method = request.GET.get('_method', None)
         if method:
             request.params += ';_method=%s' % method
         request.GET = http.QueryDict(request.params)
+
 
 class PerformanceMiddleware(BaseMiddleware, middleware.DebugToolbarMiddleware):
     '''
@@ -590,7 +541,7 @@ class SerializeXmlMiddleware(SwitchableLogMiddleware):
         # the same scope in which it was opened.
         from mint.django_rest.rbuilder import modellib
         if getattr(modellib.XObjModel, '_rbmgr', None):
-            modellib.XObjModel._rbmgr.restDb.close()
+            modellib.XObjModel._rbmgr.close()
             modellib.XObjModel._rbmgr = None
 
         return response

@@ -58,7 +58,7 @@ images_get_xml = """
     <architecture>x86</architecture>
     <base_image/>
     <image_count>1</image_count>
-    <job_uuid>1</job_uuid>
+    <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/1/jobs"/>
   </image>
   <image id="http://testserver/api/v1/images/2">
@@ -118,7 +118,7 @@ images_get_xml = """
     <architecture>x86</architecture>
     <base_image/>
     <image_count>1</image_count>
-    <job_uuid>1</job_uuid>
+    <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/2/jobs"/>
   </image>
   <image id="http://testserver/api/v1/images/3">
@@ -178,7 +178,7 @@ images_get_xml = """
     <architecture>x86</architecture>
     <base_image/>
     <image_count>1</image_count>
-    <job_uuid>1</job_uuid>
+    <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/3/jobs"/>
   </image>
 </images>
@@ -252,7 +252,7 @@ image_get_xml = """
   <architecture>x86</architecture>
   <base_image/>
   <image_count>1</image_count>
-  <job_uuid>1</job_uuid>
+  <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
   <jobs id="http://testserver/api/v1/images/1/jobs"/>
 </image>
 """
@@ -275,7 +275,7 @@ image_post_xml = """
 <image>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <status_message></status_message>
   <trove_name>troveName20</trove_name>
@@ -302,7 +302,7 @@ image_post_xml = """
     <name>foo0</name>
   </project>
   <output_trove></output_trove>
-  <job_uuid>2</job_uuid>
+  <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
 </image>
 """
 
@@ -310,7 +310,7 @@ image_put_xml = """
 <image>
   <trove_last_changed></trove_last_changed>
   <updated_by id="http://testserver/api/v1/users/2002"/>
-  <trove_flavor>is: x86</trove_flavor>
+  <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
   <created_by id="http://testserver/api/v1/users/2001"/>
   <status_message></status_message>
   <trove_name>troveName20-Changed</trove_name>
@@ -337,7 +337,7 @@ image_put_xml = """
     <name>foo0</name>
   </project>
   <output_trove></output_trove>
-  <job_uuid>2</job_uuid>
+  <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
 </image>
 """
 
@@ -347,7 +347,7 @@ build_file_post_xml = \
     <image>
       <trove_last_changed></trove_last_changed>
       <updated_by id="http://testserver/api/v1/users/2002"/>
-      <trove_flavor>is: x86</trove_flavor>
+      <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
       <created_by id="http://testserver/api/v1/users/2001"/>
       <status_message></status_message>
       <trove_name>troveName20-Changed</trove_name>
@@ -374,7 +374,7 @@ build_file_post_xml = \
         <name>foo0</name>
       </project>
       <output_trove></output_trove>
-      <job_uuid>2</job_uuid>
+      <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
     </image>
     <sha1>0</sha1>
     <idx>0</idx>

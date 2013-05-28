@@ -26,7 +26,6 @@ except ValueError:
     pass
 from webunit import webunittest
 
-from mint.web import hooks
 from mint.db import builds
 from mint.db import jobs
 import mint.db.database
@@ -269,7 +268,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                             'maintenance.lock')
 
-    cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
     util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
     util.mkdirChain(os.path.join(cfg.dataPath, 'cscache'))
 
@@ -279,9 +277,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
 
     cfg.bulletinPath = os.path.join(cfg.dataPath, 'bulletin.txt')
     cfg.frontPageBlock = os.path.join(cfg.dataPath, 'frontPageBlock.html')
-
-    f = open(cfg.conaryRcFile, 'w')
-    f.close()
     return cfg
 
 mintCfg = None
@@ -386,7 +381,6 @@ class MintApacheServer(rephelp.ApacheServer):
 
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(self.mintCfg.dataPath, 'cscache'))
-        open(self.mintCfg.conaryRcFile, 'w').close()
 
     def _setUpDjangoSettingsModule(self):
         dbDriver = self.mintDb.driver == 'sqlite' and 'sqlite3' or 'postgresql_psycopg2'
@@ -623,8 +617,8 @@ class RestDBMixIn(object):
                            troveName=troveName, troveVersion=troveVersion,
                            troveFlavor=troveFlavor,
                            outputTrove=outputTrove)
-        db.createImage(hostname, img, buildData)
-        return img.imageId
+        imageId = db.imageMgr.createImage(hostname, img, buildData)
+        return imageId
 
     def setImageFiles(self, db, hostname, imageId, imageFiles=None):
         if imageFiles is None:
@@ -908,10 +902,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper, RestDBMixIn):
         self.mintServer = server.MintServer(self.mintCfg)
 
         self.db = self.mintServer.db
-
-        # reset some caches
-        hooks.repNameCache = {}
-        hooks.domainNameCache = {}
 
     def tearDown(self):
         mock.unmockAll()

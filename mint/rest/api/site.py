@@ -18,7 +18,6 @@ from mint.rest.api import capsules
 from mint.rest.api import models
 from mint.rest.api import modulehooks
 from mint.rest.api import product
-from mint.rest.api import notices
 from mint.rest.api import platforms
 from mint.rest.api import users
 from mint.rest.middleware import auth
@@ -29,12 +28,7 @@ class RbuilderRestServer(RestController):
             'users'    : users.UserController,
             'platforms' : platforms.PlatformController,
             'contentSources' : platforms.SourceTypeController,
-            'notices'  : notices.NoticesController,
             'capsules'  : capsules.CapsulesController,
-            'reports/'  : 'djangoHandoff',
-            'inventory/' : 'djangoHandoff',
-            'query_sets/' : 'djangoHandoff',
-            'packages/' : 'djangoHandoff',
             'moduleHooks' : modulehooks.ModuleController,}
 
     def __init__(self, cfg, db):
@@ -78,7 +72,3 @@ class RbuilderRestServer(RestController):
         if result[-1] == '/':
             return result[:-1] + request.extension  + '/'
         return result + request.extension
-
-    # This is a handoff to the django URIs
-    def djangoHandoff(self, request):
-        return None

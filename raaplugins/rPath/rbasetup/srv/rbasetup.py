@@ -19,7 +19,6 @@ from rPath.rbasetup import lib
 
 from mint import config
 from mint import helperfuncs
-from mint import notices_callbacks
 from mint import rmake_setup
 from mint import shimclient
 from mint.lib import siteauth
@@ -77,15 +76,15 @@ class rBASetup(rAASrvPlugin):
         This, of course, assumes that Apache is running (a good assumption).
         """
         try:
-            retval = os.system("/sbin/service httpd graceful")
+            retval = os.system("/sbin/service gunicorn reload")
             if retval != 0:
-                log.error("Failed to gracefully restart Apache (error: %d)" , retval)
+                log.error("Failed to gracefully restart gunicorn (error: %d)" , retval)
                 return False
         except Exception, e:
-            log.error("Failed to gracefully restart Apache (reason: %s)", str(e))
+            log.error("Failed to gracefully restart gunicorn (reason: %s)", str(e))
             return False
 
-        log.info("Successful graceful restart of Apache")
+        log.info("Successful graceful restart of gunicorn")
         return True
 
     def _setupRMake(self, mintcfg):
@@ -347,14 +346,6 @@ class rBASetup(rAASrvPlugin):
         # Done
         self.message += "Setup is complete.\n"
         self.reportMessage(execId, self.message)
-
-        cfg = lib.readRBAConfig(config.RBUILDER_CONFIG)
-        cb = notices_callbacks.RbaSetupNoticeCallback(cfg, new_username)
-        cb.notify()
-        # Since this plugin runs as root, we need to reset the permissions of
-        # the rbuilder notices dir to apache.
-        uid, gid = pwd.getpwnam('apache')[2:4]
-        self._chown('/srv/rbuilder/notices', uid, gid)
 
         return { 'step': lib.FTS_STEP_COMPLETE, 'message': self.message }
 
