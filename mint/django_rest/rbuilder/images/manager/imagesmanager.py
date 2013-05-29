@@ -1,7 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 
 import sys
@@ -11,7 +9,6 @@ import hashlib
 import os
 from django.core import urlresolvers
 from mcp import client as mcp_client
-from mint import buildtypes
 from mint import jobstatus
 from mint import urltypes
 from mint.django_rest.helpers import MultiRequestUploadHandler
@@ -232,8 +229,12 @@ class ImagesManager(basemanager.BaseManager):
                     file=imageFile):
                 fileUrl = urlMap.url
                 path = fileUrl.url
-                if path.startswith('/') and os.path.exists(path):
-                    os.unlink(path)
+                if path.startswith('/'):
+                    try:
+                        os.unlink(path)
+                    except OSError, err:
+                        if err.args[0] != errno.ENOENT:
+                            log.exception("Failed to delete image %s", path)
                 fileUrl.delete()
         imageDir = os.path.join(self.cfg.imagesPath, image.project.short_name,
                 str(image_id))
@@ -241,13 +242,17 @@ class ImagesManager(basemanager.BaseManager):
             for name in os.listdir(imageDir):
                 path = os.path.join(imageDir, name)
                 if name in ('build.log', 'trace.txt') or name.endswith('.sha1'):
-                    os.unlink(path)
+                    try:
+                        os.unlink(path)
+                    except OSError, err:
+                        if err.args[0] != errno.ENOENT:
+                            log.exception("Failed to delete image %s", path)
         # Delete the parent directory, if it's empty.
         try:
             os.rmdir(imageDir)
         except OSError, err:
             if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
-                raise
+                log.exception("Failed to delete image directory %s", imageDir)
         image.delete()
         # Delete the image trove from the repository if it is not referenced by
         # any other image.
