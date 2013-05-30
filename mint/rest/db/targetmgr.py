@@ -1,11 +1,9 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
+
 import json
 import logging
-import subprocess
 
 from mint import mint_error
 from mint.lib import data as mintdata
@@ -15,7 +13,6 @@ from mint.rest.db import manager
 log = logging.getLogger(__name__)
 
 class TargetManager(manager.Manager):
-    TargetImportScriptPath = '/usr/share/rbuilder/scripts/target-systems-import'
     def getUserId(self, username):
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM Users WHERE username=? AND active=1",
@@ -241,11 +238,6 @@ class TargetManager(manager.Manager):
             cmap[(tName, uCredsId)] = ent
         return sorted(cmap.values())
 
-    def importTargetSystems(self, targetType, targetName):
-        log.info('Importing systems for target %s.' % targetName)
-        cmd = [ self.TargetImportScriptPath ]
-        subprocess.Popen(cmd)
-
     def linkTargetImageToImage(self, targetType, targetName, fileId,
             targetImageId):
         targetId = self.getTargetId(targetType, targetName)
@@ -277,8 +269,6 @@ class TargetManager(manager.Manager):
             raise mint_error.IllegalUsername(userName)
         self.setTargetCredentialsForUserId(targetType, targetName,
             userId, credentials)
-        if self.db.auth.isAdmin:
-            self.importTargetSystems(targetType, targetName)
 
     def setTargetCredentialsForUserId(self, targetType, targetName, userId,
             credentials):

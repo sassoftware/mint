@@ -564,7 +564,7 @@ class WindowsOsPatchInfo(modellib.XObjIdModel):
 
     windows_os_patch_id = models.AutoField(primary_key=True)
 
-    hotfix_id              = models.TextField()
+    hotfix_id              = models.TextField(unique=True)
     name                   = models.TextField()
     fix_comments           = models.TextField()
     description            = models.TextField()

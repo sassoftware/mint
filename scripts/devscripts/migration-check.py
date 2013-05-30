@@ -11,7 +11,7 @@ class readline:
     def set_completer(self, func): pass
 sys.modules['readline'] = readline()
 
-for path in ('/opt/postgresql-9.0/bin', '/usr/bin'):
+for path in ('/opt/postgresql-9.2/bin', '/usr/bin'):
     if os.path.exists(path + '/initdb'):
         PGBIN = path
         break

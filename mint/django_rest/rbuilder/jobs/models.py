@@ -61,7 +61,6 @@ class JobSurveyArtifact(modellib.XObjModel):
     job = XObjHidden(modellib.ForeignKey('Job', related_name='created_surveys'))
     survey = modellib.ForeignKey(survey_models.Survey, related_name='created_surveys')
 
-
 class ActionResources(modellib.UnpaginatedCollection):
     class Meta:
         abstract = True
@@ -194,6 +193,8 @@ class Job(modellib.XObjIdModel):
         return [ self.job_uuid ]
 
     def computeSyntheticFields(self, *args, **kwargs):
+        if self.job_type_id is not None:
+            self.job_description = self.job_type.description
 
         # removes some layers of nesting by not showing the artifact records
         # but instead presenting a unified collection of results containing
@@ -203,16 +204,13 @@ class Job(modellib.XObjIdModel):
         resources.extend([ x.image for x in self.created_images.all() ])
         resources.extend([ x.system for x in self.created_systems.all() ])
         resources.extend([ x for x in self.created_previews.all() ])
+        resources.extend([ x for x in self.created_launch_profiles.filter(
+            job__job_type__name = EventType.TARGET_CREATE_LAUNCH_PROFILE) ])
         resources2 = []
         for r in resources:
             res = modellib.HrefFieldFromModel(r, tag=r._xobj.tag)
             resources2.append(res)
         self.created_resources.resource = resources2
-
-    def serialize(self, request=None, **kwargs):
-        self.job_description = self.job_type.description
-        etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
-        return etreeModel
 
 class JobStates(modellib.Collection):
     
@@ -362,6 +360,8 @@ class EventType(modellib.XObjIdModel):
     
     SYSTEM_CONFIGURE             = 'system apply configuration'
     SYSTEM_CONFIGURE_DESCRIPTION = 'Apply system configuration'
+    TARGET_CREATE_LAUNCH_PROFILE = 'create launch profile'
+    TARGET_CREATE_LAUNCH_PROFILE_DESCRIPTION = 'Create launch profile'
 
     job_type_id = D(models.AutoField(primary_key=True), "the database id of the  type")
     EVENT_TYPES = (

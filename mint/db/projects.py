@@ -425,13 +425,13 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         if projectId:
-            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, p.shortname, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
                             WHERE p.projectId=? AND l.projectId=p.projectId""", projectId)
         else:
-            cu.execute("""SELECT l.labelId, l.label, p.fqdn, l.url, l.authType,
+            cu.execute("""SELECT l.labelId, l.label, p.fqdn, p.shortname, l.url, l.authType,
                                     l.username, l.password, l.entitlement,
                                     p.external
                             FROM Labels l, Projects p
@@ -441,7 +441,7 @@ class LabelsTable(database.KeyedTable):
         labelIdMap = {}
         userMap = []
         entMap = []
-        for (labelId, label, host, url, authType, username, password,
+        for (labelId, label, host, shortname, url, authType, username, password,
                 entitlement, external) in cu.fetchall():
             if overrideAuth:
                 authType = 'userpass'
@@ -451,23 +451,9 @@ class LabelsTable(database.KeyedTable):
             if not label:
                 label = host + '@dummy:label'
             labelIdMap[label] = labelId
-            host = label[:label.find('@')]
-            if url:
-                if not external:
-                    if self.cfg.SSL:
-                        protocol = "https"
-                        newHost, newPort = hostPortParse(self.cfg.secureHost, 443)
-                    else:
-                        protocol = "http"
-                        newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
-
-                    url = rewriteUrlProtocolPort(url, protocol, newPort)
-
-                map = url
-            else:
-                map = "http://%s/conary/" % (host)
-
-            repoMap[host] = map
+            if not url:
+                url = 'https://%s/repos/%s/' % (self.cfg.siteHost, shortname)
+            repoMap[host] = url
 
             if authType == 'userpass':
                 userMap.append((host, (username, password)))
@@ -488,7 +474,7 @@ class LabelsTable(database.KeyedTable):
 
     def getLabel(self, labelId):
         cu = self.db.cursor()
-        cu.execute("""SELECT label, url, authType, username, password,
+        cu.execute("""SELECT label, shortname, url, authType, username, password,
                 entitlement, fqdn
                 FROM Labels
                 JOIN Projects USING (projectId)
@@ -499,11 +485,11 @@ class LabelsTable(database.KeyedTable):
         if not p:
             raise LabelMissing
         else:
-            label, url, authType, username, password, entitlement, fqdn = p
+            label, shortname, url, authType, username, password, entitlement, fqdn = p
             if not label:
                 label = fqdn + '@dummy:label'
             if not url:
-                url = 'https://%s/repos/%s/' % (self.cfg.siteHost, fqdn)
+                url = 'https://%s/repos/%s/' % (self.cfg.siteHost, shortname)
             out = dict(
                     label=label,
                     url=url,
