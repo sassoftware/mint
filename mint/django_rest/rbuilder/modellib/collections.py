@@ -15,7 +15,7 @@ from django.conf import settings
 from django.core import exceptions
 
 from mint.django_rest.rbuilder import errors
-from mint.django_rest.rbuilder.modellib import XObjIdModel
+from mint.django_rest.rbuilder.modellib import XObjIdModel, type_map
 from mint.jobstatus import FINISHED
 
 from xobj import xobj
@@ -590,43 +590,52 @@ class Collection(XObjIdModel):
                 url += ';filter_by=%s' % urllib.quote(self.filter_by, safe="[],")
         return url
 
+    def _py_sort(self, modelList, param):
+        invert = param.startswith("-")
+        if param[0] in [ '+', '-', ' ' ]:
+            param = param[1:].strip()
+
+        # a list, not a query set
+        modelList = sorted(
+            modelList,
+            key=lambda f: getattr(f, param),
+            reverse=invert
+        )
+        return modelList
+
     def _sortByField(key):
         return lambda field: getattr(field, key, None)
 
     def orderBy(self, request, modelList):
-
         orderBy = request.GET.get('order_by', None)
+        use_python_sort = False
+        collected_model = type_map[self.list_fields[0]]
+
         if orderBy:
             newOrderParams = []
             orderParams = orderBy.split(',')
             for orderParam in orderParams:
-
                 # Ignore fields that don't exist on the model
                 fieldName = orderParam.split('.')[0]
                 if fieldName.startswith('-'):
                     fieldName = fieldName[1:]
 
+                # look for field name in the model's synthetic_fields dict,
+                # and if any field is synthetic, then sort in python
+                if fieldName in collected_model._meta.synthetic_fields:
+                    use_python_sort = True
+
                 orderParam = orderParam.replace('.', '__')
                 newOrderParams.append(orderParam)
 
-            if hasattr(modelList, 'order_by'):
+            if hasattr(modelList, 'order_by') and not use_python_sort:
                 modelList = modelList.order_by(*newOrderParams)
+            elif use_python_sort:
+                for param in newOrderParams:
+                    modelList = self._py_sort(modelList, param)
             else:
-
                 param = newOrderParams[0]
-                invert = False
-                    
-                if param.startswith("-"):
-                    invert = True
-                if param[0] in [ '+', '-', ' ' ]:
-                    param = param[1:].strip()
-
-                # a list, not a query set
-                modelList = sorted(modelList, 
-                    key=lambda f: getattr(f, param)
-                )
-                if invert:
-                    modelList.reverse()
+                modelList = self._py_sort(modelList, param)
 
         self.order_by = orderBy
 
