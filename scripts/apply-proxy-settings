@@ -1,4 +1,4 @@
 #!/bin/sh
 
-service httpd restart
+service gunicorn reload
 exit 0

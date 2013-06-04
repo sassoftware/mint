@@ -52,7 +52,7 @@ def setupRmake(cfg, rmakeConfigFilePath, restartRmake=False):
         "https://localhost/repos/%s" % (shortName,))
 
     if restartRmake:
-        if os.getenv('RBUILDER_NOSUDO'):
+        if os.getenv('RBUILDER_NOSUDO') or os.getuid() == 0:
             sudo = ''
         else:
             sudo = 'sudo '

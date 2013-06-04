@@ -44,7 +44,7 @@ def updatePassword(newPass):
         genCfg.displayKey(x, out=genFile)
     genFile.close()
 
-    os.system('killall -USR1 httpd')
+    os.system('/sbin/service gunicorn reload')
 
 
 

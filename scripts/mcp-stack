@@ -16,7 +16,7 @@
 start() {
     /sbin/service mcp-dispatcher start
     /sbin/service jobmaster start
-    /sbin/service httpd reload
+    /sbin/service gunicorn reload
 }
 
 stop() {

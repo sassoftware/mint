@@ -106,7 +106,7 @@ rm -rf /srv/rbuilder/tmp/users
 usermod -a -G apache raa-web
 
 # Create a project for rMake to use as a repository.
-sudo -u apache "$scriptdir"/rmake-setup
+runuser -s /bin/bash apache -c "$scriptdir"/rmake-setup
 RMAKE_EXISTED=$?
 
 # Primary migration is done, exit maintenance mode now since some scripts need

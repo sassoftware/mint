@@ -30,9 +30,9 @@ psql $pgbopt -Xc 'resume rmake2'
     || echo "Warning: failed to delete project rmake-repository"
 /usr/sbin/rmake-server reset \
     || echo "Warning: failed to delete rMake database"
-sudo -u apache ./rmake-setup
+runuser -s /bin/bash apache -c ./rmake-setup
 
 [ -n "$rmake_stopped" ] && /sbin/service rmake start
 [ -n "$node_stopped" ] && /sbin/service rmake-node start
-/sbin/service httpd reload
+/sbin/service gunicorn reload
 exit 0

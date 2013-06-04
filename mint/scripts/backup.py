@@ -177,7 +177,7 @@ def restore(cfg):
 
 
 def prerestore(cfg):
-    util.execute("service httpd stop")
+    util.execute("service gunicorn stop")
     # pgbouncer holds database connections open for 45s
     util.execute("service pgbouncer stop")
 
