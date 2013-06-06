@@ -378,23 +378,6 @@ class FilterEntry(modellib.XObjIdModel):
 
     load_fields = [field, operator, value]
 
-    def save(self, *args, **kwargs):
-        """
-        Validate that the query set does not have any circular relationships in
-        it's children before saving it.  E.g., a query set can not be a child
-        of one of it's children.
-        """
-        # If we don't have a query_set_id (pk), then we've never even been saved
-        # and Django prevents us from using the Many to Many manager on
-        # children.  Skip validating children in this case.
-        try:
-            return modellib.XObjIdModel.save(self, *args, **kwargs)
-        except IntegrityError:
-            # the shared filter entry schema is lame and doesn't store seperate
-            # entries for each queryset but attempts to share them
-            # if the ID already exists, be cool about it
-            pass
-
 class FilterEntryLink(modellib.XObjIdModel):
  
     class Meta:

@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+import sys
+
 from conary import versions
 
 from django.db import models
@@ -20,6 +22,7 @@ class Packages(modellib.Collection):
     _xobj = xobj.XObjMetadata(
                 tag = "packages")
     list_fields = ["package"]
+    synthetic_fields = ['trailing_label', 'trailing_version']
     package = []
 
 class Package(modellib.XObjIdModel):
@@ -47,3 +50,11 @@ class Package(modellib.XObjIdModel):
             self.trailing_version = ver.trailingRevision().asString()
         else:
             self.trailing_label = self.trailing_version = None
+
+
+for mod_obj in sys.modules[__name__].__dict__.values():
+    if hasattr(mod_obj, '_xobj'):
+        if mod_obj._xobj.tag:
+            modellib.type_map[mod_obj._xobj.tag] = mod_obj
+    if hasattr(mod_obj, '_meta'):
+        modellib.type_map[mod_obj._meta.verbose_name] = mod_obj

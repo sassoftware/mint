@@ -14,7 +14,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_image_name@"/>
             <type>str</type>
-            <default/>
             <required>true</required>
         </field>
         <field>
@@ -24,7 +23,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_image_filename@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -34,7 +32,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_conary_installlabelpath@"/>
             <type>str</type>
-            <default/>
             <required>false</required>
         </field>
         <field>
@@ -65,6 +62,12 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_cpus@"/>
             <type>int</type>
             <default>1</default>
+            <constraints>
+                <range>
+                    <min>1</min>
+                    <max>32</max>
+                </range>
+            </constraints>
             <required>false</required>
         </field>
         <field>
