@@ -1640,6 +1640,13 @@ class XObjHrefModel(object):
     def __init__(self, refValue):
         self.attributes = dict(id=refValue)
 
+class AbsoluteHref(object):
+    def __init__(self, relativeHref):
+        self.href = relativeHref
+
+    def serialize(self, request):
+        return request.build_absolute_uri(self.href)
+
 class HrefField(models.Field):
     def __init__(self, href=None, values=None):
         """

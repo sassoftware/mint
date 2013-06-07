@@ -505,6 +505,28 @@ class ProjectManager(basemanager.BaseManager):
         images.url_key = [ project_short_name, project_branch_label, stage_name ]
         images.view_name = 'ProjectBranchStageImages'
         return images
+    
+    @exposed
+    def getProjectBranchStageLatestImageFileByType(self, project_short_name,
+            project_branch_label, stage_name, image_type_name):
+        imageTypeId = imagemodels.buildtypes.validBuildTypes.get(image_type_name)
+        if imageTypeId is None:
+            raise errors.ResourceNotFound()
+        stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
+        buildFiles = list(
+                imagemodels.BuildFile.objects.filter(
+                    image__project_branch_stage=stage,
+                    image___image_type=imageTypeId).order_by(
+                        '-image__image_id',
+                        'file_id')[:1])
+
+        if not buildFiles:
+            raise errors.ResourceNotFound()
+        buildFile = buildFiles[0]
+        location = buildFile.getDownloadUrl()
+        raise errors.TemporaryRedirect(msg="Redirected to %(location)s",
+                location=location,
+                headers = dict(Location=models.modellib.AbsoluteHref(location)))
 
     @exposed
     def createProjectBranchStageImage(self, image):
