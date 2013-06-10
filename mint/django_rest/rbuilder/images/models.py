@@ -401,17 +401,24 @@ class BuildFile(modellib.XObjIdModel):
     target_images = modellib.XObjHidden(modellib.SyntheticField(modellib.EtreeField))
 
     def serialize(self, request=None, **kwargs):
-        fileUrls = BuildFilesUrlsMap.objects.filter(file=self.file_id
-                ).order_by('url').all()
-        if fileUrls and request:
-            # Not actually a URL, but a path to the image file.
-            fileUrl = fileUrls[0].url
-            self.url = request.build_absolute_uri(
-                    '/downloadImage?fileId=%d&urlType=%d' % (self.file_id,
-                        fileUrl.url_type))
+        url = self.getDownloadUrl(request)
+        if url:
+            self.url = url
         etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
         return etreeModel
 
+    def getDownloadUrl(self, request=None):
+        fileUrls = BuildFilesUrlsMap.objects.filter(file=self.file_id
+                ).order_by('url').all()
+        if not fileUrls:
+            return None
+        # Not actually a URL, but a path to the image file.
+        fileUrl = fileUrls[0].url
+        relUrl = '/downloadImage?fileId=%d&urlType=%d' % (self.file_id,
+                    fileUrl.url_type)
+        if request is None:
+            return relUrl
+        return request.build_absolute_uri(relUrl)
 
 class ImageData(modellib.XObjIdModel):
     class Meta:

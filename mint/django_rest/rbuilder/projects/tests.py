@@ -585,6 +585,32 @@ class ProjectsTestCase(RbacEngine):
            u'image-1-1devel'
         ]
         self.failUnlessEqual(actual, desired)
+        return stageDev2
+
+    def testGetStageLatestImages(self):
+        stage = self.testGetProjectBranchStageImages()
+        # Add some files to the images
+        for i, image in enumerate(stage.images.all()):
+            for j in range(2):
+                k = 2 * i + j
+                buildFile = imagesmodels.BuildFile.objects.create(image=image,
+                        size=k, sha1='%040x' % k, title='foo-%s' % k)
+
+                fileUrl = imagesmodels.FileUrl.objects.create(url_type=0,
+                        url='http://example.com/%s/' % k)
+
+                imagesmodels.BuildFilesUrlsMap.objects.create(
+                        file=buildFile, url=fileUrl)
+
+        prj = stage.project
+        branch = stage.project_branch
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/latest_image_file_by_type/%s' %
+                (prj.short_name, branch.label, stage.name, 'VIRTUAL_PC_IMAGE'))
+        # Should be unauthenticated
+        response = self._get_internal(url, follow=False)
+        self.assertEquals(response.status_code, 307)
+        self.assertEquals(response['Location'],
+                'http://testserver/downloadImage?fileId=3&urlType=0')
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()

@@ -8,6 +8,7 @@ BAD_REQUEST = 400
 NOT_FOUND = 404
 INTERNAL_SERVER_ERROR = 500
 CONFLICT = 409
+TEMPORARY_REDIRECT = 307
 
 class RbuilderError(Exception):
     "An unknown error has occured."
@@ -18,6 +19,7 @@ class RbuilderError(Exception):
         cls = self.__class__
         kwargs_msg = kwargs.pop('msg', None)
         kwargs_status = kwargs.pop('status', None)
+        kwargs_headers = kwargs.pop('headers', {})
         if kwargs_msg:
             self.msg = kwargs_msg
         else:
@@ -28,12 +30,19 @@ class RbuilderError(Exception):
             self.status = getattr(self.__class__, 'status', INTERNAL_SERVER_ERROR)
         self.kwargs = kwargs
         self.traceback = kwargs.pop('traceback', None)
+        self._headers = kwargs_headers
 
     def __str__(self):
         try:
             return self.msg % self.kwargs
         except TypeError:
             return self.msg
+
+    def iterheaders(self, request):
+        for k, v in self._headers.iteritems():
+            if hasattr(v, 'serialize'):
+                v = v.serialize(request)
+            yield k, v
 
 class PermissionDenied(RbuilderError):
     "Permission to the requested resource is denied"
@@ -76,3 +85,6 @@ class Conflict(RbuilderError):
 class InvalidData(RbuilderError):
     "The data supplied with the resource was invalid"
     status = BAD_REQUEST
+
+class TemporaryRedirect(RbuilderError):
+    status = TEMPORARY_REDIRECT
