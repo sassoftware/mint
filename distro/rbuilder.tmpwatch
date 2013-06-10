@@ -1,16 +1,13 @@
 #!/bin/sh
 
-# tmpwatch for rBuilder appliance
-
 # dump stale cached changesets after two weeks
-/usr/sbin/tmpwatch 336 /srv/rbuilder/cscache
+/usr/sbin/tmpwatch 336 /srv/rbuilder/cscache /srv/rbuilder/proxy-contents
 
-# clean outdated cache files on the Conary repositories
-find /srv/rbuilder/repos -maxdepth 2 -name tmp -type d -exec /usr/sbin/tmpwatch 720 {} \;
-
-# clean tmp but don't delete first-level directories
-find /srv/rbuilder/tmp -mindepth 2 -amin +1440 -delete
-find /srv/rbuilder/tmp -type f -amin +1440 -delete
-
-# clean up proxy contents dir after a month of non-access
-/usr/sbin/tmpwatch 720 /srv/rbuilder/proxy-contents
+# clean tmp but exclude nginx's temp dirs since it only creates them on startup
+tmpwatch \
+    --exclude=/srv/rbuilder/tmp/client_temp \
+    --exclude=/srv/rbuilder/tmp/fastcgi_temp \
+    --exclude=/srv/rbuilder/tmp/proxy_temp \
+    --exclude=/srv/rbuilder/tmp/scgi_temp \
+    --exclude=/srv/rbuilder/tmp/uwsgi_temp \
+    24 /srv/rbuilder/tmp
