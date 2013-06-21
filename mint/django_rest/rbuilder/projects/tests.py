@@ -610,7 +610,7 @@ class ProjectsTestCase(RbacEngine):
         response = self._get_internal(url, follow=False)
         self.assertEquals(response.status_code, 307)
         self.assertEquals(response['Location'],
-                'http://testserver/downloadImage?fileId=3&urlType=0')
+                'http://testserver/downloadImage?fileId=4&urlType=0')
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()

@@ -518,6 +518,7 @@ class ProjectManager(basemanager.BaseManager):
                     image__project_branch_stage=stage,
                     image___image_type=imageTypeId).order_by(
                         '-image__image_id',
+                        '-size',
                         'file_id')[:1])
 
         if not buildFiles:
