@@ -556,19 +556,20 @@ class ProjectsTestCase(RbacEngine):
                 self.mgr.createImageBuild(image)
 
                 name += 'devel'
-                image = imagesmodels.Image(
-                    name=name,
-                    description=name,
-                    project=prj,
-                    # since this isn't what the real app stores (unfortunately)...
-                    project_branch_stage=stage,
-                    # the tests must also set this...
-                    stage_name=stage.name,
-                    _image_type=10,
-                    trove_version='/foo@rpath:1/12345:%d-1' % i,
-                    trove_flavor='1#x86:i486:i586:i686|5#use:~!xen',
-                    image_count=1)
-                self.mgr.createImageBuild(image)
+                for j in range(2):
+                    image = imagesmodels.Image(
+                        name=name,
+                        description=name,
+                        project=prj,
+                        # since this isn't what the real app stores (unfortunately)...
+                        project_branch_stage=stage,
+                        # the tests must also set this...
+                        stage_name=stage.name,
+                        _image_type=10,
+                        trove_version='/foo@rpath:1/12345:%d-1' % (2*i+j),
+                        trove_flavor='1#x86:i486:i586:i686|5#use:~!xen',
+                        image_count=1)
+                    self.mgr.createImageBuild(image)
 
         # Make sure there's no cross-polination
         imgs = self.mgr.getProjectBranchStageImages(prj.short_name,
@@ -581,7 +582,9 @@ class ProjectsTestCase(RbacEngine):
            u'image-trunk-1',
            u'image-1-0',
            u'image-1-0devel',
+           u'image-1-0devel',
            u'image-1-1',
+           u'image-1-1devel',
            u'image-1-1devel'
         ]
         self.failUnlessEqual(actual, desired)
@@ -610,13 +613,31 @@ class ProjectsTestCase(RbacEngine):
         response = self._get_internal(url, follow=False)
         self.assertEquals(response.status_code, 307)
         self.assertEquals(response['Location'],
-                'http://testserver/downloadImage?fileId=4&urlType=0')
+                'http://testserver/downloadImage?fileId=8&urlType=0')
 
         # Test 404
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
                 (prj.short_name, branch.label, stage.name, 'NoWayJoseph'))
         response = self._get_internal(url, follow=False)
         self.assertEquals(response.status_code, 404)
+
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images' %
+                (prj.short_name, branch.label, stage.name))
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        # Make sure we don't see duplicates
+        self.assertXMLEquals(xobj.toxml(doc.images.latest_files),
+                """\
+<latest_files>
+  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image-1-0devel/latest_file">
+    <image_name>image-1-0devel</image_name>
+  </latest_file>
+  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image-1-1devel/latest_file">
+    <image_name>image-1-1devel</image_name>
+  </latest_file>
+</latest_files>""")
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()
