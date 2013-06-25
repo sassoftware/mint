@@ -507,9 +507,9 @@ class ProjectManager(basemanager.BaseManager):
 
         images.latest_files = imagemodels.LatestFiles()
         images.latest_files.latest_file = latestFiles = []
-        for img in stage.images.distinct('name').order_by('name'):
+        for img in stage.images.values('name').distinct('name').order_by('name'):
             lf = imagemodels.LatestFile()
-            lf.image_name = img.name
+            lf.image_name = img['name']
             lf.project_branch_stage = stage
             latestFiles.append(lf)
         return images
