@@ -13,7 +13,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
                 <desc>Image name</desc>
             </descriptions>
             <type>str</type>
-            <default/>
             <required>true</required>
         </field>
     </dataFields>

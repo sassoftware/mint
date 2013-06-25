@@ -11,11 +11,6 @@ from mint_test import mint_rephelp
 class UserManagerTest(mint_rephelp.MintDatabaseHelper):
     def setUp(self):
         mint_rephelp.MintDatabaseHelper.setUp(self)
-        from mint.rest.db import targetmgr
-        tmgr = targetmgr.TargetManager
-        if not os.path.exists(tmgr.TargetImportScriptPath):
-            self.mock(tmgr, 'importTargetSystems',
-                lambda *args, **kwargs: True)
         db = self.openMintDatabase(createRepos=False)
         cu = db.cursor()
         tbmap = [

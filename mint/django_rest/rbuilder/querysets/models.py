@@ -127,7 +127,7 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False),
+    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False, null=True),
         "Date the query set was last tagged")
     children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
@@ -135,7 +135,7 @@ class QuerySet(modellib.XObjIdModel):
         "Defined filter entries for this query set")
     resource_type = D(models.TextField(),
         "Name of the resource this query set operates on")
-    presentation_type = D(models.TextField(),
+    presentation_type = D(models.TextField(null=True),
         "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.  Boolean, defaults to False")
@@ -377,23 +377,6 @@ class FilterEntry(modellib.XObjIdModel):
         "Value for this filter, defaults to null")
 
     load_fields = [field, operator, value]
-
-    def save(self, *args, **kwargs):
-        """
-        Validate that the query set does not have any circular relationships in
-        it's children before saving it.  E.g., a query set can not be a child
-        of one of it's children.
-        """
-        # If we don't have a query_set_id (pk), then we've never even been saved
-        # and Django prevents us from using the Many to Many manager on
-        # children.  Skip validating children in this case.
-        try:
-            return modellib.XObjIdModel.save(self, *args, **kwargs)
-        except IntegrityError:
-            # the shared filter entry schema is lame and doesn't store seperate
-            # entries for each queryset but attempts to share them
-            # if the ID already exists, be cool about it
-            pass
 
 class FilterEntryLink(modellib.XObjIdModel):
  

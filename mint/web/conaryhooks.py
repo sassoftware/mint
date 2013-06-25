@@ -153,14 +153,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         if handle:
             # Convert mint user/pass into abstract repository roles, if the
             # user is successfully authenticated to mint.
-            try:
-                authToken = handle.convertAuthToken(authToken, useRepoDb=True)
-            except ProductNotFound:
-                # User doesn't have read permission, so they can't see the
-                # repository at all. However there are some unauthenticated calls,
-                # like GETing and PUTting changesets, so just downgrade the auth
-                # token and leave it at that.
-                authToken.user = authToken.password = 'anonymous'
+            authToken = handle.convertAuthToken(authToken, useRepoDb=True)
 
         # TODO: Push restdb setup and capsule filtering down to repository.py,
         # otherwise shims won't have access to it.

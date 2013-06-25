@@ -306,6 +306,9 @@ class Image(modellib.XObjIdModel):
         # XXX FIXME REALLY BADLY: this needs to be cached
         uqDeploy = dict()
         uqLaunch = dict()
+        tgtToLaunchProfilesMap = {}
+        for profile in tgtmodels.TargetLaunchProfile.objects.select_related(depth=2):
+            tgtToLaunchProfilesMap.setdefault(profile.target_id, []).append(profile)
         for bfile in image.files.all():
             for tdi in bfile.target_deployable_images.all():
                 # If target_image_id is None, the image is not deployed,
@@ -340,6 +343,22 @@ class Image(modellib.XObjIdModel):
                 descriptorHref="descriptors/launch/file/%s" % (buildFileId),
                 enabled=enabled, resources = [ tgt ])
             actions.action.append(action)
+
+        for targetId, (buildFileId, enabled) in sorted(uqLaunch.items()):
+            tgt = modellib.Cache.get(tgtmodels.Target, pk=targetId)
+            profiles = tgtToLaunchProfilesMap.get(targetId, [])
+            for profile in profiles:
+                actionName = "Launch system using profile '%s' (on %s)" % (
+                        profile.name, tgt.name)
+                action = jobmodels.EventType.makeAction(
+                    jobmodels.EventType.TARGET_LAUNCH_SYSTEM,
+                    actionName=actionName,
+                    actionDescription=actionName,
+                    descriptorModel=tgt,
+                    descriptorHref="descriptors/launch/profile/%s/file/%s" % (
+                        profile.id, buildFileId),
+                    enabled=enabled, resources = [ profile, tgt ])
+                actions.action.append(action)
 
         actionName = "Cancel image build"
         enabled = (self.status < 200)

@@ -658,7 +658,11 @@ class BaseManager(models.Manager):
 
         # If this is an abstract model, we want to pass down the
         # original flags, because we've turned saving off here.
-        model = self._add_m2m_accessors(model, etreeModel, request, flags=flags)
+        try:
+            model = self._add_m2m_accessors(model, etreeModel, request, flags=flags)
+        except IntegrityError, e:
+            e.status = errors.BAD_REQUEST
+            raise
         model = self._add_list_fields(model, etreeModel, request, flags=origFlags)
         model = self._add_accessors(model, accessors)
         model = self._add_abstract_fields(model, etreeModel)

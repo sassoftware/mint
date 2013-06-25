@@ -215,6 +215,41 @@ class QuerySetTestCase(QueryTestCase):
         # FIXME: temporarily disabled, call with ignoreNodes including 'actions' ?
         # self.assertXMLEquals(response.content, testsxml.removed_child_xml)
 
+    def testQuerySetWithMissingFilter(self):
+        # RCE-1879
+        # Create queryset
+        response = self._post('query_sets/',
+            data=testsxml.queryset_post_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        xobjModel = xobj.parse(response.content)
+
+        qs1 = models.QuerySet.objects.get(
+                query_set_id=str(xobjModel.query_set.query_set_id))
+        xml = """\
+<query_set>
+  <filter_entries>
+    <filter_entry>
+      <operator>LIKE</operator>
+      <field>name</field>
+      <value>jdl</value>
+    </filter_entry>
+    <filter_entry>
+      <field/>
+      <operator>EQUAL</operator>
+      <value/>
+    </filter_entry>
+  </filter_entries>
+</query_set>
+"""
+        response = self._put("query_sets/%s" % qs1.pk,
+            username="admin", password="password",
+            data=xml)
+        self.assertEquals(response.status_code, 400)
+        xobjModel = xobj.parse(response.content)
+        self.assertEquals(xobjModel.fault.message,
+                'null value in column "field" violates not-null constraint\nDETAIL:  Failing row contains (21, null, EQUAL, null).\n')
+
     def testPostQuerySet(self):
         # show that we can add a new query set
         # get before result
