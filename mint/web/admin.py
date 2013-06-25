@@ -486,6 +486,10 @@ class AdminHandler(WebHandler):
         if action == "Cancel":
             self._redirectHttp("admin/updateServices")
 
+        if hostname:
+            # RCE-1368
+            hostname = hostname.strip()
+
         inputKwargs = {'hostname': hostname,
             'adminUser': adminUser,
             'adminPassword': adminPassword,
