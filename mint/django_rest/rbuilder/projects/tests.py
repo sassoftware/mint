@@ -594,7 +594,7 @@ class ProjectsTestCase(RbacEngine):
             for j in range(2):
                 k = 2 * i + j
                 buildFile = imagesmodels.BuildFile.objects.create(image=image,
-                        size=k, sha1='%040x' % k, title='foo-%s' % k)
+                        size=k, sha1='%040x' % k, title='foo-%s' % i)
 
                 fileUrl = imagesmodels.FileUrl.objects.create(url_type=0,
                         url='http://example.com/%s/' % k)
@@ -604,13 +604,19 @@ class ProjectsTestCase(RbacEngine):
 
         prj = stage.project
         branch = stage.project_branch
-        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/latest_image_file_by_type/%s' %
-                (prj.short_name, branch.label, stage.name, 'VIRTUAL_PC_IMAGE'))
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
+                (prj.short_name, branch.label, stage.name, 'image-1-1devel'))
         # Should be unauthenticated
         response = self._get_internal(url, follow=False)
         self.assertEquals(response.status_code, 307)
         self.assertEquals(response['Location'],
                 'http://testserver/downloadImage?fileId=4&urlType=0')
+
+        # Test 404
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
+                (prj.short_name, branch.label, stage.name, 'NoWayJoseph'))
+        response = self._get_internal(url, follow=False)
+        self.assertEquals(response.status_code, 404)
 
     def testGetProjectBranchStagesByProject(self):
         self._initProject()

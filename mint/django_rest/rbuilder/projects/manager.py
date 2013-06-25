@@ -507,16 +507,13 @@ class ProjectManager(basemanager.BaseManager):
         return images
     
     @exposed
-    def getProjectBranchStageLatestImageFileByType(self, project_short_name,
-            project_branch_label, stage_name, image_type_name):
-        imageTypeId = imagemodels.buildtypes.validBuildTypes.get(image_type_name)
-        if imageTypeId is None:
-            raise errors.ResourceNotFound()
+    def getProjectBranchStageLatestImageFile(self, project_short_name,
+            project_branch_label, stage_name, image_name):
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         buildFiles = list(
                 imagemodels.BuildFile.objects.filter(
-                    image__project_branch_stage=stage,
-                    image___image_type=imageTypeId).order_by(
+                    image__name=image_name,
+                    image__project_branch_stage=stage).order_by(
                         '-image__image_id',
                         '-size',
                         'file_id')[:1])

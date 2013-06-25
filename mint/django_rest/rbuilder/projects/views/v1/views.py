@@ -416,18 +416,18 @@ class ProjectBranchStageImagesService(service.BaseService):
     def rest_POST(self, request, project_short_name, project_branch_label, stage_name, image):
         return self.mgr.createProjectBranchStageImage(image)
 
-class ProjectBranchStageLatestImageFileByTypeService(service.BaseService):
+class ProjectBranchStageLatestImageFileService(service.BaseService):
     def get(self, request, project_short_name, project_branch_label, stage_name,
-            image_type_name):
-        return self.mgr.getProjectBranchStageLatestImageFileByType(
+            image_name):
+        return self.mgr.getProjectBranchStageLatestImageFile(
                 project_short_name, project_branch_label, stage_name,
-                image_type_name)
+                image_name)
 
     @access.anonymous
     def rest_GET(self, request, project_short_name, project_branch_label,
-            stage_name, image_type_name):
+            stage_name, image_name):
         return self.get(request, project_short_name, project_branch_label,
-                stage_name, image_type_name)
+                stage_name, image_name)
 
 class ProjectMemberService(service.BaseService):
 
