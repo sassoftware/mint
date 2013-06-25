@@ -504,6 +504,14 @@ class ProjectManager(basemanager.BaseManager):
         images.image = my_images
         images.url_key = [ project_short_name, project_branch_label, stage_name ]
         images.view_name = 'ProjectBranchStageImages'
+
+        images.latest_files = imagemodels.LatestFiles()
+        images.latest_files.latest_file = latestFiles = []
+        for img in stage.images.distinct('name').order_by('name'):
+            lf = imagemodels.LatestFile()
+            lf.image_name = img.name
+            lf.project_branch_stage = stage
+            latestFiles.append(lf)
         return images
     
     @exposed

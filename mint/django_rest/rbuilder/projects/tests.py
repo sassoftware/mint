@@ -670,9 +670,17 @@ class ProjectsTestCase(RbacEngine):
         images = xobj.parse(response.content).images
         self.failUnlessEqual(images.id, 'http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=10')
 
-        images = images.image
-        self.failUnlessEqual([ x.name for x in images ],
+        imagesNodes = images.image
+        self.failUnlessEqual([ x.name for x in imagesNodes ],
             ['image from fixture', 'image-1', 'image-2' ])
+
+        self.assertXMLEquals(xobj.toxml(images.latest_files),
+                """\
+<latest_files>
+    <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images_by_name/image-2/latest_file">
+        <image_name>image-2</image_name>
+    </latest_file>
+</latest_files>""")
 
         # Test project images too
         url = 'projects/%s' % (prj.short_name, )
