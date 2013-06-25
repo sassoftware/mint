@@ -487,7 +487,7 @@ class AdminHandler(WebHandler):
             self._redirectHttp("admin/updateServices")
 
         if hostname:
-            # RCE-1368
+            # RCE-1368: get rid of trailing spaces
             hostname = hostname.strip()
 
         inputKwargs = {'hostname': hostname,
