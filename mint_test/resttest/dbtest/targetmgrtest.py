@@ -1,14 +1,11 @@
 #!/usr/bin/python
-import os
-import testsetup
-from testutils import mock
+#
+# Copyright (c) SAS Institute Inc.
+#
 
-from conary.lib import cfgtypes
+import testsetup
 
 from mint import buildtypes
-from mint import jobstatus
-from mint import mint_error
-from mint.lib import data
 
 from mint.rest import errors
 from mint.rest.db import targetmgr
@@ -19,7 +16,6 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
     def setUp(self):
         tmgr = targetmgr.TargetManager
         mint_rephelp.MintDatabaseHelper.setUp(self)
-        tmgr.importTargetSystems = lambda *args, **kwargs: True
 
         db = self.openMintDatabase(createRepos=False)
         cu = db.cursor()

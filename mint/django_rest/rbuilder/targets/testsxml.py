@@ -35,6 +35,14 @@ target_GET = \
       <key>refresh_target_systems</key>
       <name>Refresh systems</name>
     </action>
+    <action>
+      <description>Create launch profile</description>
+      <descriptor id="http://testserver/api/v1/targets/4/descriptors/launch_profile"/>
+      <enabled>False</enabled>
+      <job_type id="http://testserver/api/v1/inventory/event_types/28"/>
+      <key>create_launch_profile</key>
+      <name>Create launch profile</name>
+    </action>
   </actions>
   <credentials_valid>false</credentials_valid>
   <description>Target Description openstack</description>
