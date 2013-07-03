@@ -542,7 +542,7 @@ class ProjectsTestCase(RbacEngine):
             branch = stage.project_branch
             imagesmodels.Image.objects.filter(project_branch=branch)
             for i in range(2):
-                name = "image-%s-%s" % (branch.name, i)
+                name = "image %s-%s" % (branch.name, i)
                 image = imagesmodels.Image(name=name,
                     description=name,
                     project_branch=branch,
@@ -578,14 +578,14 @@ class ProjectsTestCase(RbacEngine):
         actual  = [ x.name for x in imgs.image ]
         desired = [
            u'image from fixture',
-           u'image-trunk-0',
-           u'image-trunk-1',
-           u'image-1-0',
-           u'image-1-0devel',
-           u'image-1-0devel',
-           u'image-1-1',
-           u'image-1-1devel',
-           u'image-1-1devel'
+           u'image trunk-0',
+           u'image trunk-1',
+           u'image 1-0',
+           u'image 1-0devel',
+           u'image 1-0devel',
+           u'image 1-1',
+           u'image 1-1devel',
+           u'image 1-1devel'
         ]
         self.failUnlessEqual(actual, desired)
         return stageDev2
@@ -608,7 +608,7 @@ class ProjectsTestCase(RbacEngine):
         prj = stage.project
         branch = stage.project_branch
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
-                (prj.short_name, branch.label, stage.name, 'image-1-1devel'))
+                (prj.short_name, branch.label, stage.name, 'image 1-1devel'))
         # Should be unauthenticated
         response = self._get_internal(url, follow=False)
         self.assertEquals(response.status_code, 307)
@@ -631,11 +631,11 @@ class ProjectsTestCase(RbacEngine):
         self.assertXMLEquals(xobj.toxml(doc.images.latest_files),
                 """\
 <latest_files>
-  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image-1-0devel/latest_file">
-    <image_name>image-1-0devel</image_name>
+  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image%201-0devel/latest_file">
+    <image_name>image 1-0devel</image_name>
   </latest_file>
-  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image-1-1devel/latest_file">
-    <image_name>image-1-1devel</image_name>
+  <latest_file id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-1/project_branch_stages/Development/images_by_name/image%201-1devel/latest_file">
+    <image_name>image 1-1devel</image_name>
   </latest_file>
 </latest_files>""")
 
