@@ -835,7 +835,7 @@ class ProductManager(manager.Manager):
                 reqSpecs)
 
             sourceVersions = [ (n, t(), f) for (n, v, f), t in
-                itertools.izip(reqSpecs, ti) ]
+                itertools.izip(reqSpecs, ti) if t ]
 
             error = False
             for spec in allTroves:

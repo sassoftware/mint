@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(67, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(68, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -848,6 +848,24 @@ def _createTargets(db):
                     REFERENCES TargetCredentials ON DELETE CASCADE
             """)
 
+    createTable(db, 'target_launch_profile', """
+                id                      %(PRIMARYKEY)s,
+                target_id               integer             NOT NULL
+                    REFERENCES Targets ON DELETE CASCADE,
+                name                    TEXT NOT NULL,
+                description             TEXT NOT NULL,
+                descriptor_data         TEXT NOT NULL,
+                created_date            TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                modified_date           TIMESTAMP WITH TIME ZONE NOT NULL
+                    DEFAULT current_timestamp,
+                created_by integer
+                    REFERENCES "users" ("userid") ON DELETE SET NULL
+            """)
+    db.createIndex('target_launch_profile',
+            'target_launch_profile_name_uq',
+            'name', unique=True)
+
 def _createPlatforms(db):
     cu = db.cursor()
 
@@ -1464,6 +1482,10 @@ def _createInventorySchema(db, cfg):
                   description="Apply system configuration",
                   priority=105,
                   resource_type="System"),
+             dict(name="create launch profile",
+                  description="Create launch profile",
+                  priority=105,
+                  resource_type="Target"),
              ])
 
     if 'inventory_system_event' not in db.tables:
@@ -3318,6 +3340,19 @@ def _createTargetJobs(db):
                         REFERENCES Targets(targetid)
                         ON DELETE CASCADE
     )""")
+
+    createTable(db, 'jobs_job_launch_profile', """
+            id          %(PRIMARYKEY)s,
+            job_id      integer NOT NULL
+                        REFERENCES jobs_job(job_id)
+                        ON DELETE CASCADE,
+            launch_profile_id integer NOT NULL
+                        REFERENCES target_launch_profile(id)
+                        ON DELETE CASCADE
+            """)
+    db.createIndex('jobs_job_launch_profile',
+            'jobs_job_launch_profile_jid_pid_uq',
+            'job_id, launch_profile_id', unique=True)
 
 def _createJobThroughTables(db):
     createTable(db, 'jobs_job_image', """

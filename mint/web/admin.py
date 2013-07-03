@@ -135,12 +135,13 @@ class AdminHandler(WebHandler):
         authType = 'none',\
         additionalLabelsToMirror = '', useMirror = 'none')
     @intFields(projectId = -1)
-    @boolFields(allLabels = False, backupExternal=False)
+    @boolFields(allLabels = False, backupExternal=False, backgroundMirror=False)
     def processAddExternal(self, name, hostname, label, url,
                         externalUser, externalPass,
                         externalEntKey,
                         useMirror, authType, additionalLabelsToMirror,
-                        projectId, allLabels, backupExternal, *args, **kwargs):
+                        projectId, allLabels, backupExternal, backgroundMirror,
+                        *args, **kwargs):
 
 
         # strip extraneous whitespace
@@ -200,8 +201,10 @@ class AdminHandler(WebHandler):
                     self.client.addInboundMirror(projectId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
+                self.client.setBackgroundMirror(projectId, backgroundMirror)
             # remove mirroring if requested
             elif useMirror == 'none' and inboundMirror and editing:
+                self.client.setBackgroundMirror(projectId, False)
                 self.client.delInboundMirror(inboundMirror['inboundMirrorId'])
 
             verb = editing and "Edited" or "Added"
@@ -226,12 +229,14 @@ class AdminHandler(WebHandler):
         labelIdMap = self.client.getLabelsForProject(projectId)[0]
         label, labelId = labelIdMap.items()[0]
         labelInfo = self.client.getLabel(labelId)
+        backgroundMirror = bool(self.client.getBackgroundMirror(projectId))
 
         initialKwargs = {}
         initialKwargs['name'] = project.name
         initialKwargs['hostname'] = project.hostname
         initialKwargs['label'] = label
         initialKwargs['backupExternal'] = project.backupExternal
+        initialKwargs['backgroundMirror'] = backgroundMirror
 
         initialKwargs['url'] = labelInfo['url']
         initialKwargs['authType'] = labelInfo['authType']
@@ -480,6 +485,10 @@ class AdminHandler(WebHandler):
             description, action, *args, **kwargs):
         if action == "Cancel":
             self._redirectHttp("admin/updateServices")
+
+        if hostname:
+            # RCE-1368: get rid of trailing spaces
+            hostname = hostname.strip()
 
         inputKwargs = {'hostname': hostname,
             'adminUser': adminUser,

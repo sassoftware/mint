@@ -163,9 +163,9 @@ class WebHandler(object):
 
     def _clearAllMessages(self):
         for key in ('infoMsg', 'errorMsgList'):
-            if self.session.has_key(key):
+            if self.session.get(key):
                 del self.session[key]
-        self.session.save()
+                self.session.save()
 
 def normPath(path):
     """Normalize a web path by prepending a / if missing, and appending
