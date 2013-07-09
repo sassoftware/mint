@@ -157,13 +157,6 @@ class SyncTool(object):
                 WHERE project_branch_id = ?""", branchId)
         sqlStages = dict(cu)
         pdStages = [x.name for x in pd.getStages()]
-        for stage in pdStages:
-            stageHost = pd.getLabelForStage(stage).split('@')[0]
-            if stageHost != handle.fqdn:
-                log.info("Stage '%s' of product definition on label %s is on "
-                        "a different repository %s; this stage will not be "
-                        "added to the database", stage, label, stageHost)
-                pdStages.remove(stage)
         for stage in set(pdStages) - set(sqlStages):
             isPromotable = (stage != pdStages[-1] and not handle.isExternal)
             cu.execute("""INSERT INTO project_branch_stage (name, label,

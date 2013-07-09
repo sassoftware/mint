@@ -504,20 +504,26 @@ class ProjectManager(basemanager.BaseManager):
         images.image = my_images
         images.url_key = [ project_short_name, project_branch_label, stage_name ]
         images.view_name = 'ProjectBranchStageImages'
+
+        images.latest_files = imagemodels.LatestFiles()
+        images.latest_files.latest_file = latestFiles = []
+        for img in stage.images.values('name').distinct('name').order_by('name'):
+            lf = imagemodels.LatestFile()
+            lf.image_name = img['name']
+            lf.project_branch_stage = stage
+            latestFiles.append(lf)
         return images
     
     @exposed
-    def getProjectBranchStageLatestImageFileByType(self, project_short_name,
-            project_branch_label, stage_name, image_type_name):
-        imageTypeId = imagemodels.buildtypes.validBuildTypes.get(image_type_name)
-        if imageTypeId is None:
-            raise errors.ResourceNotFound()
+    def getProjectBranchStageLatestImageFile(self, project_short_name,
+            project_branch_label, stage_name, image_name):
         stage = self.getProjectBranchStage(project_short_name, project_branch_label, stage_name)
         buildFiles = list(
                 imagemodels.BuildFile.objects.filter(
-                    image__project_branch_stage=stage,
-                    image___image_type=imageTypeId).order_by(
+                    image__name=image_name,
+                    image__project_branch_stage=stage).order_by(
                         '-image__image_id',
+                        '-size',
                         'file_id')[:1])
 
         if not buildFiles:

@@ -1,10 +1,11 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import logging
 import base64
 import rpath_capsule_indexer
+import socket
 from webob import exc as web_exc
 
 from mint import maintenance
@@ -221,7 +222,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         # requests forwarded for the Conary Proxy. If it contains our
         # IP address and port, then we've already handled this request.
         via = req.headers.get("Via", "")
-        if req.host in via:
+        if socket.gethostname() in via:
             log.error('Internal Conary Proxy was attempting an infinite '
                     'loop (request %s, via %s)' % (req.host, via))
             raise web_exc.HTTPBadGateway()

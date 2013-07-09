@@ -348,6 +348,7 @@ test_get_images_from_pbs_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <images count="2" next_page="" num_pages="1" previous_page="" full_collection="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;order_by=name" end_index="1" limit="100" order_by="name" per_page="100" filter_by="" id="http://testserver/api/v1/projects/chater-foo/project_branches/chater-foo.eng.rpath.com@rpath:chater-foo-trunk/project_branch_stages/Development/images;start_index=0;limit=100;order_by=name" start_index="0">
+  <latest_files/>
   <image id="http://testserver/api/v1/images/1">
     <files/>
     <actions>

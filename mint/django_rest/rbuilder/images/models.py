@@ -34,6 +34,8 @@ class Images(modellib.Collection):
 
     actions = D(modellib.SyntheticField('jobs.Actions'),
         "actions available on the images")
+    latest_files = D(modellib.SyntheticField('LatestFiles'),
+            "Latest files for each image name")
 
     def get_url_key(self, *args, **kwargs):
         return self.url_key
@@ -370,6 +372,31 @@ class Image(modellib.XObjIdModel):
         actions.action.append(action)
 
         return actions
+
+class LatestFiles(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(tag='latest_files')
+    list_fields = ['latest_file']
+
+class LatestFile(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+
+    _xobj = xobj.XObjMetadata(tag='latest_file')
+    view_name = 'ProjectBranchStageLatestImageFile'
+
+    url = modellib.SyntheticField()
+    image_name = modellib.SyntheticField()
+    project_branch_stage = modellib.XObjHidden(
+        modellib.DeferredForeignKey('projects.Stage'))
+
+    def get_url_key(self, *args, **kwargs):
+        project = self.project_branch_stage.project
+        project_branch = self.project_branch_stage.project_branch
+        return [ project.short_name, project_branch.label,
+                self.project_branch_stage.name, self.image_name ]
 
 class BuildFiles(modellib.Collection):
     class Meta:

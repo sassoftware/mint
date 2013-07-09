@@ -127,7 +127,7 @@ class QuerySet(modellib.XObjIdModel):
         "Date the query set was created")
     modified_date = D(modellib.DateTimeUtcField(auto_now_add=True),
         "Date the query set was modified")
-    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False),
+    tagged_date = D(modellib.DateTimeUtcField(auto_now_add=False, null=True),
         "Date the query set was last tagged")
     children = D(models.ManyToManyField("self", symmetrical=False),
         "Query sets that are children of this query set")
@@ -135,7 +135,7 @@ class QuerySet(modellib.XObjIdModel):
         "Defined filter entries for this query set")
     resource_type = D(models.TextField(),
         "Name of the resource this query set operates on")
-    presentation_type = D(models.TextField(),
+    presentation_type = D(models.TextField(null=True),
         "A classification for client to use when displaying the objects.  For example, stages can be on projects, branches, platforms, etc.")
     can_modify = D(models.BooleanField(default=True),
         "Whether this query set can be deleted through the API.  Boolean, defaults to False")
