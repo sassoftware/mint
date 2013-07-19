@@ -1,12 +1,12 @@
 [global]
 server.supplemental_groups = ['apache']
 plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset', '/loadmirror/LoadMirror']
-product.productName="rPath Cloud Engine"
+product.productName="SAS App Engine"
 product.productVersion="@VERSION@"
 product.companyCopyYears="2006-2012"
 services.Services.hidden = True
 apphome.visible = True
-apphome.text = "rPath Cloud Engine"
+apphome.text = "SAS App Engine"
 
 # Wizard plugins to run in this order. 
 # -- Terms of service should always be first!
