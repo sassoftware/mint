@@ -7,7 +7,6 @@
 
 from django.db import models
 from django.db.models import related
-from xobj import xobj
 
 from mint.django_rest.rbuilder.querysets import models as qsmodels
 from mint.django_rest.rbuilder import modellib
