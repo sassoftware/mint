@@ -262,8 +262,9 @@ class SystemState(modellib.XObjIdModel):
 
     system_state_id = D(models.AutoField(primary_key=True), "the database id for the state")
     name = D(models.CharField(max_length=8092, unique=True,
-        choices=STATE_CHOICES), "the state name")
-    description = D(models.CharField(max_length=8092), "the state description")
+        choices=STATE_CHOICES), "the state name", short="The state name")
+    description = D(models.CharField(max_length=8092),
+            "the state description", short="The state description")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the state was created (UTC)")
 
     load_fields = [ name ]
@@ -351,8 +352,12 @@ class SystemType(modellib.XObjIdModel):
     )
 
     system_type_id = D(models.AutoField(primary_key=True), "the database ID for the system type")
-    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the system type")
-    description = D(models.CharField(max_length=8092), "the description of the system type")
+    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True,
+        choices=CHOICES)), "the name of the system type",
+        short="The name of the system type")
+    description = D(models.CharField(max_length=8092),
+            "the description of the system type",
+            short="The description of the system type")
     created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the system type was added to inventory (UTC)")
     infrastructure = D(models.BooleanField(), "whether or not the system type is infrastructure")
     creation_descriptor = D(modellib.XMLField(), "the descriptor of available fields to create systems of this type")
@@ -506,7 +511,8 @@ class System(modellib.XObjIdModel):
     credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
-        "the type of the system")
+        "the type of the system",
+        short="The system type")
     project_branch_stage = D(APIReadOnly(modellib.DeferredForeignKey(Stage, null=True,
         db_column="stage_id", text_field='name', related_name="+",
         on_delete=models.SET_NULL)),

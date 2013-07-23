@@ -9,6 +9,7 @@ from django.db import models
 from django.db.models import related
 from xobj import xobj
 
+from mint.django_rest.rbuilder.querysets import models as qsmodels
 from mint.django_rest.rbuilder import modellib
 
 # because we don't want to include relations of the same
@@ -29,38 +30,6 @@ LITERAL_FIELDS = [
     'Stage name'
 ]
 
-class FieldDescriptor(object):
-    _xobj = xobj.XObjMetadata(tag='field_descriptor',
-        elements=[
-            'field_label', 'field_key', 'value_type',
-            'operator_choices', 'value_options'])
-
-class FieldDescriptors(object):
-    _xobj = xobj.XObjMetadata(tag='field_descriptors')
-
-class FilterDescriptor(modellib.XObjIdModel):
-    _xobj = xobj.XObjMetadata(tag='filter_descriptor',
-        elements=['field_descriptors'],
-        attributes={'id':str})
-    view_name = 'QuerySetFilterDescriptor'
-
-    def serialize(self, *args, **kwargs):
-        self.id = self.get_absolute_url(*args, **kwargs)
-        return super(FilterDescriptor, self).serialize(*args, **kwargs)
-
-class OperatorChoices(object):
-    _xobj = xobj.XObjMetadata(tag='operator_choices')
-
-class OperatorChoice(object):
-    _xobj = xobj.XObjMetadata(tag='operator_choice')
-
-    def __init__(self, key, label):
-        self.key = key
-        self.label = label
-
-class ValueOptions(object):
-    _xobj = xobj.XObjMetadata(tag='value_options')
-
 def getFieldValueType(field):
     if isinstance(field, models.IntegerField):
         return 'int'
@@ -73,7 +42,7 @@ def getFieldValueType(field):
     return 'str'
 
 def getFieldValueOptions(field):
-    vo = ValueOptions()
+    vo = qsmodels.ValueOptions()
     vo.options = []
     if field._choices:
         for key, value in field._choices:
@@ -81,18 +50,18 @@ def getFieldValueOptions(field):
     return vo
 
 def allOperatorChoices():
-    operatorChoices = OperatorChoices()
-    operatorChoices.choices = []
+    operatorChoices = qsmodels.OperatorChoices()
+    operatorChoices.operator_choice = oclist = []
     operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('IS_NULL', None)]
     for operator in operators:
-        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
-            operator.description))
+        oclist.append(qsmodels.OperatorChoice(key=operator.filterTerm,
+            label=operator.description))
     return operatorChoices
 
 def strOperatorChoices():
-    operatorChoices = OperatorChoices()
-    operatorChoices.choices = []
+    operatorChoices = qsmodels.OperatorChoices()
+    operatorChoices.operator_choice = oclist = []
     operators = [modellib.operatorMap[o] for o in modellib.operatorMap
         if o not in ('LESS_THAN', 'LESS_THAN_OR_EQUAL', 'GREATER_THAN',
             'GREATER_THAN_OR_EQUAL', 'IS_NULL', None)]
@@ -107,17 +76,17 @@ def strOperatorChoices():
     operators.sort(cmp=operator_sorter)
 
     for operator in operators:
-        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
-            operator.description))
+        oclist.append(qsmodels.OperatorChoice(key=operator.filterTerm,
+            label=operator.description))
     return operatorChoices
 
 def boolOperatorChoices():
-    operatorChoices = OperatorChoices()
-    operatorChoices.choices = []
+    operatorChoices = qsmodels.OperatorChoices()
+    operatorChoices.operator_choice = oclist = []
     operators = [modellib.operatorMap['EQUAL'], modellib.operatorMap['NOT_EQUAL']]
     for operator in operators:
-        operatorChoices.choices.append(OperatorChoice(operator.filterTerm, 
-            operator.description))
+        oclist.append(qsmodels.OperatorChoice(key=operator.filterTerm,
+            label=operator.description))
     return operatorChoices
 
 def getFieldOperatorChoices(field):
@@ -132,8 +101,8 @@ def getFieldOperatorChoices(field):
 
     if field.null:
         operator = modellib.operatorMap['IS_NULL']
-        operatorChoices.choices.append(OperatorChoice(operator.filterTerm,
-            operator.description))
+        operatorChoices.operator_choice.append(qsmodels.OperatorChoice(
+            key=operator.filterTerm, label=operator.description))
 
     return operatorChoices
 
@@ -160,7 +129,7 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
             else:
                 _prefix = field.name
             _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
-            [fds.append(_fd) for _fd in _fds]
+            fds.extend(_fds)
         processedModels.append(field.rel.to)
     elif isinstance(field, related.RelatedObject):
         if field.model() in processedModels and prefix is not None:
@@ -171,10 +140,10 @@ def getFieldDescriptors(field, prefix=None, processedModels=[], depth=0):
             else:
                 _prefix = field.get_accessor_name()
             _fds = getFieldDescriptors(f, _prefix, processedModels, depth+1)
-            [fds.append(_fd) for _fd in _fds]
+            fds.extend(_fds)
         processedModels.append(field.model())
     else:
-        fd = FieldDescriptor()
+        fd = qsmodels.FieldDescriptor()
         if prefix:
             key = '%s.%s' % (prefix, field.name)
         else:
@@ -200,31 +169,31 @@ def _explicitlyAddSearchTerms(descriptorList, model, querySet):
     if querySet.resource_type == 'system':
 
         # ipv4 address
-        desc = FieldDescriptor()
+        desc = qsmodels.FieldDescriptor()
         desc.field_label = "System network address (ipv4)"
         desc.field_key = "networks.ip_address"
         desc.value_type = 'str'
-        desc.value_options = ValueOptions()
-        desc.value_options.options = [] 
+        desc.value_options = qsmodels.ValueOptions()
+        desc.value_options.options = []
         desc.operator_choices = allOperatorChoices()
         descriptorList.append(desc) 
-        
+
         # ipv6 address
-        desc = FieldDescriptor()
+        desc = qsmodels.FieldDescriptor()
         desc.field_label = "System network address (ipv6)"
         desc.field_key = "networks.ipv6_address"
         desc.value_type = 'str'
-        desc.value_options = ValueOptions()
-        desc.value_options.options = [] 
+        desc.value_options = qsmodels.ValueOptions()
+        desc.value_options.options = []
         desc.operator_choices = allOperatorChoices()
         descriptorList.append(desc) 
 
 def getFilterDescriptor(model, queryset):
     processedModels = []
     processedModels.append(model)
-    fd = FilterDescriptor()
-    fd.field_descriptors = FieldDescriptors()
-    fd.field_descriptors.descriptors = []
+    fd = qsmodels.FilterDescriptor()
+    fd.field_descriptors = qsmodels.FieldDescriptors()
+    fd.field_descriptors.field_descriptor = fdlist = []
     fieldNames = model._meta.get_all_field_names()
     fieldNames.sort()
     for fieldName in fieldNames:
@@ -232,14 +201,13 @@ def getFilterDescriptor(model, queryset):
             continue 
         field = model._meta.get_field_by_name(fieldName)[0]
         _fds = getFieldDescriptors(field, None, processedModels)
-        [fd.field_descriptors.descriptors.append(_fd) for _fd in _fds]
+        fdlist.extend(_fds)
 
-    _explicitlyAddSearchTerms(fd.field_descriptors.descriptors, model, queryset)
+    _explicitlyAddSearchTerms(fdlist, model, queryset)
 
     # uniquify values as some systems resolve to themselves and so forth
-    list = fd.field_descriptors.descriptors
     fds_by_name = {}
-    for x in list:
+    for x in fdlist:
         if x is None or x.field_label is None:
             continue
         if fds_by_name.has_key(x.field_label):
@@ -250,7 +218,6 @@ def getFilterDescriptor(model, queryset):
             fds_by_name[x.field_label] = x
     values = fds_by_name.values()
     values.sort(key = lambda x: str.lower(x.field_label))
-    fd.field_descriptors.descriptors = values
 
     def filter_sort(one, two):
        '''
@@ -266,6 +233,7 @@ def getFilterDescriptor(model, queryset):
            return 1
        return cmp(one.field_label, two.field_label)
 
-    fd.field_descriptors.descriptors.sort(cmp=filter_sort)
+    values.sort(cmp=filter_sort)
+    fd.field_descriptors.field_descriptor = values
     return fd
 

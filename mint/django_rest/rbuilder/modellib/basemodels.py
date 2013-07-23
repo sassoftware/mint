@@ -1567,6 +1567,9 @@ class XObjModel(models.Model):
                     if val.tag is not None:
                         tag = val.tag
                     xobjModelVal = val.serialize_value(request, tag=tag)
+                elif isinstance(val, basestring):
+                    xobjModelVal = etree.Element(list_field)
+                    xobjModelVal.text = unicode(val)
                 else:
                     xobjModelVal = val
                 etreeModel.append(xobjModelVal)

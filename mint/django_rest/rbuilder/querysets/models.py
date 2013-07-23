@@ -89,17 +89,73 @@ class QuerySets(modellib.Collection):
     list_fields = ["query_set"]
     query_set = []
 
-class FilterDescriptor(modellib.XObjIdModel):
-
-    # this is a stub for serialization of a URL only, 
-    # see the other FilterDescriptor in descriptors.py 
-
+class OperatorChoices(modellib.UnpaginatedCollection):
     class Meta:
         abstract = True
-    _xobj = xobj.XObjMetadata(attributes = {'id':str})
+    _xobj = xobj.XObjMetadata(tag='operator_choices')
+    list_fields = [ 'operator_choice' ]
 
-    id = models.AutoField(primary_key=True)
-    view_name = "QuerySetFilterDescriptor"
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and \
+                self.operator_choice == other.operator_choice
+
+class OperatorChoice(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='operator_choice')
+    key = models.TextField()
+    label = models.TextField()
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and \
+                self.key == other.key and \
+                self.label == other.label
+
+class ValueOptions(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='value_options')
+    list_fields = [ 'options' ]
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and \
+                self.options == other.options
+
+class FieldDescriptor(modellib.XObjModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='field_descriptor')
+    field_label = models.TextField()
+    field_key = models.TextField()
+    value_type = models.TextField()
+    operator_choices = modellib.SyntheticField(OperatorChoices)
+    value_options = modellib.SyntheticField(ValueOptions)
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and \
+            self.field_label == other.field_label and \
+            self.field_key == other.field_key and \
+            self.value_type == other.value_type and \
+            self.operator_choices == other.operator_choices and \
+            self.value_options == other.value_options
+
+class FieldDescriptors(modellib.UnpaginatedCollection):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='field_descriptors')
+    list_fields = [ 'field_descriptor' ]
+
+class FilterDescriptor(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(tag='filter_descriptor',
+        elements=['field_descriptors'],
+        attributes={'id':str})
+    view_name = 'QuerySetFilterDescriptor'
+    field_descriptors = modellib.SyntheticField(FieldDescriptors)
+    _querySetId = modellib.XObjHidden(models.TextField())
+
+    url_key = [ '_querySetId' ]
 
 class CollectionId(modellib.XObjIdModel):
     class Meta:

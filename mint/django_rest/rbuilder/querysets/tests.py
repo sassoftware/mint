@@ -371,6 +371,8 @@ class QuerySetTestCase(QueryTestCase):
         response = self._get("query_sets/%s/filter_descriptor/" % qsid,
             username="admin", password="password")
         self.assertEquals(response.status_code, 200)
+        self.assertXMLEquals(response.content,
+                testsxml.queryset_filter_descriptor_xml)
 
 class ConfigEnvironmentsTestCase(QueryTestCase):
 

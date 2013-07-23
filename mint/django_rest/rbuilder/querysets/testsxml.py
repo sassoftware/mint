@@ -238,3 +238,3682 @@ queryset_invalidate_post_xml = """
 </job>
 """
 
+queryset_filter_descriptor_xml = """
+<filter_descriptor id="http://testserver/api/v1/query_sets/5/filter_descriptor">
+  <field_descriptors>
+    <field_descriptor>
+      <field_label>System name</field_label>
+      <field_key>name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch created date</field_label>
+      <field_key>project_branch.created_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch description</field_label>
+      <field_key>project_branch.description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch label</field_label>
+      <field_key>project_branch.label</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch modified date</field_label>
+      <field_key>project_branch.modified_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch name</field_label>
+      <field_key>project_branch.name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch namespace</field_label>
+      <field_key>project_branch.namespace</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch platform label</field_label>
+      <field_key>project_branch.platform_label</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Branch source group</field_label>
+      <field_key>project_branch.source_group</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Build standard group?</field_label>
+      <field_key>project_branch.build_standard_group</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image count</field_label>
+      <field_key>source_image.image_count</field_key>
+      <value_type>int</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image description</field_label>
+      <field_key>source_image.description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image name</field_label>
+      <field_key>source_image.name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image output trove</field_label>
+      <field_key>source_image.output_trove</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image stage name</field_label>
+      <field_key>source_image.stage_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image status</field_label>
+      <field_key>source_image.status</field_key>
+      <value_type>int</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image status message</field_label>
+      <field_key>source_image.status_message</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image time created</field_label>
+      <field_key>source_image.time_created</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image time updated</field_label>
+      <field_key>source_image.time_updated</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image trove flavor</field_label>
+      <field_key>source_image.trove_flavor</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image trove last changed</field_label>
+      <field_key>source_image.trove_last_changed</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image trove name</field_label>
+      <field_key>source_image.trove_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Image trove version</field_label>
+      <field_key>source_image.trove_version</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project Branch ID</field_label>
+      <field_key>project_branch.branch_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project Stage id</field_label>
+      <field_key>project_branch_stage.stage_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project URL</field_label>
+      <field_key>project.project_url</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project commit email</field_label>
+      <field_key>project.commit_email</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project created date</field_label>
+      <field_key>project.created_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project database</field_label>
+      <field_key>project.database</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project description</field_label>
+      <field_key>project.description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project disabled?</field_label>
+      <field_key>project.disabled</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project domain name</field_label>
+      <field_key>project.domain_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project external?</field_label>
+      <field_key>project.external</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project hostname</field_label>
+      <field_key>project.hostname</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project modified date</field_label>
+      <field_key>project.modified_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project name</field_label>
+      <field_key>project.name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project namespace</field_label>
+      <field_key>project.namespace</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project repository hostname</field_label>
+      <field_key>project.repository_hostname</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project short name</field_label>
+      <field_key>project.short_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project type</field_label>
+      <field_key>project.project_type</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Project version</field_label>
+      <field_key>project.version</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Stage created date</field_label>
+      <field_key>project_branch_stage.created_date</field_key>
+      <value_type>datetime</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Stage label</field_label>
+      <field_key>project_branch_stage.label</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Stage modified date</field_label>
+      <field_key>project_branch_stage.modified_date</field_key>
+      <value_type>datetime</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Stage name</field_label>
+      <field_key>literal:project_branch_stage.name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Stage promotable?</field_label>
+      <field_key>project_branch_stage.promotable</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Survey ID</field_label>
+      <field_key>surveys.survey_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System Desired Trove Spec</field_label>
+      <field_key>desired_top_level_items.trove_spec</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System ID</field_label>
+      <field_key>system_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System UUID</field_label>
+      <field_key>generated_uuid</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System active jobs</field_label>
+      <field_key>has_active_jobs</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System agent port</field_label>
+      <field_key>agent_port</field_key>
+      <value_type>int</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System configuration applied</field_label>
+      <field_key>configuration_applied</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System configuration saved</field_label>
+      <field_key>configuration_set</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System description</field_label>
+      <field_key>description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System hostname</field_label>
+      <field_key>hostname</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System launch date</field_label>
+      <field_key>launch_date</field_key>
+      <value_type>datetime</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System local UUID</field_label>
+      <field_key>local_uuid</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System modified date</field_label>
+      <field_key>managementnode.modified_date</field_key>
+      <value_type>datetime</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System network address (ipv4)</field_label>
+      <field_key>networks.ip_address</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System network address (ipv6)</field_label>
+      <field_key>networks.ipv6_address</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System out of date</field_label>
+      <field_key>out_of_date</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System registration date</field_label>
+      <field_key>registration_date</field_key>
+      <value_type>datetime</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System running jobs</field_label>
+      <field_key>has_running_jobs</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System target system ID</field_label>
+      <field_key>target_system_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System target system description</field_label>
+      <field_key>target_system_description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System target system name</field_label>
+      <field_key>target_system_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>System target system state</field_label>
+      <field_key>target_system_state</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Target description</field_label>
+      <field_key>target.description</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>Target name</field_label>
+      <field_key>target.name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_key>system_type.description</field_key>
+      <field_label>The description of the system type</field_label>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+         <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+      <value_type>str</value_type>
+    </field_descriptor>
+    <field_descriptor>
+      <field_key>system_type.name</field_key>
+      <field_label>The name of the system type</field_label>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options>
+        <options>inventory</options>
+        <options>infrastructure-management-node</options>
+        <options>infrastructure-windows-build-node</options>
+      </value_options>
+      <value_type>str</value_type>
+    </field_descriptor>
+    <field_descriptor>
+      <field_key>current_state.description</field_key>
+      <field_label>The state description</field_label>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+      <value_type>str</value_type>
+    </field_descriptor>
+    <field_descriptor>
+      <field_key>current_state.name</field_key>
+      <field_label>The state name</field_label>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options>
+        <options>unmanaged</options>
+        <options>unmanaged-credentials</options>
+        <options>registered</options>
+        <options>responsive</options>
+        <options>non-responsive-unknown</options>
+        <options>non-responsive-net</options>
+        <options>non-responsive-host</options>
+        <options>non-responsive-shutdown</options>
+        <options>non-responsive-suspended</options>
+        <options>non-responsive-credentials</options>
+        <options>dead</options>
+        <options>mothballed</options>
+      </value_options>
+      <value_type>str</value_type>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User can create?</field_label>
+      <field_key>created_by.can_create</field_key>
+      <value_type>bool</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User created date</field_label>
+      <field_key>created_by.created_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User display email</field_label>
+      <field_key>created_by.display_email</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User email</field_label>
+      <field_key>created_by.email</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User full name</field_label>
+      <field_key>created_by.full_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User id</field_label>
+      <field_key>created_by.user_id</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN_OR_EQUAL</key>
+          <label>Greater than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN_OR_EQUAL</key>
+          <label>Less than or equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>GREATER_THAN</key>
+          <label>Greater than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LESS_THAN</key>
+          <label>Less than</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User last login date</field_label>
+      <field_key>created_by.last_login_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User modified date</field_label>
+      <field_key>created_by.modified_date</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
+      <field_label>User name</field_label>
+      <field_key>created_by.user_name</field_key>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+  </field_descriptors>
+</filter_descriptor>
+"""
