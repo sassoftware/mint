@@ -151,6 +151,7 @@ class FilterDescriptor(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='filter_descriptor',
         elements=['field_descriptors'],
         attributes={'id':str})
+    id = models.TextField()
     view_name = 'QuerySetFilterDescriptor'
     field_descriptors = modellib.SyntheticField(FieldDescriptors)
     _querySetId = modellib.XObjHidden(models.TextField())
