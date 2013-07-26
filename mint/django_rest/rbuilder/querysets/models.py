@@ -151,7 +151,6 @@ class FilterDescriptor(modellib.XObjIdModel):
     _xobj = xobj.XObjMetadata(tag='filter_descriptor',
         elements=['field_descriptors'],
         attributes={'id':str})
-    id = models.TextField()
     view_name = 'QuerySetFilterDescriptor'
     field_descriptors = modellib.SyntheticField(FieldDescriptors)
     _querySetId = modellib.XObjHidden(models.TextField())
@@ -287,7 +286,7 @@ class QuerySet(modellib.XObjIdModel):
         grant_matrix._parents = [self]
         etreeModel.append(grant_matrix.serialize(request, tag='grant_matrix'))
 
-        fd = FilterDescriptor(id=self.query_set_id)
+        fd = FilterDescriptor(_querySetId=self.query_set_id)
         etreeModel.append(fd.serialize(request, tag='filter_descriptor'))
 
         modellib.Etree.Node('is_top_level', text=str(self.isTopLevel()).lower(),
