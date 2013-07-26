@@ -261,7 +261,7 @@ class ProjectManager(basemanager.BaseManager):
 
         member.delete()
 
-    def saveProductVersionDefinition(self, productVersion, prodDef):
+    def saveProductVersionDefinition(self, productVersion, prodDef, forUser=None):
         # Make sure users can't overwrite proddefs on other projects by
         # tweaking their own proddef XML.
         checkFQDN = productVersion.label.split('@')[0]
@@ -274,12 +274,13 @@ class ProjectManager(basemanager.BaseManager):
         stages = prodDef.getStages()
         for stage in stages:
             promotable = ((stage.name != stages[-1].name and True) or False)
-            dbStage = models.Stage(name=str(stage.name),
-                 label=str(prodDef.getLabelForStage(stage.name)),
-                 promotable=promotable)
-            dbStage.project = productVersion.project
-            dbStage.project_branch = productVersion
-            dbStage.save()
+            models.Stage.objects.create(name=str(stage.name),
+                    label=str(prodDef.getLabelForStage(stage.name)),
+                    promotable=promotable,
+                    created_by=forUser,
+                    modified_by=forUser,
+                    project = productVersion.project,
+                    project_branch = productVersion)
 
     def setProductVersionDefinition(self, prodDef):
         cclient = self.mgr.getAdminClient(write=True)
@@ -305,13 +306,6 @@ class ProjectManager(basemanager.BaseManager):
 
         project = projectVersion.project
 
-        existing_stages = models.Stage.objects.filter(
-            project = project
-        ).all()
-        # collapse query as per Mr. Schroedinger
-        # as we'll create new rows later
-        existing_stage_pks = [ x.pk for x in existing_stages ]
-
         pd = helperfuncs.sanitizeProductDefinition(
                 projectName=project.name,
                 projectDescription=project.description or '',
@@ -328,25 +322,13 @@ class ProjectManager(basemanager.BaseManager):
             platform = platform_models.Platform.objects.select_related(depth=2
                     ).get(label=platformLabel)
             cclient = self.mgr.getAdminClient(write=True)
-            pd.rebase(cclient, platform.label)
-        self.saveProductVersionDefinition(projectVersion, pd)
+            pd.rebase(cclient, platform.label, overwriteStages=True)
+        self.saveProductVersionDefinition(projectVersion, pd, forUser=forUser)
 
         tnow = time.time()
         projectVersion.created_date = tnow
         projectVersion.modified_date = tnow
         projectVersion.save()
-
-        # get newly crated stages and assign ownership info
-        # these are created as a side effect
-        new_stages = models.Stage.objects.filter(
-               project = project
-           ).exclude(
-               pk__in = existing_stage_pks
-           ).filter()
-        for new_stage in new_stages:
-            new_stage.created_by = forUser
-            new_stage.modified_by = forUser
-            new_stage.save()
 
         self.mgr.retagQuerySetsByType('project_branch_stage', forUser)
         return projectVersion

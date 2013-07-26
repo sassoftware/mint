@@ -328,13 +328,26 @@ class ProjectsTestCase(RbacEngine):
              'postgres-private.rpath.com@rpath:postgres-private-1'])
 
     def testAddProjectVersionToProject(self):
+        # Mock the platform lookup
+        import rpath_proddef
+        def mockLoadFromRepository(slf, *args, **kwargs):
+            slf.clearStages()
+            slf.addStage('my-devel', labelSuffix='-my-devel')
+            slf.addStage('my-release', labelSuffix='')
+            return slf
+        self.mock(rpath_proddef.PlatformDefinition, 'loadFromRepository',
+                mockLoadFromRepository)
+        self.mock(rpath_proddef.PlatformDefinition, 'snapshotVersions',
+                lambda *a, **kw: None)
+
         self.addProject("foo")
         platform = platformsmodels.Platform(
-            label='label-foo', platform_name='foo-platform-name')
+            label='conary.tv@label:1', platform_name='foo-platform-name')
         platform.save()
         response = self._post('projects/foo/project_branches/',
             data=testsxml.project_version_post_with_project_xml,
             username="admin", password="password")
+
         self.assertEquals(response.status_code, 200)
         branch = xobj.parse(response.content).project_branch
         branch = models.ProjectVersion.objects.get(pk=branch.branch_id)
@@ -344,16 +357,19 @@ class ProjectsTestCase(RbacEngine):
         self.assertTrue(branch.created_date is not None)
         self.assertTrue(branch.modified_date is not None)
 
-        # FIXME: convert to XML test
         # make sure stages are there
-        # XXX project creation does not handle stage creation at the
-        # moment
-        self.assertEquals(len(branch.project_branch_stages.all()), 3)
+        stages = branch.project_branch_stages.order_by('stage_id')
+        self.assertEquals(
+                [ x.name for x in stages ],
+                [ 'my-devel', 'my-release'])
 
         # make sure creating the branch caused stages to auto vivify
         # and they have creator/modified info
-        stages = models.Stage.objects.filter(project__name='foo')
-        self.assertEquals(len(stages), 3, 'stages auto created')
+        stages = models.Stage.objects.filter(project__name='foo',
+                project_branch__name='42').order_by('stage_id')
+        self.assertEquals(
+                [ x.name for x in stages ],
+                [ 'my-devel', 'my-release'])
         for stage in stages:
             self.assertTrue(stage.created_by is not None)
             self.assertTrue(stage.modified_by is not None)

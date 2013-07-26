@@ -366,43 +366,11 @@ def collateDictByKeyPrefix(fields, coerceValues=False):
     return dicts
 
 
-def getProductVersionDefaultStagesNames():
-    """
-    Build a list containing the default stage names
-    """
-    names = []
-    stagesList = getProductVersionDefaultStagesList()
-    for stage in stagesList:
-        names.append(stage['name'])
-        
-    return names
-
 def getProductVersionDefaultStage():
     """
     Get the default stage 
     """
     return dict(name='Development', labelSuffix='-devel')
-
-def getProductVersionDefaultStagesList():
-    """
-    Build a list containing the default stages
-    """       
-    defaultStage = getProductVersionDefaultStage() 
-    return [defaultStage,
-            dict(name='QA',
-                 labelSuffix='-qa'),
-            dict(name='Release',
-                 labelSuffix='')]
-        
-def addDefaultStagesToProductDefinition(productDefinitionObj):
-    """
-    Given a product definition object, add the canned set of
-    stages to it. This function modifies the original object.
-    """
-    for stage in getProductVersionDefaultStagesList():
-        productDefinitionObj.addStage(stage['name'],
-                stage['labelSuffix'])
-    return
 
 def addDefaultPlatformToProductDefinition(productDefinition):
     """
@@ -423,6 +391,7 @@ def addDefaultPlatformToProductDefinition(productDefinition):
             productDefinition.platform.getContainerTemplates() or
             productDefinition.platform.getBuildTemplates()):
         proddef._addPlatformDefaults(productDefinition.platform)
+    productDefinition.platform.addDefaultStages()
 
 def getDefaultImageGroupName(shortname):
     """
@@ -454,9 +423,8 @@ def sanitizeProductDefinition(projectName, projectDescription,
     productDefinition.setConaryRepositoryHostname(repositoryHostname)
     productDefinition.setImageGroup(getDefaultImageGroupName(shortname))
 
-    addDefaultStagesToProductDefinition(productDefinition)
-
     addDefaultPlatformToProductDefinition(productDefinition)
+    productDefinition.copyStages(productDefinition.platform)
 
     return productDefinition
 

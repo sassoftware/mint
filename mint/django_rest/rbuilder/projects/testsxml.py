@@ -132,6 +132,7 @@ project_version_post_with_project_xml = """\
     <name>42</name>
     <build_standard_group>true</build_standard_group>
     <platform id="http://testserver/api/v1/platforms/1"/>
+    <platform_label>conary.tv@label:1</platform_label>
   </project_branch>
 """
 
