@@ -78,7 +78,7 @@ class VersionsTestCase(XMLTestCase):
   <targets id="http://testserver/api/v1/targets"/>
   <version_info>
     <conary_version>conary-version-42</conary_version>
-    <product_definition_schema_version>4.4</product_definition_schema_version>
+    <product_definition_schema_version>4.5</product_definition_schema_version>
     <rbuilder_version>mint-version-42</rbuilder_version>
     <rmake_version>rmake-version-42</rmake_version>
   </version_info>
