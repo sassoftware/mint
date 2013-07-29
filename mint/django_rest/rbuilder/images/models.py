@@ -267,12 +267,12 @@ class Image(modellib.XObjIdModel):
             return None
         return self.metadata.asDict()
 
-    def save(self):
+    def save(self, *args, **kwargs):
         if self.image_type is not None:
             imageType = ImageType.fromXobjModel(self.image_type)
             if self._image_type != imageType.image_type_id:
                 self._image_type = imageType.image_type_id
-        return modellib.XObjIdModel.save(self)
+        return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def _computeActions(self):
         if self._image_type == buildtypes.DEFERRED_IMAGE and self.base_image:

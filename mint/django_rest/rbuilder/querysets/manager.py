@@ -526,7 +526,6 @@ class QuerySetManager(basemanager.BaseManager):
         # and don't descend below at all.
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
-        lookupFn = self._searchMethod(querySet)
         if stale or not use_tags:
             # if use_tags is true, attempt to use tags *WHERE* possible in
             # subquerysets, asking each if they are stale or not.  If stale
@@ -537,6 +536,7 @@ class QuerySetManager(basemanager.BaseManager):
             self._tagSingleQuerySetTransitive(querySet, qsAllResult)
             self._updateQuerySetTaggedDate(querySet)
         else:
+            lookupFn = self._searchMethod(querySet)
             qsAllResult = self._getQuerySetAllResultFast(querySet, lookupFn)
 
         resourceCollection = self._getResourceCollection(querySet, qsAllResult, for_user=for_user)
@@ -758,7 +758,6 @@ class QuerySetManager(basemanager.BaseManager):
         '''
         querySet = self._querySet(querySetId)
         stale = self._areResourceTagsStale(querySet)
-        lookupFn = self._searchMethod(querySet)
         result_data = self._getQuerySetChildResult(querySet)
         resourceCollection = self._getResourceCollection(querySet, result_data, for_user=for_user)
         resourceCollection.view_name = "QuerySetChildResult"
