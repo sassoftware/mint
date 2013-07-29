@@ -1073,7 +1073,6 @@ class ImagesTestCase(RbacEngine):
         self.assertEqual(img.project_branch_stage_id, projectBranchStageId)
 
     def testImageOrdering(self):
-        project = projectsmodels.Project.objects.get(project_id=1)
         user = usermodels.User.objects.get(user_name='ExampleDeveloper')
         stage = projectsmodels.Stage.objects.filter(
             project__short_name='chater-foo',
