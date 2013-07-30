@@ -1071,3 +1071,32 @@ class ImagesTestCase(RbacEngine):
         img = models.Image.objects.get(image_id=imageId)
         self.assertEqual(img.project_branch_id, projectBranchId)
         self.assertEqual(img.project_branch_stage_id, projectBranchStageId)
+
+    def testImageOrdering(self):
+        user = usermodels.User.objects.get(user_name='ExampleDeveloper')
+        stage = projectsmodels.Stage.objects.filter(
+            project__short_name='chater-foo',
+            project_branch__name='1',
+            name='Development')[0]
+        for name in [ 'a', 'b', 'c', 'A', 'B', 'C' ]:
+            img = models.Image(name=name,
+                    project_branch_stage=stage,
+                    created_by=user,
+                    status=300)
+            self.mgr.createImageBuild(img, for_user=user)
+        self.mgr.commit()
+        response = self._get('query_sets/%s/all;order_by=name' % self.all_images.query_set_id,
+                username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(
+                [ x.name for x in doc.images.image ],
+                ['A', 'B', 'C', 'a', 'b', 'c'])
+        # Same deal, reverse order
+        response = self._get('query_sets/%s/all;order_by=-name' % self.all_images.query_set_id,
+                username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(
+                [ x.name for x in doc.images.image ],
+                ['c', 'b', 'a', 'C', 'B', 'A'])
