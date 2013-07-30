@@ -48,7 +48,11 @@ class SyncTool(object):
         self._platformMap = None
 
     def syncAll(self):
+        seen = set()
         for handle in self.reposManager.iterRepositories():
+            if handle.fqdn in seen:
+                continue
+            seen.add(handle.fqdn)
             self._syncReposMaybe(handle)
 
     def syncReposByFQDN(self, fqdn):
