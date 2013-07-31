@@ -191,14 +191,6 @@ event_types_xml="""\
     <resource_type>Target</resource_type>
     <system_events/>
   </event_type>
-  <event_type id="http://testserver/api/v1/inventory/event_types/21">
-    <description>Capture a system's image</description>
-    <job_type_id>21</job_type_id>
-    <name>system capture</name>
-    <priority>105</priority>
-    <resource_type>System</resource_type>
-    <system_events/>
-  </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/22">
     <description>Configure target</description>
     <job_type_id>22</job_type_id>
@@ -1057,14 +1049,6 @@ systems_xml = """\
         <name>System scan</name>
       </action>
       <action>
-        <description>Capture a system's image</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/capture"/>
-        <enabled>false</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-        <key>system_capture</key>
-        <name>System capture</name>
-      </action>
-      <action>
         <description>Update your system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
         <enabled>False</enabled>
@@ -1183,14 +1167,6 @@ systems_xml = """\
         <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
         <key>system_scan</key>
         <name>System scan</name>
-      </action>
-      <action>
-        <description>Capture a system's image</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
-        <enabled>false</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-        <key>system_capture</key>
-        <name>System capture</name>
       </action>
       <action>
         <description>Update your system</description>
@@ -1454,14 +1430,6 @@ system_xml = """\
       <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
       <key>system_scan</key>
       <name>System scan</name>
-    </action>
-    <action>
-      <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-      <key>system_capture</key>
-      <name>System capture</name>
     </action>
     <action>
       <description>Update your system</description>
@@ -1871,14 +1839,6 @@ system_target_xml = """\
       <key>system_scan</key>
       <name>System scan</name>
     </action>
-    <action>
-      <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
-      <enabled>true</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-      <key>system_capture</key>
-      <name>System capture</name>
-   </action>
     <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
@@ -2331,14 +2291,6 @@ system_with_target = """\
       <name>System scan</name>
     </action>
     <action>
-      <description>Capture a system's image</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/capture"/>
-      <enabled>true</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-      <key>system_capture</key>
-      <name>System capture</name>
-    </action>
-    <action>
       <description>Update your system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
       <enabled>False</enabled>
@@ -2597,14 +2549,6 @@ retirement_xml = """
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
       <key>system_assimilation</key>
       <description>Assimilate system</description>
-    </action>
-    <action>
-      <name>System capture</name>
-      <job_type id="http://testserver/api/v1/inventory/event_types/21"/>
-      <enabled>false</enabled>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/capture"/>
-      <key>system_capture</key>
-      <description>Capture a system's image</description>
     </action>
     <action>
         <description>Apply system configuration</description>

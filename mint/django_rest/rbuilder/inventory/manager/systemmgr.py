@@ -1083,12 +1083,6 @@ class SystemManager(basemanager.BaseManager):
             target_type__name=targetTypeName, name=targetName)
 
     @exposed
-    def captureSystem(self, system, params):
-        if not system.target_id:
-            raise errors.SystemNotDeployed()
-        # XXX more stuff to happen here
-
-    @exposed
     def addLaunchedSystems(self, systems, job=None, forUser=None):
         img = None
         configurationData = None
@@ -2196,7 +2190,6 @@ class SystemManager(basemanager.BaseManager):
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
             assimilation = self.getDescriptorAssimilation,
-            capture      = self.getDescriptorCaptureSystem,
             configure    = self.getDescriptorConfigure,
             preview      = self.getDescriptorPreview,
             update       = self.getDescriptorUpdate,
@@ -2280,35 +2273,6 @@ class SystemManager(basemanager.BaseManager):
             # gets caught somewhere up the chain (which we should fix)
             raise Exception("failed to schedule event")
         return event
-
-    def getDescriptorCaptureSystem(self, systemId, *args, **kwargs):
-        system = models.System.objects.get(pk=systemId)
-        DriverClass = targetmodels.Target.getDriverClassForTargetId(system.target_id)
-        if not hasattr(DriverClass, "drvCaptureSystem"):
-            raise errors.InvalidData(msg="drvCaptureSystem not supported")
-
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=DriverClass.systemCaptureXmlData)
-        descr.setRootElement("descriptor_data")
-        field = descr.getDataField('instanceId')
-        field.set_default([system.target_system_id])
-        from mint.django_rest.rbuilder.projects import models as projmodels
-        # XXX Needs RBAC here
-        stages = sorted((x.stage_id, self._makeStageLabel(x)) for x in projmodels.Stage.objects.all())
-        descr.addDataField('stageId',
-            descriptions = 'Project Stage',
-            required = True,
-            type = descr.EnumeratedType(descr.ValueWithDescription(
-                                            str(sid), descriptions=slabel)
-                for sid, slabel in stages),
-            default=str(stages[0][0]))
-        imageImportDescriptor = self.getImageImportMetadataDescriptor()
-        for f in imageImportDescriptor.getDataFields():
-            # The flex implementation assumes structured objects
-            # whenever they see a dot, so avoid that for now
-            f.set_name(f.get_name().replace('metadata.', 'metadata_'))
-            descr.addDataField(f)
-        return descr
 
     @classmethod
     def _makeStageLabel(cls, stage):

@@ -4661,28 +4661,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         self.assertEquals([ j.job_type.name for j in savedsystem.jobs.all() ],
             ['system apply configuration'])
 
-    def testCaptureSystem(self):
-        user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
-        self.mgr.user = user2
-        params = dict(
-            target_system_id = "target-system-id-001",
-            target_system_name = "target-system-name 001",
-            target_system_description = "target-system-description 001",
-            target_system_state = "Frisbulating",
-            _ssl_client_certificate = "ssl client certificate 001",
-            _ssl_client_key = "ssl client key 001",
-        )
-        dnsName = 'dns-name-1'
-        system = self.newSystem(**params)
-        system = self.mgr.addLaunchedSystem(system,
-            dnsName=dnsName,
-            targetName=self.tgt2.name,
-            targetType=self.tgt2.target_type)
-
-        stage = projectmodels.Stage.objects.filter(project__name='chater-foo',
-            name='Development')[0]
-        params = dict(stage=stage, imageName="foo image")
-        self.mgr.captureSystem(system, params)
 
 class CollectionTest(XMLTestCase):
     fixtures = ['system_collection']

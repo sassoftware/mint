@@ -966,12 +966,6 @@ class System(modellib.XObjIdModel):
             # survey it.
             configureEnabled = bool(self.configuration is not None)
 
-        capture_enabled = False
-        if self.target_id:
-            drvCls = targetmodels.Target.getDriverClassForTargetId(
-                self.target_id)
-            capture_enabled = hasattr(drvCls, "drvCaptureSystem")
-
         actions.action.extend([
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_ASSIMILATE,
@@ -987,13 +981,6 @@ class System(modellib.XObjIdModel):
                 descriptorModel=self,
                 descriptorHref="descriptors/survey_scan",
                 enabled=scanEnabled,
-            ),
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_CAPTURE,
-                actionName="System capture",
-                descriptorModel=self,
-                descriptorHref="descriptors/capture",
-                enabled=capture_enabled,
             ),
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_UPDATE,
