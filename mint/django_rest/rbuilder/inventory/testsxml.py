@@ -191,6 +191,14 @@ event_types_xml="""\
     <resource_type>Target</resource_type>
     <system_events/>
   </event_type>
+  <event_type id="http://testserver/api/v1/inventory/event_types/21">
+    <description>Capture a system's image</description>
+    <job_type_id>21</job_type_id>
+    <name>system capture</name>
+    <priority>105</priority>
+    <resource_type>System</resource_type>
+    <system_events/>
+  </event_type>
   <event_type id="http://testserver/api/v1/inventory/event_types/22">
     <description>Configure target</description>
     <job_type_id>22</job_type_id>
