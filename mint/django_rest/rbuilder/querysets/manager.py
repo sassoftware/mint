@@ -295,13 +295,14 @@ class QuerySetManager(basemanager.BaseManager):
                 continue
             # assume static until proven otherwise
             static = True
-            if len(qs.filter_entries.all()) > 0:
+            if qs.filter_entries.count() > 0:
                 static = False
             for kid in qs.children.all():
-                if not kid.is_static:
-                    static=False
+                if not static:
+                    break
+                static = kid.is_static
             if querySet.is_static != static:
-                models.QuerySet.objects.filter(pk=qs.pk).update(is_static=static)
+                qs.update(is_static=static)
 
     @exposed
     def deleteQuerySet(self, querySet):

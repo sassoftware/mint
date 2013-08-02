@@ -388,6 +388,122 @@ class UsersTestCase(RbacEngine):
         self.failUnlessEqual(fault.code, '404')
         self.failUnlessEqual(fault.message, 'The specified user does not exist')
 
+    def testQuerysetLeakingDeletedUsers(self):
+        # Create child queryset, filtering by testuser
+        qsxml = """
+<query_set>
+  <filter_entries>
+    <filter_entry>
+      <field>user_name</field>
+      <operator>LIKE</operator>
+      <value>testuser</value>
+    </filter_entry>
+  </filter_entries>
+  <name>child</name>
+  <resource_type>user</resource_type>
+  <description>User name like testuser</description>
+</query_set>"""
+
+        response = self._post('query_sets/',
+            data=qsxml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        childQsId = doc.query_set.id
+
+        # Create parent queryset
+        qsxml = """
+<query_set>
+  <children>
+    <query_set id="%(id)s"/>
+  </children>
+  <name>parent</name>
+  <resource_type>user</resource_type>
+  <description>Parent of a child queryset</description>
+</query_set>""" % dict(id=childQsId)
+
+        response = self._post('query_sets/',
+            data=qsxml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        parentQsId = int(doc.query_set.query_set_id)
+
+        # Make sure we see one testuser
+        users = self._getUsers()
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'admin',
+                'testuser',
+                'test-rce1341',
+                'ExampleSysadmin',
+                'ExampleDeveloper',
+                'ExampleIntern',
+            ])
+
+        # Check child and parent qs
+        users = self._getUsers(childQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'testuser',
+            ])
+
+        users = self._getUsers(parentQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'testuser',
+            ])
+
+
+        # Create new users
+        newUserIds = []
+        for i in range(3):
+            xml = testsxml.users_post_xml.replace('dcohn',
+                    'testuser%03d' % i)
+            response = self._post('users/',
+                data=xml,
+                username='admin', password='password'
+            )
+            self.failUnlessEqual(response.status_code, 200)
+
+            doc = xobj.parse(response.content)
+            newUserIds.append(int(doc.user.user_id))
+
+        users = self._getUsers(parentQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'testuser',
+                'testuser000',
+                'testuser001',
+                'testuser002',
+            ])
+
+        response = self._delete('users/%s' % newUserIds[1],
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 204)
+
+        users = self._getUsers(parentQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'testuser',
+                'testuser000',
+                'testuser002',
+            ])
+
+    def _getUsers(self, qsId=None):
+        if qsId is None:
+            url = 'users'
+        else:
+            url = 'query_sets/%s/all' % str(qsId).rsplit('/', 1)[-1]
+        response = self._get(url,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        users = doc.users.user
+        if not isinstance(users, list):
+            users = [ users ]
+        return users
+
     def testUserGetIsAdmin(self):
         user = models.User.objects.get(user_name='admin')
         self.failUnlessEqual(user.is_admin, True)

@@ -374,6 +374,53 @@ class QuerySetTestCase(QueryTestCase):
         self.assertXMLEquals(response.content,
                 testsxml.queryset_filter_descriptor_xml)
 
+    def testQuerySetUpdateResetsIsStatic(self):
+        # RCE-1926
+        qsxml = """
+<query_set>
+  <can_modify>true</can_modify>
+  <children/>
+  <chosen_members/>
+  <config_environments/>
+  <description/>
+  <filter_entries/>
+  <is_top_level>false</is_top_level>
+  <name>foobar1</name>
+  <resource_type>user</resource_type>
+</query_set>
+"""
+        response = self._post('query_sets/',
+            data=qsxml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        childQsId = int(doc.query_set.query_set_id)
+
+        qs = models.QuerySet.objects.get(query_set_id=childQsId)
+        self.assertEquals(qs.is_static, True)
+
+        # Add filter_entries
+        qsxml = """
+<query_set>
+  <filter_entries>
+    <filter_entry>
+      <field>user_name</field>
+      <operator>LIKE</operator>
+      <value>testuser</value>
+    </filter_entry>
+  </filter_entries>
+</query_set>"""
+
+        response = self._put('query_sets/%s' % qs.query_set_id,
+            data=qsxml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+
+        qs = models.QuerySet.objects.get(query_set_id=qs.query_set_id)
+        self.assertEquals(qs.filter_entries.count(), 1)
+        self.assertEquals(qs.is_static, False)
+
+
 class ConfigEnvironmentsTestCase(QueryTestCase):
 
     fixtures = ['system_collection']
