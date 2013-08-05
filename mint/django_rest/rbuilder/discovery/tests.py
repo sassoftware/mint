@@ -89,3 +89,16 @@ class VersionsTestCase(XMLTestCase):
     </schemas>
   </xml_resources>
 </api_version>""")
+
+    def testAccessViaRepeaterIsHttps(self):
+        # RCE-2021
+        self._mockConfigInfo()
+        response = self._get('/api',
+            headers={'X-rPath-Repeater' : 'does not matter'})
+        self.failUnlessEqual(response.status_code, 200)
+        self.assertXMLEquals(response.content, """\
+<api>
+  <api_versions>
+    <api_version description="rBuilder REST API version 1" id="https://testserver:80/api/v1" name="v1"/>
+  </api_versions>
+</api>""")

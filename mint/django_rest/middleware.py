@@ -322,6 +322,9 @@ class RequestSanitizationMiddleware(BaseMiddleware):
         # urljoin which strips off the last component
         if not request.path.endswith('/'):
             request.path += '/'
+        from mint.django_rest import deco
+        if deco.getHeaderValue(request, 'X-rPath-Repeater'):
+            request.META['wsgi.url_scheme'] = 'https'
         return None
 
 class SetMethodRequestMiddleware(BaseMiddleware):
