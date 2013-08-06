@@ -490,6 +490,55 @@ class UsersTestCase(RbacEngine):
                 'testuser002',
             ])
 
+    def testQuerysetLeakingDeletedUsers2(self):
+        # RCE-1926
+        # Create child queryset, filtering by testuser
+        qsxml = """
+<query_set>
+  <filter_entries>
+    <filter_entry>
+      <field>user_name</field>
+      <operator>NOT_EQUAL</operator>
+      <value>other</value>
+    </filter_entry>
+  </filter_entries>
+  <name>child</name>
+  <resource_type>user</resource_type>
+  <description>User name like testuser</description>
+</query_set>"""
+
+        response = self._post('query_sets/',
+            data=qsxml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        childQsId = doc.query_set.id
+
+        users = self._getUsers(childQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'admin',
+                'testuser',
+                'test-rce1341',
+                'ExampleSysadmin',
+                'ExampleDeveloper',
+                'ExampleIntern',
+            ])
+
+        response = self._delete('users/%s' % users[2].user_id,
+            username='admin', password='password')
+        self.assertEquals(response.status_code, 204)
+
+        users = self._getUsers(childQsId)
+        self.assertEquals([ x.user_name for x in users ],
+            [
+                'admin',
+                'testuser',
+                'ExampleSysadmin',
+                'ExampleDeveloper',
+                'ExampleIntern',
+            ])
+
     def _getUsers(self, qsId=None):
         if qsId is None:
             url = 'users'

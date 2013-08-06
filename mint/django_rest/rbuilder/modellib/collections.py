@@ -520,10 +520,10 @@ def filterDjangoQuerySet(djangoQuerySet, field, operator, value,
     # never be able to list a deleted user account, they are 
     # present for admin metadata only
     if queryset and queryset.resource_type == 'user':
-        filtDict['deleted'] = False 
+        djangoQuerySet = djangoQuerySet.filter(deleted=False)
     # image querysets should not show non-successful images
     if queryset and queryset.resource_type == 'image':
-        filtDict['status'] = FINISHED
+        djangoQuerySet = djangoQuerySet.filter(status=FINISHED)
 
     if operator.startswith('NOT_'):
         qs = djangoQuerySet.filter(~Q(**filtDict))
