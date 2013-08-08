@@ -398,7 +398,7 @@ class Stages(modellib.Collection):
     list_fields = ["project_branch_stage"]
 
     def get_url_key(self, *args, **kwargs):
-        return self._url_key
+        return getattr(self, '_url_key', [])
 
 class Stage(modellib.XObjIdModel):
     class Meta:

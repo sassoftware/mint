@@ -420,6 +420,27 @@ class QuerySetTestCase(QueryTestCase):
         self.assertEquals(qs.filter_entries.count(), 1)
         self.assertEquals(qs.is_static, False)
 
+    def testQuerySetFilteredWrongResource(self):
+        # RCE-2070
+        qsxml = """
+<query_set>
+  <name>foobar1</name>
+  <resource_type>project_branch_stage</resource_type>
+</query_set>
+"""
+        response = self._post('query_sets/',
+            data=qsxml,
+            username="admin", password="password")
+
+        doc = xobj.parse(response.content)
+        childQsId = int(doc.query_set.query_set_id)
+
+        response = self._get('query_sets/%s/filtered' % childQsId,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 200)
+        doc = xobj.parse(response.content)
+        self.assertEquals(doc.project_branch_stages.full_collection,
+                'http://testserver/api/v1/query_sets/%s/filtered' % childQsId)
 
 class ConfigEnvironmentsTestCase(QueryTestCase):
 

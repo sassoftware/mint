@@ -704,8 +704,7 @@ class QuerySetManager(basemanager.BaseManager):
         stale = self._areResourceTagsStale(querySet)
         resultData = self._getQuerySetFilteredResult(querySet)
         resourceCollection = self._getResourceCollection(querySet, resultData, for_user=for_user)
-        resourceCollection.view_name = "Systems"
-        resourceCollection._parents = []
+        resourceCollection.view_name = "QuerySetFilteredResult"
         resourceCollection.filter_by = querySet.getFilterBy()
         return resourceCollection
 
