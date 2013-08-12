@@ -28,7 +28,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(68, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(69, 0)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -429,7 +429,8 @@ def _createBuilds(db):
             statusMessage        text                       DEFAULT '',
             output_trove         text,
             base_image           integer
-                REFERENCES Builds ON DELETE SET NULL
+                REFERENCES Builds ON DELETE SET NULL,
+            image_model         text
         ) %(TABLEOPTS)s """ % db.keywords)
         db.tables['Builds'] = []
 

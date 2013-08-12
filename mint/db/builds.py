@@ -30,6 +30,7 @@ class BuildsTable(database.KeyedTable):
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
               'buildCount', 'productVersionId', 'stageName',
               'status', 'statusMessage', 'job_uuid', 'base_image',
+              'image_model',
               ]
 
     def iterBuildsForProject(self, projectId):
@@ -57,13 +58,20 @@ class BuildsTable(database.KeyedTable):
         cu.execute("""UPDATE Builds SET troveName=?,
                                           troveVersion=?,
                                           troveFlavor=?,
-                                          troveLastChanged=?
+                                          troveLastChanged=?,
+                                          image_model=NULL
                       WHERE buildId=?""",
                    troveName, troveVersion,
                    troveFlavor, time.time(),
                    buildId)
         self.db.commit()
         return 0
+
+    def setModel(self, buildId, imageModel):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Builds SET image_model = ? WHERE buildId = ?",
+                ''.join(imageModel), buildId)
+        self.db.commit()
 
     def _getStageId(self, cu, projectBranchId, stageName):
         cu.execute("""SELECT stage_id FROM project_branch_stage

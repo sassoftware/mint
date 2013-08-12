@@ -5524,3 +5524,14 @@ class MigrateTo_68(SchemaMigration):
         """)
         return True
 
+
+class MigrateTo_69(SchemaMigration):
+    '''diamond'''
+    Version = (69, 0)
+
+    def migrate(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD image_model text")
+        return True
+
+
