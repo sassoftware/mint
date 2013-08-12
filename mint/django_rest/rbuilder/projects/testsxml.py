@@ -385,6 +385,7 @@ test_get_images_from_pbs_xml = \
     <jobs id="http://testserver/api/v1/images/1/jobs"/>
     <description/>
     <image_id>1</image_id>
+    <image_model/>
     <trove_last_changed></trove_last_changed>
     <time_updated>2011-11-30T14:48:20.430000+00:00</time_updated>
     <name>image from fixture</name>
@@ -431,6 +432,7 @@ test_get_images_from_pbs_xml = \
     <jobs id="http://testserver/api/v1/images/2/jobs"/>
     <description>image-1</description>
     <image_id>2</image_id>
+    <image_model/>
     <trove_last_changed></trove_last_changed>
     <time_updated>2011-11-30T14:48:20.430000+00:00</time_updated>
     <name>image-1</name>

@@ -239,6 +239,7 @@ image_get_xml = """
   </project_branch>
   <description>image-0</description>
   <image_id>1</image_id>
+  <image_model/>
   <time_created></time_created>
   <time_updated></time_updated>
   <name>image-0</name>
