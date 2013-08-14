@@ -1796,22 +1796,21 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     and architecture.flavor or '')
 
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(groupList, flavorSet, architecture)
-            if not nvfs:
+            groupTup = self._resolveTrove(groupList, flavorSet, architecture)
+            if not groupTup:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
                     (buildGroup, buildFlavor))))
                 continue
-            groupTup = nvfs[0]
 
             imageModel = []
             for item in pd.getSearchPaths():
                 matches = searchTroves.get(item.getTroveTup(), ())
-                matches = self._resolveTrove(matches, flavorSet, architecture)
-                if matches:
+                searchTup = self._resolveTrove(matches, flavorSet, architecture)
+                if searchTup:
                     imageModel.append('search %s\n' %
-                            self._formatTupForModel(matches[0]))
+                            self._formatTupForModel(searchTup))
             imageModel.append('install %s\n' %
                     self._formatTupForModel(groupTup))
             # Store a build with options for the best match for each build
@@ -1988,16 +1987,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
     def _resolveTrove(self, groupList, flavorSet, archFlavor):
         '''
-        Return a list of trove tuples matching C{troveName},
-        C{troveLabel}, satisfying flavor constraints.  result is sorted
-        according to flavor score.  The repository backing the project at
-        C{projectId} will be used.
+        Return the best matching trove tuple from C{groupList} given flavor
+        constraints for the build.
 
-        @return: List of trove tuples matching the query
-        @rtype: list
+        @return: Matching trove tuple, or None if no match exists
+        @rtype: TroveTuple
         '''
         if not groupList:
-            return []
+            return None
         # Get the major architecture from filterFlavor
         filterArch = helperfuncs.getArchFromFlavor(archFlavor)
         completeFlavor = deps.overrideFlavor(flavorSet, archFlavor)
@@ -2012,17 +2009,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if helperfuncs.getArchFromFlavor(x[2]) in ('', filterArch) ]
         if not archMatches:
             # Nothing even had the correct architecture, bail out.
-            return []
+            return None
+        # Filter out old group versions, which show up here if they have a
+        # flavor that is no longer present in the latest version
         maxVersion = max(x[1] for x in archMatches)
         latest = [x for x in archMatches if x[1] == maxVersion]
-        if len(latest) < 2:
-            # A single group flavor matched the architecture so no need for
-            # flavor scoring.
-            return latest
-        scored = sorted((x[2].score(completeFlavor), x) for x in latest)
-        maxScore = scored[-1][0]
-        return sorted([ x[1] for x in scored if x[0] == maxScore ],
-                      key=lambda x: x[2])[-1:]
+        # Score each group flavor against the filter
+        scored = sorted((completeFlavor.score(x[2]), x) for x in latest)
+        # Discard flavors that are not satisfied at all
+        scored = [(score, x) for (score, x) in scored if score is not False]
+        if not scored:
+            return None
+        # Pick the highest scoring result
+        return sorted(scored)[-1][1]
 
     def _deleteBuild(self, buildId, force=False):
         if not self.builds.buildExists(buildId)  and not force:
