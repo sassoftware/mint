@@ -50,16 +50,16 @@ class Script(postgres_major_migrate.Script):
         self.loadConfig(options.config_file)
         self.resetLogging(quiet=options.quiet)
 
-        self.stopPostgres()
-
+        currentMeta = self.getCurrentMeta()
         nextMeta = self.getNextMeta()
-        if options.init:
+        if currentMeta and currentMeta.dataDir == nextMeta.dataDir:
+            return 0
+
+        self.stopPostgres()
+        if not currentMeta:
             self.initdb(nextMeta)
         else:
-            currentMeta = self.getCurrentMeta()
-            if currentMeta.dataDir != nextMeta.dataDir:
-                self.migrateMeta(currentMeta, nextMeta)
-
+            self.migrateMeta(currentMeta, nextMeta)
         self.startPostgres()
 
     def stopPostgres(self):
