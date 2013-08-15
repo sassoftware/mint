@@ -4,25 +4,26 @@
 
 static_files =				\
 	add-lvm-disk			\
-	add-windows-build-service       \
+	add-windows-build-service	\
 	apply-proxy-settings		\
 	check-repository		\
 	create-platforms		\
 	deleteproject			\
-	enable-platforms	\
+	enable-platforms		\
 	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
 	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
+	post-install			\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\
 	set-authuserpass		\
+	set-password			\
 	update-package-index		\
 	update-package-index-external	\
-	set-password                    \
 	$(generic_scripts)		\
 
 
