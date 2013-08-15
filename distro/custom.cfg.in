@@ -1,6 +1,6 @@
 [global]
 server.supplemental_groups = ['apache']
-plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset', '/loadmirror/LoadMirror']
+plugins.disable = ['/configure/ConaryConf', '/flipflop/Update', '/factoryreset/FactoryReset']
 product.productName="SAS App Engine"
 product.productVersion="@VERSION@"
 product.companyCopyYears="2006-2012"

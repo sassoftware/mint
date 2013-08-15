@@ -4,7 +4,7 @@
 # All rights reserved
 #
 
-SUBDIRS = inboundmirror outboundmirror loadmirror mcpconsole rmakemanagement rbasetup
+SUBDIRS = inboundmirror outboundmirror mcpconsole rmakemanagement rbasetup
 
 extra_dist = __init__.py
 

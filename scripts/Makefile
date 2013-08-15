@@ -4,16 +4,12 @@
 
 static_files =				\
 	add-lvm-disk			\
-	add-windows-build-service	\
 	apply-proxy-settings		\
-	check-repository		\
 	create-platforms		\
 	deleteproject			\
 	enable-platforms		\
-	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
-	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
 	post-install			\
@@ -42,7 +38,6 @@ generic_scripts = \
 	rbuilder-database		\
 	repository-sync			\
 	restore-preload-bundle		\
-	system-resolver			\
 	target-systems-import		\
 
 
