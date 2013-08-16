@@ -36,6 +36,7 @@ class Script(postgres_major_migrate.Script):
 
     port = 5439
     user = 'postgres'
+    dataTop = '/srv/pgsql'
     currentMetaPath = '/srv/rbuilder/data/postgres-meta'
     nextMetaPath = '/usr/share/rbuilder/postgres-meta'
 
@@ -113,11 +114,13 @@ class Script(postgres_major_migrate.Script):
 
         # rBuilder <= 5.8.0 doesn't have a meta file. Use the highest-numbered
         # datadir as the "current" cluster.
+        if not os.path.isdir(self.dataTop):
+            return None
         versions = []
-        for name in os.listdir('/srv/pgsql'):
+        for name in os.listdir(self.dataTop):
             if name[-9:] != '-rbuilder':
                 continue
-            path = os.path.join('/srv/pgsql', name)
+            path = os.path.join(self.dataTop, name)
             version = name[:-9]
             try:
                 parts = [int(x) for x in version.split('.')]
