@@ -11,6 +11,7 @@ static_files =				\
 	group-script			\
 	mcp-stack			\
 	migrate-all-projects		\
+	post-install			\
 	preconfigure			\
 	rbuilder-debug			\
 	rmake-reset			\
