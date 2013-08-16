@@ -134,19 +134,6 @@ else
     echo Skipping certificate generation due to chrooting
 fi
 
-# If rmake repo didn't exist, this must be a new install, so only touch the
-# platforms file.  If it did exist, it must be an update, so only run the
-# script if the platforms file doesn't exist.
-PLATFORMS_FILE=/srv/rbuilder/data/enable_platforms
-if [ "$RMAKE_EXISTED" = "0" ]
-then
-    touch "$PLATFORMS_FILE"
-elif [ ! -e "$PLATFORMS_FILE" ]
-then
-    "$scriptdir"/enable-platforms
-    touch "$PLATFORMS_FILE"
-fi
-
 if [ "x$is_chrooted" == "x" ]
 then
     # Start ancillary services

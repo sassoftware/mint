@@ -7,7 +7,6 @@ static_files =				\
 	apply-proxy-settings		\
 	create-platforms		\
 	deleteproject			\
-	enable-platforms		\
 	generate-certs.sh		\
 	group-script			\
 	mcp-stack			\
