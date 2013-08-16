@@ -126,12 +126,6 @@ class Script(postgres_major_migrate.Script):
                 parts = [int(x) for x in version.split('.')]
             except ValueError:
                 continue
-            # Sanity check: make sure there's more than the 3 default databases
-            # (template0, template1, postgres)
-            basedir = os.path.join(path, 'base')
-            if not os.path.isdir(basedir) or len(os.listdir(basedir)) <= 3:
-                log.warning("Ignoring (empty?) cluster at %s", path)
-                continue
             versions.append((parts, version, path))
         if not versions:
             # No postgres data dir found.
