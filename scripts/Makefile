@@ -1,5 +1,5 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 static_files =				\
@@ -11,7 +11,7 @@ static_files =				\
 	group-script			\
 	mcp-stack			\
 	migrate-all-projects		\
-	post-install			\
+	preconfigure			\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\

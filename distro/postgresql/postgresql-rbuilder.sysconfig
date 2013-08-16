@@ -3,7 +3,7 @@ PGDATA="/srv/pgsql/@POSTGRES_VERSION@-rbuilder"
 PGOPTS="-c config_file=/usr/share/rbuilder/postgresql.conf"
 PGLOG="/var/log/pgsql"
 PGTZ="/usr/share/zoneinfo"
-PGAUTOINIT=no
+PGAUTOINIT=yes
 PGINITOPTS="--auth=trust --encoding=UTF8 --locale=C"
 
 # Set the maximum shared memory to 10GB before postmaster starts
