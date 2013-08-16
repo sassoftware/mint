@@ -3,6 +3,8 @@
 # dump stale cached changesets after two weeks
 /usr/sbin/tmpwatch 336 /srv/rbuilder/cscache /srv/rbuilder/proxy-contents
 
+/usr/sbin/tmpwatch 336 /srv/rbuilder/sessions
+
 # clean tmp but exclude nginx's temp dirs since it only creates them on startup
 tmpwatch \
     --exclude=/srv/rbuilder/tmp/client_temp \
