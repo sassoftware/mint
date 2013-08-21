@@ -1,0 +1,10 @@
+resource <%= @resource %> {
+	device			<%= @drbd_dev %>;
+	meta-disk		internal;
+<% @nodes.each do |options| -%>
+	on <%= options['name'] %> {
+		address		<%= options.fetch('address', "#{name}:7789") %>;
+		disk		<%= options['disk'] %>;
+	}
+<% end -%>
+}

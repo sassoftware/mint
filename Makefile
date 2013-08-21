@@ -1,13 +1,11 @@
 #
-# Copyright (c) 2010 rPath, Inc.
-#
-# All rights reserved.
+# Copyright (c) SAS Institute Inc.
 #
 
 # may be adjusted by recipe (via make commandline)
 export DESTDIR =	/
 export PRODUCT =	rbuilder
-export VERSION =	6.0.0
+export VERSION =	8
 export SHORTVER =	$(VERSION)
 export TOPDIR =		$(shell pwd)
 export DISTNAME =	$(PRODUCT)-$(SHORTVER)
@@ -22,7 +20,7 @@ export PYTHON = /usr/bin/python
 export PYVER = $(shell $(PYTHON) -c 'import sys; print sys.version[0:3]')
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins rmake_plugins doc distro twisted
+SUBDIRS = mint scripts raaplugins rmake_plugins doc distro twisted ha
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 

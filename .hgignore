@@ -28,6 +28,7 @@
 ^distro/jobslave_set$
 ^distro/rbuilder.conf$
 ^distro/schema$
+^ha/rpath_ha/manifests/managed_services.pp$
 
 ^mint/mint-local.db$
 ^mint/django_rest/mint-local.db$

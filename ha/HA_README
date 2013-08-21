@@ -1,0 +1,41 @@
+conary install group-ha
+
+## system configs:
+# postfix relayhost and aliases (root gets drbd notifications)
+# populate /etc/sysconfig/network-scripts/ifcfg-eth1
+for x in rbuilder-credstore jobmaster mcp-dispatcher jabberd rmake-messagebus nginx gunicorn pgbouncer postgresql-rbuilder rmake rmake-node rmake3 rmake3-node rbuilder raa iptables ip6tables drbd; do service $x stop; done
+umount /srv
+sed -i -e '/\/srv/d' /etc/fstab
+
+mkdir /var/lib/drbd
+drbdadm create-md r1
+drbdadm up r1
+e2fsck -f /dev/drbd1
+resize2fs /dev/drbd1
+
+./sysprep
+# poweroff, clone 2nd node
+
+## per node:
+# HOSTNAME/DHCP_HOSTNAME in /etc/sysconfig/network
+# static ip, ONBOOT=yes in /etc/sysconfig/network-scripts/ifcfg-eth1
+cat >/etc/hosts <<EOD
+172.25.0.101 host-1 host-1.domain
+172.25.0.102 host-2 host-2.domain
+172.25.0.50  shared shared.domain
+reboot
+
+## edit puppet config:
+cp /usr/share/rbuilder/ha/rbuilder.pp.example /etc/rbuilder.pp
+
+## (as needed) rsync modified configs over
+rsync -av --delete /etc/ root@mithar-drbd-2.na.sas.com:/etc/ \
+    --exclude adjtime \
+    --exclude mtab \
+    --exclude sysconfig/network \
+    --exclude sysconfig/network-scripts \
+    -n
+
+# run puppet on both nodes at once because corosync will block until both are
+#  running and happy
+puppet apply --debug /etc/rbuilder.pp

@@ -12,6 +12,12 @@
 # marked with a comment indicating when and for what version it was
 # added as well as any relevant issue IDs.
 
+if pgrep corosync >/dev/null || pgrep crmd >/dev/null
+then
+    echo "ERROR: This looks like a clustered environment. Cowardly refusing to run upgrades."
+    exit 0
+fi
+
 . /etc/sysconfig/pgsql/postgresql-rbuilder
 export PGDATA PGPORT
 
