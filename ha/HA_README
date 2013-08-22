@@ -1,9 +1,16 @@
-conary install group-ha
+# complete initial setup
+
+# /etc/conary/system-model - change
+#  install group-rbuilder-appliance=...
+# to
+#  search group-rbuilder-dist=...
+#  install group-rbuilder-appliance
+#  install group-ha
 
 ## system configs:
 # postfix relayhost and aliases (root gets drbd notifications)
 # populate /etc/sysconfig/network-scripts/ifcfg-eth1
-for x in rbuilder-credstore jobmaster mcp-dispatcher jabberd rmake-messagebus nginx gunicorn pgbouncer postgresql-rbuilder rmake rmake-node rmake3 rmake3-node rbuilder raa iptables ip6tables drbd; do service $x stop; done
+for x in rbuilder-credstore jobmaster mcp-dispatcher jabberd rmake-messagebus nginx gunicorn pgbouncer postgresql-rbuilder rmake rmake-node rmake3 rmake3-node rbuilder raa iptables ip6tables crond; do service $x stop; done
 umount /srv
 sed -i -e '/\/srv/d' /etc/fstab
 
