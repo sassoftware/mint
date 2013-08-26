@@ -1,28 +1,25 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 static_files =				\
 	add-lvm-disk			\
-	add-windows-build-service       \
 	apply-proxy-settings		\
-	check-repository		\
 	create-platforms		\
 	deleteproject			\
-	enable-platforms	\
-	fix-ec2-certificates		\
 	generate-certs.sh		\
 	group-script			\
-	load-offline-mirror		\
 	mcp-stack			\
 	migrate-all-projects		\
+	post-install			\
+	preconfigure			\
 	rbuilder-debug			\
 	rmake-reset			\
 	rmake-setup			\
 	set-authuserpass		\
+	set-password			\
 	update-package-index		\
 	update-package-index-external	\
-	set-password                    \
 	$(generic_scripts)		\
 
 
@@ -41,7 +38,6 @@ generic_scripts = \
 	rbuilder-database		\
 	repository-sync			\
 	restore-preload-bundle		\
-	system-resolver			\
 	target-systems-import		\
 
 

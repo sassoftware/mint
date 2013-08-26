@@ -171,6 +171,9 @@ class Image(modellib.XObjIdModel):
         db_column="statusmessage"), "Image status message, by default is null", short="Image status message")
     base_image = D(modellib.DeferredForeignKey('Image', null=True,
         related_name='layered_images', db_column='base_image'), "Image base image, by default is null", short="Image base image")
+    image_model = D(models.TextField(null=True, blank=True),
+            "Optional system model used to create the image",
+            short="Image system model")
 
     metadata = D(modellib.SyntheticField(ImageMetadata), "Image metadata", short="Image metadata")
     architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")

@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Copyright (c) SAS Institute Inc.
+#
+
+chkconfig gunicorn on
+chkconfig memcached on
+chkconfig pgbouncer on
+chkconfig postgresql-rbuilder on
+chkconfig jabberd on

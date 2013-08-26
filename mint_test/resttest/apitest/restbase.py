@@ -281,7 +281,11 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
     def getTestProjectRepos(self):
         db = self.openMintDatabase()
         client = db.productMgr.reposMgr.getAdminClient(write=True)
-        return client.repos
+        repos = client.repos
+        # Keep the db object alive since the only pointer back to it from the
+        # shim client is a weakref
+        repos.mintdb = db
+        return repos
 
     def assertBlobEquals(self, actual, expected):
         """

@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Copyright (c) SAS Institute Inc.
+#
+
+scriptdir=$(dirname $0)
+
+. /etc/sysconfig/pgsql/postgresql-rbuilder
+export PGDATA PGPORT
+
+"$scriptdir"/postgres-auto-update || exit 1
+
+# mint database
+createuser -SdRU postgres rbuilder &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
+"$scriptdir"/rbuilder-database --migrate || exit 1
+
+# jabberd database
+createuser -SDRU postgres jabberd &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
+    psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
+
+# rMake 3 database
+createuser -SDRU postgres rmake &>/dev/null
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
+
+# rMake 2 database
+createdb -U postgres --encoding=UTF8 --owner=rmake rmake2 &>/dev/null
+
+# SSL certificates
+"$scriptdir"/generate-certs.sh
+
+# Configure the local rmake node's identity and add it to the dispatcher's
+# whitelist.
+if [ ! -f /srv/rmake3/worker.ident ]
+then
+  domain=rbuilder.rpath
+  username=`head -c16 /dev/urandom | xxd -ps`
+  password=`head -c16 /dev/urandom | xxd -ps`
+  echo "xmppPermit ${username}@${domain}" >> /etc/rmake3/server.d/21_whitelist.conf
+
+  ident=/srv/rmake3/worker.ident
+  > $ident
+  chmod 0600 $ident
+  echo "rbuilder.rpath ${username} ${password}" >> $ident
+fi
+
+
+exit 0

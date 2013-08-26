@@ -1030,6 +1030,54 @@ queryset_filter_descriptor_xml = """
       <value_options/>
     </field_descriptor>
     <field_descriptor>
+      <field_key>source_image.image_model</field_key>
+      <field_label>Image system model</field_label>
+      <value_type>str</value_type>
+      <operator_choices>
+        <operator_choice>
+          <key>AND</key>
+          <label>And</label>
+        </operator_choice>
+        <operator_choice>
+          <key>CONTAINS</key>
+          <label>Contains</label>
+        </operator_choice>
+        <operator_choice>
+          <key>EQUAL</key>
+          <label>Equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IN</key>
+          <label>In list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>LIKE</key>
+          <label>Like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>OR</key>
+          <label>Or</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_EQUAL</key>
+          <label>Not equal to</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_IN</key>
+          <label>Not in list</label>
+        </operator_choice>
+        <operator_choice>
+          <key>NOT_LIKE</key>
+          <label>Not like</label>
+        </operator_choice>
+        <operator_choice>
+          <key>IS_NULL</key>
+          <label>Is NULL</label>
+        </operator_choice>
+      </operator_choices>
+      <value_options/>
+    </field_descriptor>
+    <field_descriptor>
       <field_label>Image time created</field_label>
       <field_key>source_image.time_created</field_key>
       <value_type>str</value_type>

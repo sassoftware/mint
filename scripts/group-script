@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Copyright (c) 2008 rPath, Inc.
-# All rights reserved.
+# Copyright (c) SAS Institute Inc.
 #
+
 # This script is executed from the group after each update. It migrates
 # the mint database and all repository databases.
 #
@@ -21,14 +21,14 @@ fi
 . /etc/sysconfig/pgsql/postgresql-rbuilder
 export PGDATA PGPORT
 
-scriptdir=`dirname $0`
+scriptdir=$(dirname $0)
 
 if [[ `awk '{print $2}' /proc/mounts | grep -c ^/proc$` > 1 ]]
 then
     # If /proc appears to be mounted more than once, then it means we're
     # chrooted. It manifests itself this way as the actual path is
     # outside the chroot and thus can't be addressed.
-    is_chrooted=1
+    exit 0
 fi
 
 die() {
@@ -36,9 +36,12 @@ die() {
     exit 1
 }
 
+# Pause nginx
+[ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
+
 # Stop all ancillary services
 # crond is included so nothing fails during the migration (cf RBL-7973)
-services="rmake3 rmake3-node rmake-messagebus rmake rmake-node mcp-dispatcher jobmaster rbuilder-authn rbuilder-credstore crond"
+services="rmake3 rmake3-node rmake-messagebus rmake rmake-node mcp-dispatcher jobmaster rbuilder-authn rbuilder-credstore gunicorn crond"
 reversed=$(echo "$services" | sed -e 's/ /\n/g' | tac)
 for name in $reversed
 do
@@ -48,55 +51,13 @@ do
     fi
 done
 
-# Pause nginx and shutdown gunicorn
-[ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
-[ -f /var/lock/subsys/gunicorn ] && /sbin/service gunicorn stop
-
-# Shut down postgres, and migrate to the latest major version if required.
-# Then start it and wait for it to return.
-if [ "x$is_chrooted" == "x1" ]
-then
-    # Initial install
-    updateargs="--init"
-
-    chkconfig gunicorn on
-    chkconfig memcached on
-    chkconfig pgbouncer on
-    chkconfig postgresql-rbuilder on
-    chkconfig jabberd on
-fi
-"$scriptdir"/postgres-auto-update $updateargs \
-    || die "Migration failed, check /var/log/rbuilder/scripts.log"
+"$scriptdir"/preconfigure || exit 1
 
 service pgbouncer condstop
 service pgbouncer start
 
-# Create rbuilder user for initial setup OR give it createdb permissions to fix
-# up an earlier mistake. -- 5.5.0 2009-11-16
-createuser -SdRU postgres rbuilder &>/dev/null || \
-    psql -U postgres -qc 'ALTER ROLE rbuilder CREATEDB'
-
-# Migrate the mint database (or create it if it doesn't exist)
-createlang -U postgres plpgsql template1 &>/dev/null
-createdb -U postgres --encoding=UTF8 --owner=rbuilder mint &>/dev/null
-
-"$scriptdir"/rbuilder-database --migrate \
-    || die "Failed to migrate the rBuilder database"
 chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
 rm -f /srv/rbuilder/data/platformName.cache
-
-# jabberd database
-createuser -SDRU postgres jabberd &>/dev/null
-createdb -U postgres --encoding=UTF8 --owner=jabberd jabberd &>/dev/null && \
-    psql -U jabberd -d jabberd -Xqf /usr/share/rbuilder/jabberd/db-setup.pgsql
-
-# rMake 3 database
-createuser -SDRU postgres rmake &>/dev/null
-createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
-
-# rMake 2 database
-createdb -U postgres --encoding=UTF8 --owner=rmake rmake2 &>/dev/null
-
 
 # Migrate the mint config
 "$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
@@ -111,88 +72,25 @@ rm -rf /srv/rbuilder/tmp/users
 # raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
 usermod -a -G apache raa-web
 
-# Create a project for rMake to use as a repository.
-runuser -s /bin/bash apache -c "$scriptdir"/rmake-setup
-RMAKE_EXISTED=$?
-
 # Primary migration is done, exit maintenance mode now since some scripts need
 # to talk to local repositories.
 rm -f /srv/rbuilder/run/maintenance.lock
 
-# Generate rMake certificates IFF we're not chrooted; otherwise we
-# might end up sticking them pre-generated in the ISOs which would be
-# very bad.
-#   -- 5.0.0 - 2008-12-01
-if [ "x$is_chrooted" == "x" ]
-then
-    "$scriptdir"/generate-certs.sh \
-        || die "Failed to generate certificates"
+# Start ancillary services
+for name in $services
+do
+    /sbin/service $name start
+done
 
-    # Start nginx with new certificates.
-    /sbin/service gunicorn start
-    if [ -f /var/lock/subsys/nginx ]
-    then
-        /sbin/service nginx reload || /sbin/service nginx restart
-    else
-        /sbin/service nginx start
-    fi
-else
-    echo Skipping certificate generation due to chrooting
-fi
+# Unpause nginx
+service nginx reload
 
-# If rmake repo didn't exist, this must be a new install, so only touch the
-# platforms file.  If it did exist, it must be an update, so only run the
-# script if the platforms file doesn't exist.
-PLATFORMS_FILE=/srv/rbuilder/data/enable_platforms
-if [ "$RMAKE_EXISTED" = "0" ]
-then
-    touch "$PLATFORMS_FILE"
-elif [ ! -e "$PLATFORMS_FILE" ]
-then
-    "$scriptdir"/enable-platforms
-    touch "$PLATFORMS_FILE"
-fi
+# Create initial platforms
+echo Updating platforms ...
+$scriptdir/create-platforms
 
-if [ "x$is_chrooted" == "x" ]
-then
-    # Start ancillary services
-    for name in $services
-    do
-        /sbin/service $name start
-    done
-
-    # Create initial platforms
-    echo Updating platforms ...
-    $scriptdir/create-platforms
-
-    echo Updating branch/stage information ...
-    $scriptdir/repository-sync
-fi
-
-# Shut down postgres if chrooted
-if [ "x$is_chrooted" == "x1" ]
-then
-    service pgbouncer stop
-    service postgresql-rbuilder stop
-
-    echo "Waiting for postgres to stop"
-    retries=4
-    while true
-    do
-        if [ ! -f "$PGDATA/postmaster.pid" ]
-        then
-            break
-        elif [[ "$retries" -ne 0 ]]
-        then
-            retries=$(( $retries - 1 ))
-            sleep 4
-        else
-            echo "Giving up and killing the pidfile"
-            rm -f "$PGDATA/postmaster.pid"
-            break
-        fi
-    done
-fi
+echo Updating branch/stage information ...
+$scriptdir/repository-sync
 
 
 exit 0

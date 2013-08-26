@@ -28,27 +28,7 @@ start)
   export PGPORT
   wait_for_postgres || exit 1
 
-  # Generate SSL certs for various things on initial boot.
-  /usr/share/rbuilder/scripts/generate-certs.sh
-
-  # Start nginx now that certs exist
-  [ -f /var/lock/subsys/nginx ] || /sbin/service nginx start
-
-  # Configure the local rmake node's identity and add it to the dispatcher's
-  # whitelist.
-  if [ ! -f /srv/rmake3/worker.ident ]
-  then
-      domain=rbuilder.rpath
-      username=`head -c16 /dev/urandom | xxd -ps`
-      password=`head -c16 /dev/urandom | xxd -ps`
-      echo "xmppPermit ${username}@${domain}" >> /etc/rmake3/server.d/21_whitelist.conf
-
-      ident=/srv/rmake3/worker.ident
-      > $ident
-      chmod 0600 $ident
-      echo "rbuilder.rpath ${username} ${password}" >> $ident
-  fi
-
+  /usr/share/rbuilder/scripts/preconfigure
   ;;
 stop)
   ;;

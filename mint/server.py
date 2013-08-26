@@ -1697,6 +1697,14 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return buildId
 
+    @staticmethod
+    def _formatTupForModel(tup):
+        return '"%s=%s/%s[%s]"' % (
+                tup[0],
+                tup[1].trailingLabel(),
+                tup[1].trailingRevision(),
+                tup[2])
+
     @typeCheck(int, ((str, unicode),), bool, list, str)
     @requiresAuth
     @private
@@ -1763,6 +1771,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         groupTroves = repos.findTroves(None, 
                                        [(x, versionSpec, None) for x in 
                                          groupNames ], allowMissing = True)
+        searchTroves = repos.findTroves(None,
+                [x.getTroveTup() for x in pd.getSearchPaths()],
+                allowMissing=True)
 
         for build in buildList:
             if buildNames and build.name not in buildNames:
@@ -1784,30 +1795,34 @@ If you would not like to be %s %s of this project, you may resign from this proj
             architecture = deps.parseFlavor(architecture \
                     and architecture.flavor or '')
 
-            # As of schema 2.0, builds no longer have custom flavors, so use
-            # an empty flavor for the custom flavor
-            customFlavor = deps.parseFlavor('')
-
             # Returns a list of troves that satisfy buildFlavor.
-            nvfs = self._resolveTrove(groupList, flavorSet, architecture,
-                    customFlavor)
-
-            if nvfs:
-                # Store a build with options for the best match for each build
-                # results are sorted best to worst
-                filteredBuilds.append((build, nvfs[0]))
-            else:
+            groupTup = self._resolveTrove(groupList, flavorSet, architecture)
+            if not groupTup:
                 # No troves were found, save the error.
                 buildErrors.append(str(conary_errors.TroveNotFound(
                     "Trove '%s' has no matching flavors for '%s'" % \
                     (buildGroup, buildFlavor))))
+                continue
+
+            imageModel = []
+            for item in pd.getSearchPaths():
+                matches = searchTroves.get(item.getTroveTup(), ())
+                searchTup = self._resolveTrove(matches, flavorSet, architecture)
+                if searchTup:
+                    imageModel.append('search %s\n' %
+                            self._formatTupForModel(searchTup))
+            imageModel.append('install %s\n' %
+                    self._formatTupForModel(groupTup))
+            # Store a build with options for the best match for each build
+            # results are sorted best to worst
+            filteredBuilds.append((build, groupTup, imageModel))
 
         if buildErrors and not force:
             raise mint_error.TroveNotFoundForBuildDefinition(buildErrors)
 
         # Create/start each build.
         buildIds = []
-        for buildDefinition, nvf in filteredBuilds:
+        for buildDefinition, nvf, imageModel in filteredBuilds:
             buildImage = buildDefinition.getBuildImage()
 
             containerTemplate = pd.getContainerTemplate( \
@@ -1827,9 +1842,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
             buildName = buildDefinition.name
-            buildId = self.newBuildWithOptions(projectId, buildName,
-                                               n, v, f, buildType,
-                                               buildSettings, start=False)
+            buildId = self.newBuildWithOptions(projectId, buildName, n, v, f,
+                    buildType, buildSettings, imageModel=imageModel,
+                    start=False)
             buildIds.append(buildId)
             self.startImageJob(buildId)
         return buildIds
@@ -1873,12 +1888,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._getBuildPageUrl(buildId)
 
-    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool)
+    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool, list)
     @requiresAuth
     @private
-    def newBuildWithOptions(self, projectId, buildName,
-                            groupName, groupVersion, groupFlavor,
-                            buildType, buildSettings, start=False):
+    def newBuildWithOptions(self, projectId, buildName, groupName,
+            groupVersion, groupFlavor, buildType, buildSettings, start=False,
+            imageModel=None):
         self._filterProjectAccess(projectId)
 
         version = helperfuncs.parseVersion(groupVersion)
@@ -1898,6 +1913,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
+        if imageModel:
+            self.builds.setModel(buildId, imageModel)
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
 
@@ -1968,22 +1985,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.startImageJob(buildId)
         return buildId
 
-    def _resolveTrove(self, groupList, flavorSet, archFlavor, customFlavor):
+    def _resolveTrove(self, groupList, flavorSet, archFlavor):
         '''
-        Return a list of trove tuples matching C{troveName},
-        C{troveLabel}, satisfying flavor constraints. customFlavor overrides
-        flavorSet and archFlavor. result is sorted according to flavor score.
-        The repository backing the project at C{projectId} will be used.
+        Return the best matching trove tuple from C{groupList} given flavor
+        constraints for the build.
 
-        @return: List of trove tuples matching the query
-        @rtype: list
+        @return: Matching trove tuple, or None if no match exists
+        @rtype: TroveTuple
         '''
         if not groupList:
-            return []
+            return None
         # Get the major architecture from filterFlavor
-        arch = deps.overrideFlavor(archFlavor, customFlavor)
-        filterArch = helperfuncs.getArchFromFlavor(arch)
-        completeFlavor = deps.overrideFlavor(flavorSet, arch)
+        filterArch = helperfuncs.getArchFromFlavor(archFlavor)
+        completeFlavor = deps.overrideFlavor(flavorSet, archFlavor)
         # Hard filtering is done strictly by major architecture. This ensures
         # two things:
         #  * "is: x86" filter does NOT match "is: x86 x86_64" group
@@ -1992,20 +2006,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
         # but the vast majority of proddefs use one flavor per arch only and
         # thus that case needs to be the most robust.
         archMatches = [ x for x in groupList
-                if helperfuncs.getArchFromFlavor(x[2]) == filterArch ]
+                if helperfuncs.getArchFromFlavor(x[2]) in ('', filterArch) ]
         if not archMatches:
             # Nothing even had the correct architecture, bail out.
-            return []
+            return None
+        # Filter out old group versions, which show up here if they have a
+        # flavor that is no longer present in the latest version
         maxVersion = max(x[1] for x in archMatches)
         latest = [x for x in archMatches if x[1] == maxVersion]
-        if len(latest) < 2:
-            # A single group flavor matched the architecture so no need for
-            # flavor scoring.
-            return latest
-        scored = sorted((x[2].score(completeFlavor), x) for x in latest)
-        maxScore = scored[-1][0]
-        return sorted([ x[1] for x in scored if x[0] == maxScore ],
-                      key=lambda x: x[2])[-1:]
+        # Score each group flavor against the filter
+        scored = sorted((completeFlavor.score(x[2]), x) for x in latest)
+        # Discard flavors that are not satisfied at all
+        scored = [(score, x) for (score, x) in scored if score is not False]
+        if not scored:
+            return None
+        # Pick the highest scoring result
+        return sorted(scored)[-1][1]
 
     def _deleteBuild(self, buildId, force=False):
         if not self.builds.buildExists(buildId)  and not force:
@@ -2164,6 +2180,17 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self.buildData.getDataDict(buildId)
 
+    @staticmethod
+    def _partitionLines(text):
+        ret = []
+        while '\n' in text:
+            n = text.find('\n')
+            line, text = text[:n+1], text[n+1:]
+            ret.append(line)
+        if text:
+            ret.append(text)
+        return ret
+
     @typeCheck(int)
     @private
     def serializeBuild(self, buildId):
@@ -2202,6 +2229,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     buildDict['productVersionId'])
         else:
             r['proddefLabel'] = ''
+        if buildDict['image_model']:
+            r['imageModel'] = self._partitionLines(buildDict['image_model'])
 
         hostBase = '%s.%s' % (self.cfg.hostName, self.cfg.siteDomainName)
 

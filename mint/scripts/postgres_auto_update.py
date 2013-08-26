@@ -36,6 +36,7 @@ class Script(postgres_major_migrate.Script):
 
     port = 5439
     user = 'postgres'
+    dataTop = '/srv/pgsql'
     currentMetaPath = '/srv/rbuilder/data/postgres-meta'
     nextMetaPath = '/usr/share/rbuilder/postgres-meta'
 
@@ -50,16 +51,16 @@ class Script(postgres_major_migrate.Script):
         self.loadConfig(options.config_file)
         self.resetLogging(quiet=options.quiet)
 
-        self.stopPostgres()
-
+        currentMeta = self.getCurrentMeta()
         nextMeta = self.getNextMeta()
-        if options.init:
+        if currentMeta and currentMeta.dataDir == nextMeta.dataDir:
+            return 0
+
+        self.stopPostgres()
+        if not currentMeta:
             self.initdb(nextMeta)
         else:
-            currentMeta = self.getCurrentMeta()
-            if currentMeta.dataDir != nextMeta.dataDir:
-                self.migrateMeta(currentMeta, nextMeta)
-
+            self.migrateMeta(currentMeta, nextMeta)
         self.startPostgres()
 
     def stopPostgres(self):
@@ -113,21 +114,17 @@ class Script(postgres_major_migrate.Script):
 
         # rBuilder <= 5.8.0 doesn't have a meta file. Use the highest-numbered
         # datadir as the "current" cluster.
+        if not os.path.isdir(self.dataTop):
+            return None
         versions = []
-        for name in os.listdir('/srv/pgsql'):
+        for name in os.listdir(self.dataTop):
             if name[-9:] != '-rbuilder':
                 continue
-            path = os.path.join('/srv/pgsql', name)
+            path = os.path.join(self.dataTop, name)
             version = name[:-9]
             try:
                 parts = [int(x) for x in version.split('.')]
             except ValueError:
-                continue
-            # Sanity check: make sure there's more than the 3 default databases
-            # (template0, template1, postgres)
-            basedir = os.path.join(path, 'base')
-            if not os.path.isdir(basedir) or len(os.listdir(basedir)) <= 3:
-                log.warning("Ignoring (empty?) cluster at %s", path)
                 continue
             versions.append((parts, version, path))
         if not versions:
