@@ -13,6 +13,10 @@ managed_services = \
 	jabberd \
 	mcp-dispatcher \
 	jobmaster \
+	rmake \
+	rmake-node \
+	rmake3 \
+	rmake3-node \
 	rbuilder-credstore \
 	crond
 
