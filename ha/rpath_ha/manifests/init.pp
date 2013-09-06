@@ -20,6 +20,7 @@ class rpath_ha (
     $multicast_network              = 'UNSET',
     $multicast_address              = 'UNSET',
     $drbd_nodes                     = 'UNSET',
+    $mount_point                    = '/srv',
     ) {
 
     $cib = 'rpath_cib'
@@ -33,7 +34,7 @@ class rpath_ha (
 
     class { 'rpath_ha::drbd':
         protocol                    => 'C',
-        mount                       => '/srv/',
+        mount                       => $mount_point,
         nodes                       => $drbd_nodes,
         cib                         => $cib,
     }
