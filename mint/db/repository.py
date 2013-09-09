@@ -33,7 +33,8 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.repository.netrepos import proxy
-from conary.repository.netrepos.netauth import ValidUser, ValidPasswordToken
+from conary.repository.netrepos.auth_tokens import (
+        AuthToken, ValidPasswordToken, ValidUser)
 from conary.server import schema as conary_schema
 
 from mint import userlevels
@@ -590,9 +591,9 @@ class RepositoryHandle(object):
         token will be used.
         """
         if authToken is None:
-            authToken = netserver.AuthToken()
+            authToken = AuthToken()
         else:
-            authToken = netserver.AuthToken(*authToken)
+            authToken = AuthToken(*authToken)
         if self._cfg.injectUserAuth:
             injectedAuthType = self._projectInfo['authType']
         else:

@@ -22,8 +22,8 @@ import webob
 from beaker import session
 from conary import dbstore
 from conary.lib import coveragehook
-from conary.repository.netrepos import netauth
-from conary.repository.netrepos import netserver
+from conary.repository.netrepos.auth_tokens import AuthToken, ValidPasswordToken
+from conary.server.wsgi_hooks import ConaryHandler
 from django.core.handlers import wsgi as djwsgi
 from webob import exc as web_exc
 
@@ -118,8 +118,8 @@ class application(object):
         self.rm = RepositoryManager(self.cfg, self.db,
                 baseUrl=self.req.application_url)
         self.authToken = self._getAuth()
-        self.authToken = netserver.AuthToken(*self.authToken)
-        self.authToken.remote_ip = self.req.client_addr
+        self.authToken = AuthToken(*self.authToken)
+        ConaryHandler.setRemoteIp(self.authToken, self.req)
         self.req.environ['mint.authToken'] = self.authToken
         self.req.environ['mint.wsgiContext'] = self
 
@@ -184,7 +184,7 @@ class application(object):
             return ()
         if authToken[1] == '':
             # Pre-authenticated session
-            return (authToken[0], netauth.ValidPasswordToken)
+            return (authToken[0], ValidPasswordToken)
         # Discard old password-containing sessions to force a fresh login
         return ()
 

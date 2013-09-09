@@ -15,7 +15,7 @@
 #
 
 
-from conary.repository.netrepos.netauth import ValidPasswordToken
+from conary.repository.netrepos.auth_tokens import ValidPasswordToken
 from mint.django_rest.rbuilder.users.models import User
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from django.db import transaction

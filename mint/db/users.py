@@ -10,7 +10,7 @@ from conary.lib.digestlib import md5
 from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
-from conary.repository.netrepos.netauth import ValidPasswordToken
+from conary.repository.netrepos.auth_tokens import ValidPasswordToken
 
 from mint import templates
 from mint import searcher
