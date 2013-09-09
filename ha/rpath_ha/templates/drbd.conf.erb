@@ -29,7 +29,7 @@ common {
 
 	net {
 		protocol <%= @protocol %>;
-		after-sb-0pri discard-younger-primary;
+		after-sb-0pri discard-least-changes;
 		after-sb-1pri discard-secondary;
 		after-sb-2pri call-pri-lost-after-sb;
 		# protocol timeout max-epoch-size max-buffers unplug-watermark
