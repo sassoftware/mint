@@ -8,6 +8,7 @@ common {
 		split-brain "/usr/lib/drbd/notify-split-brain.sh <%= @notify_email %>";
 		fence-peer "/usr/lib/drbd/crm-fence-peer.sh";
 		after-resync-target "/usr/lib/drbd/crm-unfence-peer.sh";
+                pri-lost-after-sb "/usr/share/rbuilder/ha/pri-lost-after-sb.sh <%= @notify_email %>";
 	}
 
 	startup {
@@ -28,9 +29,9 @@ common {
 
 	net {
 		protocol <%= @protocol %>;
-		after-sb-0pri discard-zero-changes;
+		after-sb-0pri discard-younger-primary;
 		after-sb-1pri discard-secondary;
-		after-sb-2pri disconnect;
+		after-sb-2pri call-pri-lost-after-sb;
 		# protocol timeout max-epoch-size max-buffers unplug-watermark
 		# connect-int ping-int sndbuf-size rcvbuf-size ko-count
 		# allow-two-primaries cram-hmac-alg shared-secret after-sb-0pri

@@ -28,9 +28,10 @@ prim_list = $(patsubst %,$(prim_pat),$(managed_services))
 all: default-all $(generated_files)
 
 install: default-install $(generated_files)
-	mkdir -p $(DESTDIR)/usr/share/puppet/modules $(DESTDIR)/usr/share/rbuilder/ha
+	mkdir -p $(DESTDIR)/usr/share/puppet/modules
 	cp -r rpath_ha $(DESTDIR)/usr/share/puppet/modules/
-	cp rbuilder.pp $(DESTDIR)/usr/share/rbuilder/ha/rbuilder.pp.example
+	install -D -m0644 rbuilder.pp $(DESTDIR)/usr/share/rbuilder/ha/rbuilder.pp.example
+	install -D -m0755 pri-lost-after-sb.sh $(DESTDIR)/usr/share/rbuilder/ha/pri-lost-after-sb.sh
 
 clean: default-clean
 
