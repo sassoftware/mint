@@ -1,0 +1,84 @@
+#!/usr/bin/python
+"""
+An initscript that when stopped disables all cronjobs not in a whitelist, and
+when started enables all cronjobs previously disabled.
+
+Used to suppress all application jobs when not the primary in a cluster.
+"""
+import os
+import sys
+
+watch_dirs = [
+        '/etc/cron.d',
+        '/etc/cron.daily',
+        '/etc/cron.hourly',
+        '/etc/cron.monthly',
+        '/etc/cron.weekly',
+        ]
+keep_files = [
+        '/etc/cron.d/0hourly',
+        '/etc/cron.d/sysstat',
+        '/etc/cron.daily/logrotate',
+        '/etc/cron.daily/tmpwatch',
+        '/etc/cron.daily/makewhatis.cron',
+        '/etc/cron.hourly/0anacron',
+        ]
+save_dir = '/etc/cron.disabled'
+
+
+def stop():
+    for rundir in watch_dirs:
+        stopdir = os.path.join(save_dir, os.path.basename(rundir))
+        if not os.path.isdir(stopdir):
+            os.makedirs(stopdir)
+        for name in os.listdir(rundir):
+            runpath = os.path.join(rundir, name)
+            if runpath in keep_files:
+                continue
+            stoppath = os.path.join(stopdir, name)
+            os.rename(runpath, stoppath)
+    os.system("/sbin/service crond reload")
+
+
+def start():
+    for rundir in watch_dirs:
+        stopdir = os.path.join(save_dir, os.path.basename(rundir))
+        if not os.path.isdir(stopdir):
+            continue
+        for name in os.listdir(stopdir):
+            stoppath = os.path.join(stopdir, name)
+            runpath = os.path.join(rundir, name)
+            os.rename(stoppath, runpath)
+        os.rmdir(stopdir)
+    os.rmdir(save_dir)
+    os.system("/sbin/service crond reload")
+
+
+def status():
+    if os.path.isdir(save_dir):
+        print 'stopped'
+        sys.exit(3)
+    else:
+        print 'running'
+        sys.exit(0)
+
+
+def usage():
+    sys.exit("usage: %s {start,stop,status}" % sys.argv[0])
+
+
+def main():
+    if len(sys.argv) != 2:
+        usage()
+    cmd = sys.argv[1]
+    if cmd == 'start':
+        start()
+    elif cmd == 'stop':
+        stop()
+    elif cmd == 'status':
+        status()
+    else:
+        usage()
+
+
+main()

@@ -51,6 +51,12 @@ class rpath_ha (
         enable                      => false,
     }
 
+    file { '/etc/rc.d/init.d/rbuilder-ha-cron':
+        ensure                      => link,
+        target                      => '/usr/share/rbuilder/ha/rbuilder-ha-cron',
+    }
+    File['/etc/rc.d/init.d/rbuilder-ha-cron'] -> Service['rbuilder-ha-cron']
+
     # Write changes to a shadow CIB so they can be committed all at once
     cs_shadow { $cib: }
 

@@ -18,7 +18,7 @@ managed_services = \
 	rmake3 \
 	rmake3-node \
 	rbuilder-credstore \
-	crond
+	rbuilder-ha-cron \
 
 
 prim_pat = '%',
@@ -32,6 +32,7 @@ install: default-install $(generated_files)
 	cp -r rpath_ha $(DESTDIR)/usr/share/puppet/modules/
 	install -D -m0644 rbuilder.pp $(DESTDIR)/usr/share/rbuilder/ha/rbuilder.pp.example
 	install -D -m0755 pri-lost-after-sb.sh $(DESTDIR)/usr/share/rbuilder/ha/pri-lost-after-sb.sh
+	install -D -m0755 rbuilder-ha-cron $(DESTDIR)/usr/share/rbuilder/ha/rbuilder-ha-cron
 
 clean: default-clean
 
