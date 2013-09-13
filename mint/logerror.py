@@ -38,6 +38,11 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
     timeStamp = time.ctime(time.time())
     realHostName = socket.getfqdn()
 
+    if 'mint.authToken' in info_dict:
+        info_dict['mint.authToken'] = repr(info_dict['mint.authToken'])
+    if 'HTTP_AUTHORIZATION' in info_dict:
+        info_dict['HTTP_AUTHORIZATION'] = info_dict['HTTP_AUTHORIZATION'].split()[0] + ' ******'
+
     # Format large traceback to file
     (tbFd, tbPath) = tempfile.mkstemp('.txt', prefix)
     large = os.fdopen(tbFd, 'w+')
@@ -81,7 +86,6 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
             print >> large, '%s: %s' % (key, val)
         except:
             pass
-    large.seek(0)
 
     # Format small traceback
     small = conary_util.BoundedStringIO()
@@ -90,6 +94,30 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
     conary_util.formatTrace(e_type, e_value, e_tb, stream=small,
         withLocals=False)
     print >> small, 'Extended traceback at %s' % tbPath
+
+    if cfg and cfg.sentryDSN:
+        from raven import Client
+        from raven.utils import wsgi
+        client = Client(cfg.sentryDSN)
+        data = {}
+        extra = {
+                'environ': info_dict,
+                'reference': '%s:%s' % (realHostName, tbPath),
+                }
+        if 'REQUEST_METHOD' in info_dict:
+            # Looks like WSGI
+            environ = info_dict
+            data['sentry.interfaces.Http'] = {
+                'method': environ.get('REQUEST_METHOD'),
+                'url': wsgi.get_current_url(environ, strip_querystring=True),
+                'query_string': environ.get('QUERY_STRING'),
+                'headers': dict(wsgi.get_headers(environ)),
+                'env': dict(wsgi.get_environ(environ)),
+                }
+        sentry_id = client.captureException(exc_info=(e_type, e_value, e_tb),
+                data=data, extra=extra)
+        print >> large, "Sentry event ID: ", sentry_id[0]
+        print >> small, "Sentry event ID: ", sentry_id[0]
 
     small.seek(0)
     conary_util.copyfileobj(small, smallStream)
@@ -106,6 +134,7 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
             subject = cfg.bugsEmailSubject % extra
 
         if cfg.bugsEmail:
+            large.seek(0)
             maillib.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                      cfg.bugsEmail, subject, large.read())
         if cfg.smallBugsEmail:

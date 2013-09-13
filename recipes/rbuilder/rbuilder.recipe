@@ -64,6 +64,7 @@ class rBuilderProduct(CPackageRecipe):
         'python-pam:python',
         'python-pgsql:python',
         'python-psycopg2',
+        'python-raven',
         'python-twisted:python',
         'python-webob:python',
         'rapa:python',

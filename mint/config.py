@@ -125,6 +125,7 @@ class MintConfig(conarycfg.ConfigFile):
     memCache                = (CfgString, 'localhost:11211')
     memCacheTimeout         = (CfgInt, 86400)
     authSocket              = (CfgPath, None)
+    sentryDSN               = (CfgString, None)
 
     # Handler configuration
     basePath                = (CfgString, '/', "URI root for this rBuilder")
