@@ -1,0 +1,129 @@
+#!/usr/bin/python
+#
+# Copyright (c) SAS Institute Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
+import errno
+import optparse
+import os
+import subprocess
+import sys
+import time
+from conary import dbstore
+
+
+def list_dbs(options):
+    mdb = dbstore.connect('%s@localhost:%d/template1'
+            % (options.user, options.port), 'psycopg2')
+    mcu = mdb.cursor()
+    mcu.execute("SELECT datname FROM pg_database WHERE datallowconn")
+    dblist = [x[0] for x in mcu.fetchall()]
+    mdb.close()
+    return dblist
+
+
+def get_db_timestamp(options, dbname):
+    last_change = None
+    db = dbstore.connect('%s@localhost:%d/%s'
+            % (options.user, options.port, dbname), 'psycopg2')
+    db.loadSchema()
+    cu = db.cursor()
+    if 'instances' in db.tables:
+        cu.execute("select max(changed) from instances")
+        timestamp = cu.next()[0]
+        if timestamp is not None:
+            # Trick strptime into parsing UTC timestamps
+            parseable = '%s UTC' % timestamp
+            timetup = time.strptime(parseable, '%Y%m%d%H%M%S %Z')
+            # Trick mktime into epoch-izing UTC timestamps
+            timetup = timetup[:8] + (0,)  # Set DST off
+            last_change = min(time.time(), time.mktime(timetup) - time.timezone)
+    db.close()
+    return last_change
+
+
+def get_dump_timestamp(dump_path):
+    try:
+        return os.stat(dump_path).st_mtime
+    except OSError, err:
+        if err.errno != errno.ENOENT:
+            raise
+        return None
+
+
+def main():
+    parser = optparse.OptionParser()
+    parser.add_option('-d', '--dest-dir', default='/srv/dumps')
+    parser.add_option('-U', '--user', default='postgres')
+    parser.add_option('-p', '--port', default=5439, type=int)
+    parser.add_option('-s', '--stagger', default=14, type=int)
+    parser.add_option('-o', '--dump-opts', default='-Fc -Z9')
+    options, args = parser.parse_args()
+    if args:
+        parser.error("No arguments expected")
+
+    dest_dir = os.path.abspath(options.dest_dir)
+    if not os.path.isdir(dest_dir):
+        os.makedirs(dest_dir)
+    assert options.stagger > 1
+    pg_opts = '-p %d -U %s' % (options.port, options.user)
+
+    dblist = list_dbs(options)
+    today = int(time.time() / 86400) % options.stagger
+    rc = 0
+    for n, dbname in enumerate(dblist):
+        if dbname.startswith('_old_'):
+            continue
+        dump_path = os.path.join(dest_dir, dbname + '.pgdump')
+        freshen_before = time.time() - 86400 * ((today - n) % options.stagger)
+        last_change = get_db_timestamp(options, dbname)
+        last_dump = get_dump_timestamp(dump_path)
+        status = '%s (%d/%d)' % (dbname, n+1, len(dblist))
+        if last_dump is None:
+            print 'NEW    ', status
+        elif last_change is None:
+            print 'DUMP   ', status
+        elif last_dump <= last_change:
+            print 'CHANGED', status
+        elif last_dump <= freshen_before:
+            print 'FRESHEN', status
+        else:
+            print 'SKIP   ', status
+            continue
+        tmp_path = dump_path + '.new'
+        p = subprocess.Popen("pg_dump %s %s '%s' -f %s"
+                % (pg_opts, options.dump_opts, dbname, tmp_path), shell=True)
+        p.wait()
+        if p.returncode:
+            print "ERROR dumping database", dbname
+            rc = 1
+        else:
+            os.rename(tmp_path, dump_path)
+
+    dump_path = os.path.join(dest_dir, 'globals.pgsql')
+    tmp_path = dump_path + '.tmp'
+    p = subprocess.Popen("pg_dumpall %s -g -f %s" % (pg_opts, tmp_path), shell=True)
+    p.wait()
+    if p.returncode:
+        print "ERROR dumping database", dbname
+        rc = 1
+    else:
+        os.rename(tmp_path, dump_path)
+
+    return rc
+
+if __name__ == '__main__':
+    sys.exit(main())

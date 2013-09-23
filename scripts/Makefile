@@ -8,6 +8,7 @@ static_files =				\
 	apply-proxy-settings		\
 	check-repository		\
 	create-platforms		\
+	dump-rbuilder-databases		\
 	deleteproject			\
 	enable-platforms	\
 	fix-ec2-certificates		\
