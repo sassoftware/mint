@@ -206,7 +206,11 @@ def typeCheck(*paramTypes):
 
         def wrapper(*args, **kwargs):
             # Collapse keyword arguments to positional ones
-            args = filler.fill(args, kwargs)
+            try:
+                args = filler.fill(args, kwargs)
+            except TypeError, e:
+                # RCE-2231: don't surface TypeError, which results in a 500
+                raise mint_error.ParameterError(e[0])
             del kwargs
 
             # [1:] here to skip 'self'
