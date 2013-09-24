@@ -1709,17 +1709,20 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 tup[1].trailingRevision(),
                 tup[2])
 
-    @typeCheck(int, ((str, unicode),), bool, list, str)
+    @typeCheck(int, ((str, unicode),), bool, list, str, list)
     @requiresAuth
     @private
     def newBuildsFromProductDefinition(self, versionId, stageName, force,
-                                       buildNames = None, versionSpec = None):
+                                       buildNames = None, versionSpec = None,
+                                       groupSpecs = None):
         """
         Launch the image builds defined in the product definition for the
         given version id and stage.  If provided, use versionSpec as the top
         level group for the image, otherwise use the top level group defined
-        in the
-        product defintion.
+        in the product defintion.
+        If groupSpecs is provided, build the image from the specified list of
+        groups. This is an extended form of versionSpec, and does not use the
+        groups defined in the product definition.
 
         @return: buildIds
         @rtype: list of ints
@@ -1766,15 +1769,22 @@ If you would not like to be %s %s of this project, you may resign from this proj
         filteredBuilds = []
         buildErrors = []
 
-        groupNames = [ str(x.getBuildImageGroup()) for x in buildList ]
-        if not versionSpec:
-            versionSpec = stageLabel
-
         client = self.reposMgr.getUserClient(self.auth)
         repos = client.getRepos()
-        groupTroves = repos.findTroves(None, 
-                                       [(x, versionSpec, None) for x in 
-                                         groupNames ], allowMissing = True)
+
+        if groupSpecs:
+            parsedGroupSpecs = [ parseTroveSpec(x) for x in groupSpecs ]
+            groupTroves = repos.findTroves(None, parsedGroupSpecs,
+                    allowMissing=True)
+        else:
+            groupNames = [ str(x.getBuildImageGroup()) for x in buildList ]
+            if not versionSpec:
+                versionSpec = stageLabel
+
+            groupTroves = repos.findTroves(None,
+                    [(x, versionSpec, None)
+                        for x in groupNames ], allowMissing = True)
+
         searchTroves = repos.findTroves(None,
                 [x.getTroveTup() for x in pd.getSearchPaths()],
                 allowMissing=True)
@@ -1783,8 +1793,15 @@ If you would not like to be %s %s of this project, you may resign from this proj
             if buildNames and build.name not in buildNames:
                 continue
             buildFlavor = deps.parseFlavor(str(build.getBuildBaseFlavor()))
-            buildGroup = str(build.getBuildImageGroup())
-            groupList = groupTroves.get((buildGroup, versionSpec, None), [])
+            if groupSpecs:
+                candidateGroupLists = [ (x, buildFlavor, groupTroves.get(x, []))
+                        for x in parsedGroupSpecs ]
+            else:
+                buildGroup = str(build.getBuildImageGroup())
+                candidateGroupLists = [
+                    (buildGroup, buildFlavor,
+                        groupTroves.get((buildGroup, versionSpec, None), []))
+                    ]
 
             flavorSet = build.flavorSetRef and \
                     (pd.getFlavorSet(build.flavorSetRef, None) \
@@ -1799,13 +1816,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
             architecture = deps.parseFlavor(architecture \
                     and architecture.flavor or '')
 
-            # Returns a list of troves that satisfy buildFlavor.
-            groupTup = self._resolveTrove(groupList, flavorSet, architecture)
-            if not groupTup:
-                # No troves were found, save the error.
-                buildErrors.append(str(conary_errors.TroveNotFound(
-                    "Trove '%s' has no matching flavors for '%s'" % \
-                    (buildGroup, buildFlavor))))
+            groupTups = []
+            for buildGroup, buildFlavor, groupList in candidateGroupLists:
+                # Returns a list of troves that satisfy buildFlavor.
+                groupTup = self._resolveTrove(groupList, flavorSet, architecture)
+                if not groupTup:
+                    # No troves were found, save the error.
+                    buildErrors.append(str(conary_errors.TroveNotFound(
+                        "Trove '%s' has no matching flavors for '%s'" % \
+                        (buildGroup, buildFlavor))))
+                    break
+                groupTups.append(groupTup)
+            if len(groupTups) != len(candidateGroupLists):
+                # One of the groups was not found; give up
                 continue
 
             imageModel = []
@@ -1815,18 +1838,19 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 if searchTup:
                     imageModel.append('search %s\n' %
                             self._formatTupForModel(searchTup))
-            imageModel.append('install %s\n' %
-                    self._formatTupForModel(groupTup))
+            for groupTup in groupTups:
+                imageModel.append('install %s\n' %
+                        self._formatTupForModel(groupTup))
             # Store a build with options for the best match for each build
             # results are sorted best to worst
-            filteredBuilds.append((build, groupTup, imageModel))
+            filteredBuilds.append((build, groupTups, imageModel))
 
         if buildErrors and not force:
             raise mint_error.TroveNotFoundForBuildDefinition(buildErrors)
 
         # Create/start each build.
         buildIds = []
-        for buildDefinition, nvf, imageModel in filteredBuilds:
+        for buildDefinition, nvfList, imageModel in filteredBuilds:
             buildImage = buildDefinition.getBuildImage()
 
             containerTemplate = pd.getContainerTemplate( \
@@ -1844,6 +1868,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
 
+            nvf = nvfList[0]
             n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
             buildName = buildDefinition.name
             buildId = self.newBuildWithOptions(projectId, buildName, n, v, f,
