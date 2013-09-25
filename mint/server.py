@@ -1873,7 +1873,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildName = buildDefinition.name
             buildId = self.newBuildWithOptions(projectId, buildName, n, v, f,
                     buildType, buildSettings, imageModel=imageModel,
-                    start=False)
+                    start=False, productVersionId=versionId,
+                    stageName=stageName)
             buildIds.append(buildId)
             self.startImageJob(buildId)
         return buildIds
@@ -1917,12 +1918,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._getBuildPageUrl(buildId)
 
-    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool, list)
+    @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool, list,
+            int, str)
     @requiresAuth
     @private
     def newBuildWithOptions(self, projectId, buildName, groupName,
             groupVersion, groupFlavor, buildType, buildSettings, start=False,
-            imageModel=None):
+            imageModel=None, productVersionId=None, stageName=None):
         self._filterProjectAccess(projectId)
 
         version = helperfuncs.parseVersion(groupVersion)
@@ -1947,8 +1949,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
 
-        label = version.trailingLabel().asString()
-        versionId, stage = self._getProductVersionForLabel(projectId, label)
+        if productVersionId and stageName:
+            versionId, stage = productVersionId, stageName
+        else:
+            # Detect branch and stage based on the group's label
+            label = version.trailingLabel().asString()
+            versionId, stage = self._getProductVersionForLabel(projectId, label)
         if versionId and stage:
             pd = self._getProductDefinitionForVersionObj(versionId)
             platName = pd.getPlatformName()
