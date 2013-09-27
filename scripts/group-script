@@ -88,7 +88,20 @@ do
     /sbin/service $name start
 done
 
-# Unpause nginx
+# Make sure gunicorn is ready, then unpause nginx
+n=0
+while [ $n -lt 50 ]
+do
+    curl -s 127.0.0.1:7720 >& /dev/null && break
+    if [ $n -eq 0 ]
+    then
+        echo -n Waiting for application server to start
+    fi
+    echo -n .
+    sleep 0.2
+    n=$(($n + 1))
+done
+[ $n -ne 0 ] && echo
 service nginx reload
 
 # Create initial platforms
