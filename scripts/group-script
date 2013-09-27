@@ -39,9 +39,15 @@ die() {
 # Pause nginx
 [ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
 
+# WORKAROUND rmake not having pidfiles until 8.2.0, and thus failing to stop on
+# the first migration where the pidfiles do exist. Remove me in a few major
+# releases. -- mtharp 2013-09
+[ -e /var/run/rmake/rmake-server.pid ] || pkill rmake
+
+
 # Stop all ancillary services
 # crond is included so nothing fails during the migration (cf RBL-7973)
-services="rmake3 rmake3-node rmake-messagebus rmake rmake-node mcp-dispatcher jobmaster rbuilder-authn rbuilder-credstore gunicorn crond"
+services="gunicorn rmake3 rmake3-node rmake-messagebus rmake rmake-node mcp-dispatcher jobmaster rbuilder-authn rbuilder-credstore crond"
 reversed=$(echo "$services" | sed -e 's/ /\n/g' | tac)
 for name in $reversed
 do
