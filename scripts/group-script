@@ -39,10 +39,16 @@ die() {
 # Pause nginx
 [ -f /var/run/nginx.pid ] && kill -WINCH $(cat /var/run/nginx.pid)
 
-# WORKAROUND rmake not having pidfiles until 8.2.0, and thus failing to stop on
-# the first migration where the pidfiles do exist. Remove me in a few major
-# releases. -- mtharp 2013-09
-[ -e /var/run/rmake/rmake-server.pid ] || pkill rmake
+# WORKAROUND rmake3 pidfiles moving in 8.2.0 -- mtharp 2013-10
+for name in rmake-dispatcher.pid rmake-node.pid
+do
+    old=/srv/rmake3/lock/$name
+    new=/var/run/rmake3/$name
+    if [ -e $old ] && ! [ -e $new ]
+    then
+        mv -f $old $new
+    fi
+done
 
 
 # Stop all ancillary services
