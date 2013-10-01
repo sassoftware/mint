@@ -14,14 +14,27 @@ for x in rbuilder-credstore jobmaster mcp-dispatcher jabberd rmake-messagebus ng
 umount /srv
 sed -i -e '/\/srv/d' /etc/fstab
 
-mkdir /var/lib/drbd
+# edit puppet config:
+cp /usr/share/rbuilder/ha/rbuilder.pp.example /etc/rbuilder.pp
+# initial apply, ctrl-c after 'Corosync not ready, retrying'
+puppet apply --debug /etc/rbuilder.pp
+# create drbd metadata
+umount /dev/sdb1
+e2fsck -f /dev/sdb1
+resize2fs /dev/sdb1 [old size minus 1000 blocks, see e2fsck output for block count]
+
+mkdir /var/lib/drbd  #FIXME: packaging
+modprobe drbd
 drbdadm create-md r1
 drbdadm up r1
+
+drbdadm primary --force r1
 e2fsck -f /dev/drbd1
 resize2fs /dev/drbd1
 
 ./sysprep
 # poweroff, clone 2nd node
+
 
 ## per node:
 # HOSTNAME/DHCP_HOSTNAME in /etc/sysconfig/network
@@ -32,17 +45,9 @@ cat >/etc/hosts <<EOD
 172.25.0.50  shared shared.domain
 reboot
 
-## edit puppet config:
-cp /usr/share/rbuilder/ha/rbuilder.pp.example /etc/rbuilder.pp
-
-## (as needed) rsync modified configs over
-rsync -av --delete /etc/ root@mithar-drbd-2.na.sas.com:/etc/ \
-    --exclude adjtime \
-    --exclude mtab \
-    --exclude sysconfig/network \
-    --exclude sysconfig/network-scripts \
-    -n
-
 # run puppet on both nodes at once because corosync will block until both are
 #  running and happy
 puppet apply --debug /etc/rbuilder.pp
+
+# if needed, force drbd to connect on secondary:
+drbdadm connect --discard-my-data r1

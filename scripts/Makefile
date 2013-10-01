@@ -6,6 +6,7 @@ static_files =				\
 	add-lvm-disk			\
 	apply-proxy-settings		\
 	create-platforms		\
+	dump-rbuilder-databases		\
 	deleteproject			\
 	generate-certs.sh		\
 	group-script			\
