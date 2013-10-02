@@ -1928,9 +1928,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
 
         version = helperfuncs.parseVersion(groupVersion)
-        
         groupVersion = version.freeze()
-        groupFlavor = helperfuncs.parseFlavor(groupFlavor).freeze()
+        flavor = helperfuncs.parseFlavor(groupFlavor)
+        groupFlavor = flavor.freeze()
 
         # Make sure we convert from Unicode to UTF-8
         buildName = buildName.encode('UTF-8')
@@ -1944,8 +1944,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         newBuild = builds.Build(self, buildId)
         newBuild.setTrove(groupName, groupVersion, groupFlavor)
-        if imageModel:
-            self.builds.setModel(buildId, imageModel)
+        if not imageModel:
+            imageModel = ['install "%s=%s/%s[%s]"\n' % (
+                    groupName,
+                    version.trailingLabel(),
+                    version.trailingRevision(),
+                    flavor)]
+        self.builds.setModel(buildId, imageModel)
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
 
