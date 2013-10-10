@@ -4,6 +4,7 @@
 
 static_files =				\
 	add-lvm-disk			\
+	add-rmake3-node			\
 	apply-proxy-settings		\
 	create-platforms		\
 	dump-rbuilder-databases		\
