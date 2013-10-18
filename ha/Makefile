@@ -33,6 +33,9 @@ install: default-install $(generated_files)
 	install -D -m0644 rbuilder.pp $(DESTDIR)/usr/share/rbuilder/ha/rbuilder.pp.example
 	install -D -m0755 pri-lost-after-sb.sh $(DESTDIR)/usr/share/rbuilder/ha/pri-lost-after-sb.sh
 	install -D -m0755 rbuilder-ha-cron $(DESTDIR)/usr/share/rbuilder/ha/rbuilder-ha-cron
+	install -D -m0755 cluster-status $(DESTDIR)/usr/sbin/cluster-status
+	install -D -m0755 monitor-cluster $(DESTDIR)/usr/sbin/monitor-cluster
+	install -D -m0755 monitor-cluster.cron $(DESTDIR)/etc/cron.d/monitor-cluster
 
 clean: default-clean
 

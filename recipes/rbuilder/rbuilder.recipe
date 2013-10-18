@@ -217,6 +217,12 @@ class rBuilderProduct(CPackageRecipe):
         # Windows ISO builds requires mkisofs
         r.Requires('/usr/bin/mkisofs', '%(libdir)s/rmake3/.*')
 
+        r.PackageSpec('rbuilder-ha',
+                '/etc/cron.d/monitor-cluster',
+                '/usr/sbin/cluster-status',
+                '/usr/sbin/monitor-cluster',
+                )
+
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')

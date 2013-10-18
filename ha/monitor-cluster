@@ -1,0 +1,13 @@
+#!/bin/bash
+state=/srv/cluster-status
+/usr/sbin/cluster-status >"$state.new"
+if [ ! -e "$state" ]
+then
+    cat "$state.new"
+    rc=1
+else
+    diff -u "$state" "$state.new"
+    rc=$?
+fi
+mv "$state.new" "$state"
+exit $rc
