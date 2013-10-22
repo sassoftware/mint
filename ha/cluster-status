@@ -1,6 +1,6 @@
 #!/bin/bash
 /usr/sbin/crm_mon -1Ar |grep -v 'Last updated:'
 echo
-grep 'cs:' /proc/drbd
+grep 'cs:' /proc/drbd |cut -d' ' -f1-6
 echo
 /usr/sbin/corosync-quorumtool |grep -v 'Date:'
