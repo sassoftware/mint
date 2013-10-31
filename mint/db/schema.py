@@ -1,15 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
-#
-# This program is distributed under the terms of the Common Public License,
-# version 1.0. A copy of this license should have been distributed with this
-# source file in a file called LICENSE. If it is not present, the license
-# is always available at http://www.opensource.org/licenses/cpl.php.
-#
-# This program is distributed in the hope that it will be useful, but
-# without any warranty; without even the implied warranty of merchantability
-# or fitness for a particular purpose. See the Common Public License for
-# full details.
+# Copyright (c) SAS Institute Inc.
 #
 
 '''
@@ -28,7 +18,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(69, 0)
+RBUILDER_DB_VERSION = sqllib.DBversion(69, 1)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -424,6 +414,7 @@ def _createBuilds(db):
             buildCount           integer        NOT NULL    DEFAULT 0,
             productVersionId     integer
                 REFERENCES ProductVersions ON DELETE SET NULL,
+            proddef_version      text,
             stageName            text                       DEFAULT '',
             status               integer                    DEFAULT -1,
             statusMessage        text                       DEFAULT '',

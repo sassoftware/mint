@@ -28,7 +28,7 @@ class BuildsTable(database.KeyedTable):
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
-              'buildCount', 'productVersionId', 'stageName',
+              'buildCount', 'productVersionId', 'stageName', 'proddef_version',
               'status', 'statusMessage', 'job_uuid', 'base_image',
               'image_model',
               ]
@@ -82,16 +82,22 @@ class BuildsTable(database.KeyedTable):
             return None
         return row[0]
 
-    def setProductVersion(self, buildId, versionId, stageName):
+    def setProductVersion(self, buildId, versionId, stageName,
+            proddefVersion=None):
         cu = self.db.cursor()
         stageId = self._getStageId(cu, versionId, stageName)
+        if proddefVersion:
+            proddefVersion = str(proddefVersion)
+        else:
+            proddefVersion = None
         cu.execute("""UPDATE Builds SET productVersionId=?,
                                           stageId=?,
                                           stageName=?,
-                                          troveLastChanged=?
+                                          troveLastChanged=?,
+                                          proddef_version=?
                       WHERE buildId=?""",
                    versionId, stageId, stageName,
-                   time.time(), buildId)
+                   time.time(), proddefVersion, buildId)
         self.db.commit()
 
     def getTrove(self, buildId):
