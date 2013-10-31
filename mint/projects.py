@@ -177,61 +177,6 @@ class Project(database.TableObject):
     def getDefaultImageGroupName(self):
         return "group-%s-dist" % self.shortname.lower()
 
-    def resolveExtraTrove(self, specialTroveName, imageGroupVersion,
-            imageGroupFlavor, specialTroveVersion='', specialTroveFlavor=''):
-        """ 
-        Resolves an extra trove for a build. Returns a full TroveSpec
-        for that trove if found, or an empty string if not found.
-
-        Note that this function is used to resolve the following troves
-        commonly used for builds:
-        - I{anaconda-custom}
-        - I{anaconda-templates}
-        - I{media-template}
-
-        @param specialTroveName: the name of the special trove (e.g.
-            'anaconda-templates')
-        @type specialTroveName: C{str}
-        @param imageGroupVersion: a frozen Version object for the image
-            group intended to be used with the build
-        @type imageGroupVersion: C{str} (frozen Version object)
-        @param imageGroupFlavor: a frozen Flavor object for the image
-            group intended to be used with the build
-        @type imageGroupFlavor: C{str} (frozen Flavor object)
-        @param specialTroveVersion: (optional) A version of the special trove,
-            often a label. If no version is given, the imageGroupVersion is used
-            instead.
-        @type specialTroveVersion: C{str}
-        @param specialTroveFlavor: (optional) A flavor string for the special trove
-            (e.g. 'is: x86'). If no flavor string is used, the imageGroupFlavor
-            is used instead.
-        @type specialTroveVersion: C{str}
-        @returns The TroveSpec of the special trove, or an empty string
-            if no suitable trove was found.
-        @rtype C{str}
-        """
-        if imageGroupVersion is None:
-            imageGroupVersion = ''
-        elif hasattr(imageGroupVersion, 'asString'):
-            imageGroupVersion = imageGroupVersion.asString()
-        if imageGroupFlavor is None:
-            imageGroupFlavor = ''
-        elif hasattr(imageGroupFlavor, 'freeze'):
-            imageGroupFlavor = imageGroupFlavor.freeze()
-
-        if specialTroveVersion is None:
-            specialTroveVersion = ''
-        elif hasattr(specialTroveVersion, 'asString'):
-            specialTroveVersion = specialTroveVersion.asString()
-        if specialTroveFlavor is None:
-            specialTroveFlavor = ''
-        elif hasattr(specialTroveFlavor, 'freeze'):
-            specialTroveFlavor = specialTroveFlavor.freeze()
-
-        return self.server.resolveExtraTrove(self.id,
-                specialTroveName, specialTroveVersion, specialTroveFlavor,
-                imageGroupVersion, imageGroupFlavor)
-
 
 class ProductVersions(database.TableObject):
 

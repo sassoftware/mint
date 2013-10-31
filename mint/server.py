@@ -1686,9 +1686,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return build
 
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
         buildId = self.builds.new(projectId = projectId,
@@ -2120,9 +2117,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._deleteBuild(buildId, force=False)      
 
-    @typeCheck(int, dict)
-    @requiresAuth
-    @private
     def updateBuild(self, buildId, valDict):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
@@ -2154,9 +2148,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
-    @typeCheck(int, str, str, str, str, str)
-    @private
-    @requiresAuth
     def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
             specialTroveFlavor, imageGroupVersion, imageGroupFlavor):
         searchPath = []
@@ -2231,8 +2222,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             ret.append(text)
         return ret
 
-    @typeCheck(int)
-    @private
     def serializeBuild(self, buildId):
         self._filterBuildAccess(buildId)
 
@@ -2507,9 +2496,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self.builds.getTrove(buildId)
 
-    @typeCheck(int, str, str, str)
-    @requiresAuth
-    @private
     def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
