@@ -15,6 +15,7 @@
 import os
 from lxml import etree
 from xobj import xobj
+from rpath_proddef.api1 import ProductDefinition
 
 from mint.django_rest.rbuilder.inventory.tests import XMLTestCase
 
@@ -78,7 +79,7 @@ class VersionsTestCase(XMLTestCase):
   <targets id="http://testserver/api/v1/targets"/>
   <version_info>
     <conary_version>conary-version-42</conary_version>
-    <product_definition_schema_version>4.5</product_definition_schema_version>
+    <product_definition_schema_version>%(proddef_version)s</product_definition_schema_version>
     <rbuilder_version>mint-version-42</rbuilder_version>
     <rmake_version>rmake-version-42</rmake_version>
   </version_info>
@@ -88,7 +89,9 @@ class VersionsTestCase(XMLTestCase):
       <rpath_descriptor_1_1 id="/schemas/descriptor-1.1.xsd" name="descriptor-1.1.xsd"/>
     </schemas>
   </xml_resources>
-</api_version>""")
+</api_version>""" % dict(
+    proddef_version=ProductDefinition.version,
+    ))
 
     def testAccessViaRepeaterIsHttps(self):
         # RCE-2021
