@@ -10,7 +10,7 @@ import errno
 import hashlib
 import logging
 import os
-from cStringIO import StringIO
+import sys
 import time
 import weakref
 from collections import namedtuple
@@ -36,7 +36,9 @@ from conary.repository.netrepos import proxy
 from conary.repository.netrepos.auth_tokens import (
         AuthToken, ValidPasswordToken, ValidUser)
 from conary.server import schema as conary_schema
+from cStringIO import StringIO
 
+from mint import config
 from mint import userlevels
 from mint.lib import auth_client
 from mint.mint_error import RepositoryDatabaseError
@@ -516,22 +518,29 @@ class RepositoryHandle(object):
         cfg.contentsDir = ' '.join(self.contentsDirs)
         cfg.tmpDir = os.path.join(self._cfg.dataPath, 'tmp')
 
-        if self._cfg.commitAction:
-            actionDict = {
-                    'repMap': '%s %s' % (fqdn, self.getURL()),
-                    'buildLabel': '%s@rpl:1' % (fqdn,),
-                    'projectName': shortName,
-                    'fqdn': fqdn,
-                    'commitFromEmail': self._cfg.commitEmail,
-                    'commitEmail': self.commitEmail,
-                    'basePath': self._cfg.basePath,
-                    'authUser': self._cfg.authUser,
-                    'authPass': self._cfg.authPass,
-                    }
-            cfg.commitAction = self._cfg.commitAction % actionDict
-            if self._cfg.commitActionEmail and self.commitEmail:
-                cfg.commitAction += (
-                        ' ' + self._cfg.commitActionEmail % actionDict)
+        action = ("%(executable)s -mconary.server.commitaction"
+                " --repmap='%(repMap)s'"
+                " --build-label=%(buildLabel)s "
+                " --username=%(authUser)s "
+                " --password=%(authPass)s "
+                " --module='mint.rbuilderaction --config=%(config)s"
+                    "--user=%%(user)s --hostname=%(fqdn)s'")
+        if self.commitEmail:
+            action += (" --module='conary.changemail --user=%%(user)s"
+                    " --from=%(commitFromEmail)s --email=%(commitEmail)s'")
+        actionDict = {
+                'executable': sys.executable,
+                'config': config.RBUILDER_CONFIG,
+                'repMap': '%s %s' % (fqdn, self.getURL()),
+                'buildLabel': '%s@rpl:1' % (fqdn,),
+                'projectName': shortName,
+                'fqdn': fqdn,
+                'commitFromEmail': self._cfg.commitEmail,
+                'commitEmail': self.commitEmail,
+                'authUser': self._cfg.authUser,
+                'authPass': self._cfg.authPass,
+                }
+        cfg.commitAction = action % actionDict
 
         return cfg
 

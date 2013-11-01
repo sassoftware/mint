@@ -1,0 +1,50 @@
+#
+# Copyright (c) SAS Institute Inc.
+#
+
+
+class appengine (
+    $hostname                       = 'UNSET',
+    $admin_email                    = 'UNSET',
+    $project_domain                 = 'UNSET',
+    $namespace                      = 'sas',
+    ) {
+
+    $site_fqdn = $hostname ? {
+        'UNSET' => $fqdn,
+        default => $hostname,
+    }
+
+    $email = $admin_email ? {
+        'UNSET' => '',
+        default => "
+adminMail $admin_email
+bugsEmail $admin_email
+",
+    }
+
+    $host_part   = regsubst($site_fqdn, '^([^.]+)[.](.*)$', '\1')
+    $domain_part = regsubst($site_fqdn, '^([^.]+)[.](.*)$', '\2')
+
+    file { '/srv/rbuilder/config/config.d/00_site.conf':
+        ensure => file,
+        content => "
+configured True
+hostName            $host_part
+siteDomainName      $domain_part
+secureHost          $site_fqdn
+namespace           $namespace
+projectDomainName   $project_domain
+$email
+",
+        notify => Service['gunicorn'],
+    }
+
+    service { 'gunicorn': ensure => running, enable => true }
+    service { 'mcp-dispatcher': ensure => running, enable => true }
+    service { 'rbuilder-credstore': ensure => running, enable => true }
+    service { 'pgbouncer': ensure => running, enable => true }
+    service { 'postgresql-rbuilder': ensure => running, enable => true }
+    #service { 'rmake-messagebus': ensure => running, enable => true }
+    #service { 'jabberd': ensure => running, enable => true }
+}

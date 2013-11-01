@@ -34,7 +34,7 @@ rbuilder_dirs = {
 
 class rBuilderProduct(CPackageRecipe):
     name = 'rbuilder'
-    version = '5.0'
+    version = '8'
 
     buildRequires = [
         'boto:python',
@@ -67,7 +67,6 @@ class rBuilderProduct(CPackageRecipe):
         'python-raven',
         'python-twisted:python',
         'python-webob:python',
-        'rapa:python',
         'restlib:python',
         'rmake3:python',
         'rmake:python',
@@ -103,13 +102,6 @@ class rBuilderProduct(CPackageRecipe):
         else:
             r.macros.shortVersion = r.version
 
-        # items for media-template
-        r.macros.product = 'rPath rBuilder'
-        r.addSource('RELEASE-NOTES-en_US.html',
-            dest = '/usr/lib/media-template/disc1/', macros = True)
-        r.addSource('isolinux.cfg', dest='/usr/lib/media-template/disc1/isolinux/')
-        r.addSource('EULA.txt')
-
     def build(r):
         buildLabel = r.macros.get('buildlabel', 'products.rpath.com@rpath:rba-4')
         r.Make( \
@@ -139,19 +131,9 @@ class rBuilderProduct(CPackageRecipe):
             r.DanglingSymlinks(exceptions=target)
             r.Requires(tk + ':runtime', target)
 
-        # allow apache to write to a few "generated" files
-        r.Ownership('apache', 'root',
-            '%(servicedir)s/rbuilder/config/rbuilder-(generated|custom).conf')
-        r.Ownership('apache', 'root',
-            r'/etc/rmake/(node|server).d/25_rbuilder-rapa.conf')
-
         # create run directory for authentication service
         r.MakeDirs('/var/lib/twisted-taps/rbuilder-authn')
         r.ExcludeDirectories(exceptions='/var/lib/twisted-taps/rbuilder-authn')
-
-        # documentation and media-template bits
-        r.Install('EULA.txt', '/usr/lib/media-template/disc1/')
-        r.Install('EULA.txt', '%(thisdocdir)s/')
 
         # compile all .py files into .pyc
         r.CompilePython('/')
@@ -173,7 +155,7 @@ class rBuilderProduct(CPackageRecipe):
 
         # These files contain defaults or stubs and should always be
         # replaced.
-        r.Transient(r'%(servicedir)s/rbuilder/config/(rbuilder|pcreator).conf')
+        r.Transient(r'%(servicedir)s/rbuilder/config/rbuilder.conf')
         r.Transient(r'/etc/sysconfig/pgsql/postgresql-rbuilder')
         r.Transient(r'/usr/share/rbuilder/postgresql.conf')
         r.Config(exceptions=r'/etc/sysconfig/pgsql/postgresql-rbuilder')
@@ -194,11 +176,7 @@ class rBuilderProduct(CPackageRecipe):
         r.Requires('rbuilder:python(%(version)s)',
                    '%(sitepkg)s/mint/web/webhandler.pyc')
         r.Requires('rbuilder:python(%(version)s)',
-                   '%(datadir)s/rbuilder/scripts/migrate-config')
-
-        # Our rAPA plugins require rapa-plugin-rPath
-        r.Requires('rapa-plugin-rPath:lib',
-            '%(libdir)s/raa/rPath/[^/]+/__init__.pyc')
+                   '%(datadir)s/rbuilder/scripts/rbuilder-database')
 
         # Script runtime dependencies
         r.Requires('/usr/sbin/tmpwatch',
@@ -226,7 +204,6 @@ class rBuilderProduct(CPackageRecipe):
         # Anaconda customization
         # This comes first so it is omitted from the -sources split.
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
-        r.PackageSpec('media-template', r'/usr/lib/media-template/')
 
         # Attempt to isolate things that don't work when mint is just a library
         r.ComponentSpec('appliance', '/usr/share/raa/')

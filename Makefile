@@ -20,11 +20,9 @@ export PYTHON = /usr/bin/python
 export PYVER = $(shell $(PYTHON) -c 'import sys; print sys.version[0:3]')
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts raaplugins rmake_plugins doc distro twisted ha
+SUBDIRS = mint scripts rmake_plugins doc distro twisted ha puppet
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
-
-generated_files = VERSION INSTALL
 
 .PHONY: doc mint_test $(generated_files)
 
@@ -56,24 +54,6 @@ dist-tarball:
 	tar -cjf $(DISTNAME).tar.bz2 $(DISTNAME)/
 	rm -rf $(DISTDIR)
 
-
-## Generated files
-INSTALL: INSTALL.in
-	sed -e s,@version@,$(VERSION),g $< > $@
-
-VERSION:
-	echo "This is rBuilder $(VERSION)" > VERSION
-
-
-## Dist-specific rules
-strip-raa:
-	rm -rf $(DISTDIR)/raaplugins/*
-	echo "all: " > $(DISTDIR)/raaplugins/Makefile
-	echo "install: " >> $(DISTDIR)/raaplugins/Makefile
-
-dummy:
-	echo VERSION: $(VERSION)
-	echo DISTDIR: $(DISTDIR)
 
 include Make.rules
 

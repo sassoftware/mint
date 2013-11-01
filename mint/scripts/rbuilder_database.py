@@ -1,16 +1,14 @@
 #
-# Copyright (c) 2007-2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import optparse
-import os
 import sys
 
 from conary import dbstore
 from mint import config
 from mint.db import schema
 from mint.lib import scriptlibrary
-from mint.scripts.db2db.migrate import switchToPostgres
 
 
 class Script(scriptlibrary.SingletonScript):
@@ -47,7 +45,5 @@ class Script(scriptlibrary.SingletonScript):
             schema.createSchema(db, cfg=self.cfg)
         else:
             schema.loadSchema(db, self.cfg, self.options.should_migrate)
-            if self.options.should_migrate and db.driver == 'sqlite':
-                switchToPostgres(self.cfg)
 
         return 0

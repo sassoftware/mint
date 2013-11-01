@@ -29,21 +29,9 @@ from conary.lib.cfgtypes import (CfgBool, CfgDict, CfgEnum, CfgInt,
 
 RBUILDER_DATA = os.getenv('RBUILDER_DATA', '/srv/rbuilder/')
 RBUILDER_CONFIG = os.getenv('RBUILDER_CONFIG_PATH', RBUILDER_DATA + 'config/rbuilder.conf')
-RBUILDER_GENERATED_CONFIG = RBUILDER_DATA + 'config/rbuilder-generated.conf'
 RBUILDER_RMAKE_CONFIG = "/etc/rmake/server.d/25_rbuilder-rapa.conf"
 
 CONARY_CONFIG = os.getenv('CONARY_CONFIG_PATH', '/etc/conaryrc')
-
-# These are keys that are generated for the "generated" configuration file
-# Note: this is *only* used for the product, as rBO doesn't get configured
-# via "setup".
-keysForGeneratedConfig = [ 'configured', 'hostName', 'siteDomainName',
-                           'companyName', 'corpSite', 'namespace',
-                           'projectDomainName', 'SSL',
-                           'secureHost', 'bugsEmail', 'adminMail',
-                           'externalPasswordURL', 'authCacheTimeout',
-                           'requireSigs', 'authPass', 'dbDriver', 'dbPath',
-                           ]
 
 _templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -101,8 +89,6 @@ class CfgBuildEnum(CfgEnum):
 class MintConfig(conarycfg.ConfigFile):
     configured              = (CfgBool, False)
     dataPath                = (CfgPath, '/srv/rbuilder/')
-    rBuilderOnline          = (CfgBool, False)
-    rBuilderExternal        = (CfgBool, False)
 
     # Backend configuration
     adminMail               = (CfgString, 'mint@rpath.org')
@@ -111,11 +97,9 @@ class MintConfig(conarycfg.ConfigFile):
     bugsEmail               = (CfgString, None)
     bugsEmailName           = (CfgString, 'rBuilder Bugs')
     bugsEmailSubject        = (CfgString, 'rBuilder Unhandled Exception Report from %(hostname)s')
-    commitActionEmail       = (CfgString, None)
-    commitAction            = (CfgString, None)
     commitEmail             = (CfgString, None)
-    dbDriver                = (CfgString, 'sqlite')
-    dbPath                  = (CfgString, None)
+    dbDriver                = (CfgString, 'pgpool')
+    dbPath                  = (CfgString, 'postgres@localhost.localdomain:6432/mint')
     debugMode               = (CfgBool, False)
     disableAuthorization    = (CfgBool, False)
     maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
@@ -124,7 +108,7 @@ class MintConfig(conarycfg.ConfigFile):
     smallBugsEmail          = (CfgString, None)
     memCache                = (CfgString, 'localhost:11211')
     memCacheTimeout         = (CfgInt, 86400)
-    authSocket              = (CfgPath, None)
+    authSocket              = (CfgPath, '/tmp/mintauth.sock')
     sentryDSN               = (CfgString, None)
 
     # Handler configuration
@@ -140,7 +124,7 @@ class MintConfig(conarycfg.ConfigFile):
     projectDomainName       = (CfgString, None)
     staticPath              = (CfgString, '/conary-static/')
     secureHost              = (CfgString, None)
-    SSL                     = (CfgBool, False, "SSL required for login and write access to rBuilder-based products")
+    SSL                     = (CfgBool, True, "SSL required for login and write access to rBuilder-based products")
     siteDomainName          = (CfgString, 'rpath.com',
         "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
     templatePath            = (CfgPath, _templatePath + '/web/templates')
@@ -190,7 +174,6 @@ class MintConfig(conarycfg.ConfigFile):
     requireSigs             = (CfgBool, None,
                                "Require that all commits to local "
                                "repositories be signed by an OpenPGP key.")
-    useInternalConaryProxy  = (CfgBool, False)
 
     proxyContentsDir        = (CfgPath, RBUILDER_DATA + '/proxy-contents/')
     proxyTmpDir             = (CfgPath, RBUILDER_DATA + '/tmp/')
@@ -204,8 +187,6 @@ class MintConfig(conarycfg.ConfigFile):
     hideNewProjects         = (CfgBool, False)
     namespace               = (CfgString, '',
             "The default namespace used by products you create in rBuilder")
-    groupApplianceLabel     = (CfgString, 'rap.rpath.com@rpath:linux-1',
-            "The label that contains the group-appliance-platform superclass")
 
     # Upstream resources
     proxy                   = conarycfg.CfgProxy
@@ -218,23 +199,15 @@ class MintConfig(conarycfg.ConfigFile):
     tosLink                 = (CfgString, '')
     tosPostLoginLink        = (CfgString, '')
     privacyPolicyLink       = (CfgString, '')
-    companyName             = (CfgString, 'rPath, Inc.',
-        "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
-    productName             = (CfgString, 'rBuilder at rpath.org',
+    productName             = (CfgString, 'SAS App Engine',
         "Name by which you refer to the rBuilder service: (Used heavily throughout rBuilder)")
-    corpSite                = (CfgString, 'http://www.rpath.com/corp/',
-        "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
-    supportContactHTML      = (CfgString, 'Contact information in HTML.')
-    supportContactTXT       = (CfgString, 'Contact information in text.')
+    supportContactHTML      = (CfgString, "your local system administrator")
+    supportContactTXT       = (CfgString, "your local system administrator")
     announceLink            = (CfgString, '')
     googleAnalyticsTracker  = (CfgBool, False)
 
     # Build system
     anacondaTemplatesFallback   = (CfgString, 'conary.rpath.com@rpl:1')
-    packageCreatorConfiguration = (CfgPath, None)
-    visibleBuildTypes       = (CfgList(CfgBuildEnum))
-    excludeBuildTypes       = (CfgList(CfgBuildEnum))
-    includeBuildTypes       = (CfgList(CfgBuildEnum))
     queueHost               = (CfgString, '127.0.0.1')
     queuePort               = (CfgInt, 50900)
 
@@ -314,6 +287,18 @@ class MintConfig(conarycfg.ConfigFile):
     createConaryRcFile      = None
     diffCacheDir            = None
     noticesRssFeed          = None
+    commitActionEmail       = None
+    commitAction            = None
+    rBuilderOnline          = None
+    rBuilderExternal        = None
+    groupApplianceLabel     = None
+    companyName             = None
+    corpSite                = None
+    visibleBuildTypes       = None
+    excludeBuildTypes       = None
+    includeBuildTypes       = None
+    useInternalConaryProxy  = True
+    packageCreatorConfiguration = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")
@@ -382,23 +367,6 @@ class MintConfig(conarycfg.ConfigFile):
         # Similar to conarycfg.getProxyMap, but only supports the 'proxy'
         # option.
         return conarycfg.getProxyMap(self)
-
-    def writeGeneratedConfig(self, path=RBUILDER_GENERATED_CONFIG, fObj=None):
-        """
-        Write all the options in keysForGeneratedConfig to
-        rbuilder-generated.conf
-        """
-        if not fObj:
-            fObj = open(path, 'w')
-
-        for key in keysForGeneratedConfig:
-            self.displayKey(key, out=fObj)
-
-        # Only write the 'default' database alias, anything
-        # else came from somewhere else.
-        if 'default' in self.database:
-            self._options['database'].write(fObj,
-                    {'default': self.database['default']}, {})
 
     def getDBParams(self):
         """Return a dictionary of psycopg params needed to connect to mintdb."""

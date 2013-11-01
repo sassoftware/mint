@@ -237,13 +237,6 @@ def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
     cfg.configured = True
     cfg.debugMode = True
     cfg.sendNotificationEmails = False
-    scriptPath = resources.get_path('scripts/commitaction')
-    if serverRoot:
-        cfg.commitAction = ("%s --username=mintauth --password=mintpass "
-                "--repmap='%%(repMap)s' --build-label=%%(buildLabel)s "
-                "--module='%s/mint/rbuilderaction.py --user=%%%%(user)s "
-                    "--hostname=%%(fqdn)s --config=%s'"
-                % (scriptPath, mintPath, serverRoot + '/rbuilder.conf'))
     cfg.postCfg()
 
     cfg.hideFledgling = True

@@ -29,7 +29,6 @@ generated_files = $(generic_scripts)
 
 generic_scripts = \
 	job-cleanup			\
-	migrate-config			\
 	mirror-inbound			\
 	mirror-outbound			\
 	pki-tool			\

@@ -2623,32 +2623,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.db.commit()
         return True
 
-    @typeCheck()
-    @private
-    def getAvailableBuildTypes(self):
-        buildTypes = set(buildtypes.TYPES)
-
-        if self.cfg.excludeBuildTypes:
-            buildTypes -= set(self.cfg.excludeBuildTypes)
-
-        if self.cfg.includeBuildTypes:
-            buildTypes |= set(self.cfg.includeBuildTypes)
-
-        # BOOTABLE_IMAGE should never be a valid image type, so make sure it's
-        # removed
-        buildTypes.remove(buildtypes.BOOTABLE_IMAGE)
-
-        sortedList = sorted(buildTypes) 
-
-        # make image-less the first one for UI display
-        try:
-            sortedList.insert(0,
-                    sortedList.pop(sortedList.index(buildtypes.IMAGELESS)))
-        except ValueError:
-            pass # do nothing if buildtypes.IMAGELESS isn't in the list
-
-        return sortedList
-
     @typeCheck(int)
     @requiresAuth
     def startImageJob(self, buildId):

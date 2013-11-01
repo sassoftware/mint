@@ -68,7 +68,6 @@ class rBuilderTest(TestPackageRecipe):
         r.MakeDirs('../mint')
         r.Move('mint/django_rest', 'django_rest')
         r.Move('mint', '../mint/mint')
-        r.Move('raaplugins', '../mint/raaplugins')
 
         r.test()
         r.install()

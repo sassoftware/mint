@@ -366,9 +366,6 @@ class MintClient:
         """
         return self.server.setProductVisibility(projectId, makePrivate)
 
-    def getAvailableBuildTypes(self):
-        return self.server.getAvailableBuildTypes()
-
     def getBuild(self, buildId):
         """
         Retrieve a L{builds.Build} object by build id.

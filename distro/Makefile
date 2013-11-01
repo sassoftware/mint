@@ -17,7 +17,6 @@ install: default-install
 	# data directories
 	mkdir -p $(DESTDIR)/srv/rbuilder/pki
 	# rBuilder config
-	touch $(DESTDIR)/srv/rbuilder/config/conaryrc
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	sed -i "s/python2.4/python$(PYVER)/g" $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	install -D -m0644 metadataDescriptor.xml $(DESTDIR)/srv/rbuilder/data/metadataDescriptor.xml

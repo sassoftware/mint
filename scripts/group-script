@@ -71,10 +71,6 @@ service pgbouncer start
 chown -f apache:apache /srv/rbuilder/data/db /srv/rbuilder/repos/* 2>/dev/null
 rm -f /srv/rbuilder/data/platformName.cache
 
-# Migrate the mint config
-"$scriptdir"/migrate-config --migrate || die "Failed to migrate the rBuilder configuration file"
-chown apache:apache /srv/rbuilder/config/rbuilder-generated.conf
-
 # Migrate all conary repositories
 "$scriptdir"/migrate-all-projects
 

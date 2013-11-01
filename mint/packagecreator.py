@@ -278,6 +278,4 @@ def getPackageCreatorClient(mintCfg, authToken, callback=None,
     cfg.storagePath = os.path.join(mintCfg.dataPath, 'tmp')
     cfg.tmpFileStorage = cfg.storagePath
     cfg.djangoManagerCallback = djangoManagerCallback
-    if mintCfg.packageCreatorConfiguration:
-        cfg.read(mintCfg.packageCreatorConfiguration)
     return ShimClient(cfg, auth, callback = callback)
