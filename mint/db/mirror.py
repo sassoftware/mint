@@ -73,12 +73,6 @@ class OutboundMirrorsTable(database.KeyedTable):
                 x[6], bool(x[7]), bool(x[8])] \
                 for x in cu.fetchall()]
 
-    def isProjectMirroredByRelease(self, projectId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*) FROM OutboundMirrors
-            WHERE sourceProjectId = ? AND useReleases = 1""", projectId)
-        count = cu.fetchone()[0]
-        return bool(count)
 
 class OutboundMirrorsUpdateServicesTable(database.DatabaseTable):
     name = "OutboundMirrorsUpdateServices"

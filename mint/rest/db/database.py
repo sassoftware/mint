@@ -23,7 +23,6 @@ from mint.rest.db import pkimgr
 from mint.rest.db import platformmgr
 from mint.rest.db import productmgr
 from mint.rest.db import publisher
-from mint.rest.db import releasemgr
 from mint.rest.db import systemmgr
 from mint.rest.db import targetmgr
 from mint.rest.db import usermgr
@@ -131,8 +130,6 @@ class Database(DBInterface):
                                                     self.publisher)
         self.fileMgr = filemgr.FileManager(cfg, self, auth)
         self.imageMgr = imagemgr.ImageManager(cfg, self, auth, self.publisher)
-        self.releaseMgr = releasemgr.ReleaseManager(cfg, self,
-                                                    auth, self.publisher)
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
         self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
@@ -579,76 +576,10 @@ class Database(DBInterface):
         return self.imageMgr.stopImageJob(imageId)
 
     @readonly
-    def listReleasesForProduct(self, hostname, limit=None):
-        self.auth.requireProductReadAccess(hostname)
-        return self.releaseMgr.listReleasesForProduct(hostname, limit=limit)
-
-    @readonly    
-    def getReleaseForProduct(self, hostname, releaseId):
-        self.auth.requireProductReadAccess(hostname)
-        return self.releaseMgr.getReleaseForProduct(hostname, releaseId)
-
-    @commitafter
-    def createRelease(self, hostname, name, description, version, imageIds):
-        self.auth.requireProductDeveloper(hostname)
-        self.auth.requireBuildsOnHost(hostname, imageIds)
-        releaseId = self.releaseMgr.createRelease(hostname, name, description,
-                                                  version, imageIds)
-        return releaseId
-
-    @commitafter
-    def deleteRelease(self, hostname, releaseId):
-        self.auth.requireProductDeveloper(hostname)
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.releaseMgr.deleteRelease(releaseId)
-
-    @commitafter
-    def updateRelease(self, hostname, releaseId, name, description, version,
-                      published, shouldMirror, imageIds):
-        self.auth.requireProductDeveloper(hostname)
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-	if imageIds:
-            self.auth.requireBuildsOnHost(hostname, imageIds)
-        self.releaseMgr.updateRelease(hostname, releaseId,
-                                      name, description, version,
-                                      published, shouldMirror, imageIds)
-
-    @commitafter
-    def updateImagesForRelease(self, hostname, releaseId, imageIds):
-        self.auth.requireProductDeveloper(hostname)
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireBuildsOnHost(hostname, imageIds)
-        self.releaseMgr.updateImagesForRelease(hostname, releaseId, imageIds)
-
-    @commitafter
-    def addImageToRelease(self, hostname, releaseId, imageId):
-        self.auth.requireProductDeveloper(hostname)
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireBuildsOnHost(hostname, [imageId])
-        self.releaseMgr.addImageToRelease(hostname, releaseId, imageId)
-
-    @commitafter
-    def publishRelease(self, hostname, releaseId, shouldMirror):
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireProductOwner(hostname)
-        self.releaseMgr.publishRelease(releaseId, shouldMirror)
-
-    @commitafter
-    def unpublishRelease(self, hostname, releaseId):
-        self.auth.requireReleaseOnHost(hostname, releaseId)
-        self.auth.requireProductOwner(hostname)
-        self.releaseMgr.unpublishRelease(releaseId)
-
-    @readonly
     def listImagesForTrove(self, hostname, name, version, flavor):
         self.auth.requireProductReadAccess(hostname)
         return self.imageMgr.listImagesForTrove(hostname, name, version,
                 flavor)
-
-    @readonly
-    def listImagesForRelease(self, hostname, releaseId):
-        self.auth.requireProductReadAccess(hostname)
-        return self.imageMgr.listImagesForRelease(hostname, releaseId)
 
     @readonly
     def listImagesForProduct(self, hostname):

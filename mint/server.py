@@ -2,7 +2,6 @@
 # Copyright (c) SAS Institute Inc.
 #
 
-import base64
 import errno
 import logging
 import os
@@ -21,7 +20,6 @@ from mint.rest.db import database as rest_database
 from mint import users
 from mint.lib import data
 from mint.lib import database
-from mint.lib import maillib
 from mint.lib import profile
 from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
@@ -33,13 +31,9 @@ from mint import maintenance
 from mint import mint_error
 from mint import buildtemplates
 from mint import projects
-from mint import reports
-from mint import templates
 from mint import userlevels
-from mint import usertemplates
 from mint import urltypes
 from mint.db import repository
-from mint.reports import MintReport
 from mint.image_gen.wig import client as wig_client
 from mint import packagecreator
 from mint.rest import errors as rest_errors
@@ -405,24 +399,6 @@ class MintServer(object):
 
         self._filterProjectAccess(buildRow['projectId'])
 
-
-    def _filterPublishedReleaseAccess(self, pubReleaseId):
-        try:
-            pubReleaseRow = self.publishedReleases.get(pubReleaseId,
-                    fields=['projectId'])
-        except mint_error.ItemNotFound:
-            return
-
-        isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
-        # if the release is not published, then only project members
-        # with write access can see the published release
-        if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
-            raise mint_error.ItemNotFound()
-        # if the published release is published, then anyone can see it
-        # unless the project is hidden and the user is not an admin
-        else:
-            self._filterProjectAccess(pubReleaseRow['projectId'])
-
     def _filterLabelAccess(self, labelId):
         try:
             labelRow = self.labels.get(labelId, fields=['projectId'])
@@ -748,89 +724,9 @@ class MintServer(object):
         filter = (self.auth.userId != userId) and (not self.auth.admin)
         return self.projects.getProjectIdsByMember(userId, filter)
 
-    @typeCheck(int)
-    @private
     def getProjectDataByMember(self, userId):
         filter = (self.auth.userId != userId) and (not self.auth.admin)
         return self.projects.getProjectDataByMember(userId, filter)
-
-    @typeCheck(int)
-    @private
-    def getMembersByProjectId(self, id):
-        self._filterProjectAccess(id)
-        return self.projectUsers.getMembersByProjectId(id)
-
-    @typeCheck(int, int)
-    @private
-    def userHasRequested(self, projectId, userId):
-        self._filterProjectAccess(projectId)
-        return self.membershipRequests.userHasRequested(projectId, userId)
-
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def deleteJoinRequest(self, projectId, userId):
-        self._filterProjectAccess(projectId)
-        self.membershipRequests.deleteRequest(projectId, userId)
-        return True
-
-    @typeCheck(int)
-    @private
-    @requiresAuth
-    def listJoinRequests(self, projectId):
-        self._filterProjectAccess(projectId)
-        reqList = self._listAllJoinRequests(projectId)
-        return [ (x, self.users.getUsername(x)) for x in reqList]
-    
-    def _listAllJoinRequests(self, projectId):
-        return self.membershipRequests.listRequests(projectId)
-
-    @typeCheck(int, str)
-    @private
-    @requiresAuth
-    def setJoinReqComments(self, projectId, comments):
-        self._filterProjectAccess(projectId)
-        # only add if user is already a member of project
-        userId = self.auth.userId
-        memberList = self.getMembersByProjectId(projectId)
-        if userId in [x[0] for x in memberList]:
-            # in other words, filter emails for alterations to a join request
-            if (userId, userlevels.USER) not in [(x[0], x[2]) for x in memberList]:
-                return False
-        if self.cfg.sendNotificationEmails and \
-               not self.membershipRequests.userHasRequested(projectId, userId):
-            projectName = self.getProject(projectId)['hostname']
-            owners = self.projectUsers.getOwnersByProjectName(projectName)
-            for name, email in owners:
-                projectName = self.getProject(projectId)['name']
-                subject = projectName + " Membership Request"
-
-                if self.auth.fullName:
-                    name = "%s (%s)" % (self.auth.username, self.auth.fullName)
-                else:
-                    name = self.auth.username
-                from mint.templates import joinRequest
-                message = templates.write(joinRequest,
-                                          projectName = projectName, 
-                                          comments = comments, cfg = self.cfg,
-                                          displayEmail = self.auth.displayEmail,
-                                          name = name)
-                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
-        self.membershipRequests.setComments(projectId, userId, comments)
-        return True
-
-    @typeCheck(int, int)
-    @private
-    @requiresAuth
-    def getJoinReqComments(self, projectId, userId):
-        self._filterProjectAccess(projectId)
-        return self.membershipRequests.getComments(projectId, userId)
-
-    @typeCheck(str)
-    @requiresAdmin
-    @private
-    def getOwnersByProjectName(self, name):
-        return self.projectUsers.getOwnersByProjectName(name)
 
     @typeCheck(int, ((int, type(None)),), ((str, type(None)),), int)
     @requiresAuth
@@ -884,18 +780,6 @@ class MintServer(object):
         # acl in question can be non-existent
         return res and res[0] or False
 
-    @typeCheck(int, int)
-    @private
-    def lastOwner(self, projectId, userId):
-        self._filterProjectAccess(projectId)
-        return self.projectUsers.lastOwner(projectId, userId)
-
-    @typeCheck(int, int)
-    @private
-    def onlyOwner(self, projectId, userId):
-        self._filterProjectAccess(projectId)
-        return self.projectUsers.onlyOwner(projectId, userId)
-
     @typeCheck(int, int, bool)
     @requiresAuth
     def delMember(self, projectId, userId, notify=True):
@@ -912,9 +796,6 @@ class MintServer(object):
 
             user = self.getUser(userId)
 
-            if notify:
-                self._notifyUser('Removed', user, project)
-
             self.projectUsers.delete(projectId, userId, commit=False)
 
         except:
@@ -927,90 +808,6 @@ class MintServer(object):
             self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
                                                        user['username'])
         return True
-
-    def _notifyUser(self, action, user, project, userlevel=None):
-        userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
-                                             'Unknown')
-        projectUrl = 'http://%s%sproject/%s/' %\
-                      (self.cfg.siteHost,
-                       self.cfg.basePath,
-                       project.getHostname())
-
-        greeting = "Hello,"
-
-        actionText = {'Removed':'has been removed from the "%s" project'%\
-                       project.getName(),
-
-                      'Added':'has been added to the "%s" project as %s %s' % (project.getName(), userlevelname == 'Developer' and 'a' or 'an', userlevelname),
-
-                      'Changed':'has had its current access level changed to "%s" on the "%s" project' % (userlevelname, project.getName())
-                     }
-
-        helpLink = """
-
-Instructions on how to set up your build environment for this project can be found at http://wiki.rpath.com/
-
-If you would not like to be %s %s of this project, you may resign from this project at %smembers""" % \
-        (userlevelname == 'Developer' and 'a' or 'an',
-            userlevelname, projectUrl)
-
-        closing = 'If you have questions about the project, please contact the project owners.'
-
-        adminHelpText = {'Removed':'',
-                         'Added':'\n\nIf you would not like this account to be %s %s of this project, you may remove them from the project at %smembers' %\
-                         (userlevelname == 'Developer' and 'a' or 'an', 
-                          userlevelname, projectUrl),
-
-                         'Changed':'\n\nIf you would not like this account to be %s %s of this project, you may change their access level at %smembers' %\
-                         (userlevelname == 'Developer' and 'a' or 'an',
-                          userlevelname, projectUrl)
-                        }
-
-        message = adminMessage = None
-        if self.auth.userId != user['userId']:
-            message = 'Your %s account "%s" ' % (self.cfg.productName, 
-                                              user['username'])
-            message += actionText[action] + '.'
-            if action == "Added":
-                message += helpLink
-
-            adminMessage = 'The %s account "%s" ' % (self.cfg.productName,
-                                                   user['username'])
-            adminMessage += actionText[action] + ' by the project owner "%s".' % (self.auth.username)
-            adminMessage += adminHelpText[action]
-        else:
-            if action == 'Removed':
-                message = 'You have resigned from the %s project "%s".' %\
-                          (self.cfg.productName, project.getName())
-                adminMessage = 'The %s account "%s" has resigned from the "%s" project.' % (self.cfg.productName, user['username'], project.getName())
-            elif action == 'Changed':
-                message = 'You have changed your access level from Owner to Developer on the %s project "%s".' % (self.cfg.productName, project.getName())
-                adminMessage = 'The %s account "%s" ' % (self.cfg.productName,
-                                                         user['username'])
-                adminMessage += actionText[action] + ' by the project owner "%s".' % (self.auth.username)
-                adminMessage += adminHelpText[action]
-
-        if self.cfg.sendNotificationEmails:
-            if message:
-                maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
-                               user['email'],
-                               "Your %s account" % \
-                               self.cfg.productName,
-                               '\n\n'.join((greeting, message, closing)))
-            if adminMessage:
-                members = project.getMembers()
-                adminUsers = []
-                for level in [userlevels.OWNER]:
-                    for admnUsr in [self.getUser(x[0]) for x in members \
-                                 if x[2] == level]:
-                        adminUsers.append(admnUsr)
-                for usr in adminUsers:
-                    if usr['username'] != user['username']:
-                        maillib.sendMail(self.cfg.adminMail, self.cfg.productName,
-                                       usr['email'],
-                                       "%s project membership modification" % \
-                                       self.cfg.productName,
-                                       '\n\n'.join((greeting, adminMessage)))
 
     @typeCheck(int, str, str, str)
     @requiresAuth
@@ -1031,21 +828,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.PermissionDenied
 
         return self.projects.update(projectId, commitEmail = commitEmail)
-    
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setProjectNamespace(self, projectId, namespace):
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
 
-        projects._validateNamespace(namespace)
-
-        return self.projects.update(projectId, namespace = namespace)
-
-    @typeCheck(int)
-    @requiresAdmin
-    @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
 
@@ -1058,15 +841,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self.projects.hide(projectId)
         return True
 
-    @typeCheck(int)
-    @private
-    def unhideProject(self, projectId):
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-
-        self.projects.unhide(projectId)
-        return True
-
     @typeCheck(int, bool)
     @requiresAdmin
     @private
@@ -1074,54 +848,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.projects.update(projectId,
                 backupExternal=bool(backupExternal))
 
-    @typeCheck(int, bool)
-    @requiresAuth
-    @private
-    def setProductVisibility(self, projectId, makePrivate):
-        """
-        Set the visibility of a product
-        @param projectId: the project id
-        @type  projectId: C{int}
-        @param makePrivate: True to make private, False to make public
-        @type  makePrivate: C{bool}
-        @raise mint_error.PermissionDenied: if not the product owner
-        @raise PublicToPrivateConversionError: if trying to convert a public
-               product to private
-        """
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-
-        project = projects.Project(self, projectId)
-        
-        # if the product is currently hidden and they want to go public, do it
-        if project.hidden and not makePrivate:
-            self.unhideProject(projectId)
-            return True
-            
-        # if the product is currently public, do not allow them to go private
-        # unless admin
-        if not project.hidden and makePrivate:
-            if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] \
-                    or self.auth.admin:
-                self.hideProject(projectId)
-            else:
-                raise mint_error.PublicToPrivateConversionError()
-        
-        return True
-
     # user methods
     @typeCheck(int)
     @private
     def getUser(self, id):
         return self.users.get(id)
-
-    @typeCheck(int)
-    def getUserPublic(self, id):
-        """Public version of getUser which takes out the private bits."""
-        u = self.users.get(id)
-        u['salt'] = ""
-        u['passwd'] = ""
-        return u
 
     @typeCheck(int, int)
     @private
@@ -1138,33 +869,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             return r[0]
 
-    @typeCheck(int, int, int)
-    @requiresAuth
-    def setUserLevel(self, userId, projectId, level):
-        self._filterProjectAccess(projectId)
-        if self.projectUsers.onlyOwner(projectId, userId) and \
-               (level != userlevels.OWNER):
-            raise mint_error.LastOwner
-        self.restDb.productMgr.setMemberLevel(projectId, userId, level)
-        return True
-
-    @typeCheck(int)
-    @private
-    def getProjectsByUser(self, userId):
-        cu = self.db.cursor()
-
-        # audited for SQL injection.
-        cu.execute("""SELECT fqdn, name, level
-                      FROM Projects, ProjectUsers
-                      WHERE Projects.projectId=ProjectUsers.projectId AND
-                            ProjectUsers.userId=?
-                      ORDER BY level, name""", userId)
-
-        rows = []
-        for r in cu.fetchall():
-            rows.append([r[0], r[1], r[2]])
-        return rows
-
     @typeCheck(str, str, str, str, str, str, bool)
     @private
     def registerNewUser(self, username, password, fullName, email,
@@ -1173,10 +877,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
                  or not self.cfg.adminNewUsers):
             raise mint_error.PermissionDenied
-        # per https://issues.rpath.com/browse/RBL-8350, don't enforce this anymore unless rBO or flagged external
-        if self.cfg.rBuilderOnline or self.cfg.rBuilderExternal:
-            if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
-                raise mint_error.PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
                                           displayEmail, blurb, active)
 
@@ -1208,24 +908,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def setUserEmail(self, userId, email):
         return self.users.update(userId, email = email)
 
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def validateNewEmail(self, userId, email):
-        return self.users.validateNewEmail(userId, email)
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setUserDisplayEmail(self, userId, displayEmail):
-        return self.users.update(userId, displayEmail = displayEmail)
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setUserBlurb(self, userId, blurb):
-        return self.users.update(userId, blurb = blurb)
-
     @typeCheck(int, str, str)
     @requiresAuth
     @private
@@ -1233,7 +915,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterProjectAccess(projectId)
         client = self.reposMgr.getAdminClient(write=True)
         project = projects.Project(self, projectId)
-        client.repos.addNewAsciiPGPKey(versions.Label(project.getLabel()),
+        client.repos.addNewAsciiPGPKey(
+                versions.Label(project.getFQDN() + '@rpl:2'),
                 username, keydata)
         return True
 
@@ -1246,75 +929,12 @@ If you would not like to be %s %s of this project, you may resign from this proj
     @typeCheck(int)
     @requiresAuth
     @private
-    def cancelUserAccount(self, userId):
-        """ 
-        Make sure accounts and privileges belonging to the user are removed
-        prior to removing the user.
-        """
-        if (self.auth.userId != userId) and (not self.auth.admin):
-            raise mint_error.PermissionDenied()
-
-        self._ensureNoOrphans(userId)
-
-        self.membershipRequests.userAccountCanceled(userId)
-
-        self.removeUserAccount(userId)
-        
-        return True
-    
-    def _ensureNoOrphans(self, userId):
-        """
-        Make sure there won't be any orphans
-        """
-        cu = self.db.cursor()
-
-        # Find all projects of which userId is an owner, has no other owners, and/or
-        # has developers.
-        cu.execute("""SELECT MAX(D.flagged)
-                        FROM (SELECT A.projectId,
-                               COUNT(B.userId) * (CASE COUNT(C.userId) WHEN 0 THEN 1 ELSE 0 END) AS flagged
-                                 FROM ProjectUsers AS A
-                                   LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
-                                   LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
-                                                                  C.level = 0 AND
-                                                                  C.userId <> A.userId AND
-                                                                  A.level = 0
-                                       WHERE A.userId=? GROUP BY A.projectId) AS D
-                   """, userId)
-
-        r = cu.fetchone()
-        if r and r[0]:
-            raise mint_error.LastOwner
-        
-        return True
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def filterLastAdmin(self, userId):
-        """Raises an exception if the last site admin attempts to cancel their
-        account, to protect against not having any admins at all."""
-        if not self._isUserAdmin(userId):
-            return
-        cu = self.db.cursor()
-        cu.execute("SELECT userId FROM UserGroups WHERE is_admin = true")
-        if [x[0] for x in cu.fetchall()] == [userId]:
-            # userId is admin, and there is only one admin => last admin
-            raise mint_error.LastAdmin(
-                            "There are no more admin accounts. Your request "
-                            "to close your account has been rejected to "
-                            "ensure that at least one account is admin.")
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
     def removeUserAccount(self, userId):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.
         """
         if not self.auth.admin and userId != self.auth.userId:
             raise mint_error.PermissionDenied
-        self.filterLastAdmin(userId)
 
         self.setEC2CredentialsForUser(userId, '', '', '', True)
 
@@ -1328,7 +948,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-            cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
             cu.execute("DELETE FROM UserData where userId=?", userId)
         except:
@@ -1338,108 +957,10 @@ If you would not like to be %s %s of this project, you may resign from this proj
             self.db.commit()
         return True
 
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def isUserAdmin(self, userId):
-        return self._isUserAdmin(userId)
-
-    @typeCheck(str)
-    @private
-    def getConfirmation(self, username):
-        # this function exists solely for server testing scripts and should
-        # not be used for any other purpose. Never enable in production mode.
-        if not self.cfg.debugMode:
-            raise mint_error.PermissionDenied
-        cu = self.db.cursor()
-        cu.execute("SELECT userId FROM Users WHERE username=?", username)
-        r = cu.fetchall()
-        if not r:
-            raise mint_error.ItemNotFound
-        cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
-                   r[0][0])
-        r = cu.fetchall()
-        if not r:
-            raise mint_error.ItemNotFound
-        return r[0][0]
-
-    @typeCheck(str)
-    @private
-    def confirmUser(self, confirmation):
-        userId = self.users.confirm(confirmation)
-        return userId
-
     @typeCheck(str)
     @private
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
-
-    @typeCheck(str, str, ((str, int, bool),))
-    @requiresAuth
-    @private
-    def setUserDataValue(self, username, name, value):
-        if name in ['awsAccountNumber', 'awsPublicAccessKeyId',
-                'awsSecretAccessKey']:
-            raise RuntimeError("Should not set EC2 credentials using this call")
-        userId = self.getUserIdByName(username)
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-        if name not in usertemplates.userPrefsTemplate:
-            raise mint_error.ParameterError("Undefined data entry")
-        dataType = usertemplates.userPrefsTemplate[name][0]
-        self.userData.setDataValue(userId, name, value, dataType)
-        return True
-
-    @typeCheck(str, str)
-    @requiresAuth
-    @private
-    def getUserDataValue(self, username, name):
-        userId = self.getUserIdByName(username)
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-        found, res = self.userData.getDataValue(userId, name)
-        if found:
-            return res
-        return usertemplates.userPrefsTemplate[name][1]
-
-    @typeCheck(str)
-    @requiresAuth
-    @private
-    def getUserDataDefaulted(self, username):
-        userId = self.getUserIdByName(username)
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-
-        cu = self.db.cursor()
-        cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
-        res = usertemplates.userPrefsAttTemplate.keys()
-        for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
-            res.remove(ent)
-        return res
-    
-    @typeCheck(str)
-    @requiresAuth
-    @private
-    def getUserDataDefaultedAWS(self, username):
-        userId = self.getUserIdByName(username)
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-
-        cu = self.db.cursor()
-        cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
-        res = usertemplates.userPrefsAWSTemplate.keys()
-        for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
-            res.remove(ent)
-        return res
-
-    @typeCheck(str)
-    @requiresAuth
-    @private
-    def getUserDataDict(self, username):
-        userId = self.getUserIdByName(username)
-        if userId != self.auth.userId and not self.auth.admin:
-            raise mint_error.PermissionDenied
-        return self.userData.getDataDict(userId)
 
     @typeCheck(int, str)
     @private
@@ -1526,19 +1047,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         """
         return self.projects.getProjectsList()
 
-    @typeCheck(int, bool)
-    @private
-    def getNewProjects(self, limit, showFledgling):
-        """
-        Collect a list of projects.
-        NOTE: admins can see everything including hidden and fledgling
-        projects regardless of the value of self.cfg.hideFledgling.
-        @param limit:  Number of items to return
-        @param showFledgling:  Boolean to show fledgling (empty) projects or not
-        @return: a list of projects
-        """
-        return self.projects.getNewProjects(limit, showFledgling)
-
     @typeCheck(int, int, int)
     @requiresAdmin
     @private
@@ -1556,48 +1064,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self.users.getUsers(sortOrder, limit, offset, includeInactive),\
                self.users.getNumUsers(includeInactive)
 
-    @typeCheck(int)
-    @requiresAdmin
-    @private
-    def promoteUserToAdmin(self, userId):
-        """
-        Given a userId, will attempt to promote that user to an
-        administrator (i.e. make a member of the MintAdmin User Group).
-
-        @param userId: the userId to promote
-        """
-        if self._isUserAdmin(userId):
-            raise mint_error.UserAlreadyAdmin
-        cu = self.db.cursor()
-        cu.execute("UPDATE Users SET is_admin = true WHERE userId = ?", userId)
-        self.db.commit()
-        return True
-
-    @typeCheck(int)
-    @requiresAdmin
-    @private
-    def demoteUserFromAdmin(self, userId):
-        """
-        Given a userId, will attempt to demote that user from administrator
-        If this user is the last administrator, this function will balk.
-        @param userId: the userId to promote
-        """
-        # refuse to demote self. this ensures there will always be at least one
-        if userId == self.auth.userId:
-            raise mint_error.AdminSelfDemotion
-        cu = self.db.cursor()
-        cu.execute("UPDATE Users SET is_admin = false WHERE userId = ?", userId)
-        self.db.commit()
-        return True
-
     #
     # LABEL STUFF
     #
-    @typeCheck(int)
-    @private
-    def getDefaultProjectLabel(self, projectId):
-        self._filterProjectAccess(projectId)
-        return self.labels.getDefaultProjectLabel(projectId)
 
     @typeCheck(int, bool, ((str, type(None)),), ((str, type(None)),))
     @private
@@ -1652,11 +1121,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
     def getBuildsForProject(self, projectId):
         self._filterProjectAccess(projectId)
         return [x for x in self.builds.iterBuildsForProject(projectId)]
-
-    @typeCheck(int, int)
-    @private
-    def getPublishedReleaseList(self, limit, offset):
-        return self.publishedReleases.getPublishedReleaseList(limit, offset)
 
     @typeCheck(str, str, str, str)
     @private
@@ -1902,25 +1366,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
                 'arch': arch}
         return baseFileName
 
-    def _getBuildPageUrl(self, buildId, hostname = None):
-        # hostname arg is an optimization for getAllBuildsByType
-        if not hostname:
-            projectId = self.getBuild(buildId)['projectId']
-            project = self.getProject(projectId)
-            hostname = project.get('hostname')
-        if self.req:
-            target = self.req.host
-        else:
-            target = self.cfg.siteHost
-        return "http://%s%sproject/%s/build?id=%d" % (target,
-                self.cfg.basePath, hostname, buildId)
-
-    @typeCheck(int)
-    def getBuildPageUrl(self, buildId):
-        # break this function to avoid excessive filter checks for local calls
-        self._filterBuildAccess(buildId)
-        return self._getBuildPageUrl(buildId)
-
     @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool, list,
             int, str, None)
     @requiresAuth
@@ -2078,9 +1523,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if not self.builds.buildExists(buildId)  and not force:
             raise mint_error.BuildMissing()
 
-        if self.builds.getPublished(buildId) and not force:
-            raise mint_error.BuildPublished()
-
         self.db.transaction()
         try:
             for filelist in self.getBuildFilenames(buildId):
@@ -2135,13 +1577,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         if len(valDict):
             columns = { 'timeUpdated': time.time(),
                         'updatedBy':   self.auth.userId,
                         }
-            for column in ('pubReleaseId', 'name', 'description'):
+            for column in ('name', 'description'):
                 if column in valDict:
                     columns[column] = valDict.pop(column)
             if valDict:
@@ -2158,8 +1598,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
     def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
@@ -2263,7 +1701,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         r['project'] = {'name' : project.name,
                         'hostname' : project.hostname,
-                        'label' : project.getLabel(),
                         'conaryCfg' : cfgData,
                         'repoToken': repoToken,
                         }
@@ -2313,199 +1750,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return r
 
-    #
-    # published releases 
-    #
-    @typeCheck(int)
-    @requiresAuth
-    def newPublishedRelease(self, projectId):
-        self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise mint_error.PermissionDenied
-        timeCreated = time.time()
-        createdBy = self.auth.userId
-        return self.publishedReleases.new(projectId = projectId,
-                timeCreated = timeCreated, createdBy = createdBy)
-
-    @typeCheck(int)
-    def getPublishedRelease(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.get(pubReleaseId)
-
-    @typeCheck(int, dict)
-    @requiresAuth
-    @private
-    def updatePublishedRelease(self, pubReleaseId, valDict):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            raise mint_error.PermissionDenied
-        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise mint_error.PublishedReleasePublished
-        if len(valDict):
-            columns = { 'timeUpdated': time.time(),
-                        'updatedBy': self.auth.userId,
-                        }
-            for column in ('name', 'version', 'description'):
-                if column in valDict:
-                    columns[column] = valDict.pop(column)
-            if valDict:
-                # Unknown argument
-                raise mint_error.ParameterError()
-            return self.publishedReleases.update(pubReleaseId, **columns)
-        return False
-
-    @typeCheck(int, bool)
-    @requiresAuth
-    @private
-    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-
-        self._checkPublishedRelease(pubReleaseId, projectId)
-        
-        valDict = {'timePublished': time.time(),
-                   'publishedBy': self.auth.userId,
-                   'shouldMirror': int(shouldMirror),
-                   }
-
-        try:
-            self.db.transaction()
-            result = self.publishedReleases.update(pubReleaseId, commit=False,
-                                                   **valDict)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-        return result
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getMirrorableReleasesByProject(self, projectId):
-        self._filterProjectAccess(projectId)
-        return self.publishedReleases.getMirrorableReleasesByProject(projectId)
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def isProjectMirroredByRelease(self, projectId):
-        self._filterProjectAccess(projectId)
-        return self.outboundMirrors.isProjectMirroredByRelease(projectId)
-
-    def _checkPublishedRelease(self, pubReleaseId, projectId, checkPublished=True):
-        """
-        Performs some sanity checks on the published release
-        """
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-        if not len(self.publishedReleases.getBuilds(pubReleaseId)):
-            raise mint_error.PublishedReleaseEmpty
-        if checkPublished:
-            if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise mint_error.PublishedReleasePublished
-
-        return True
-
-    def _checkUnpublishedRelease(self, pubReleaseId, projectId, failIfNotPub=True):
-        """
-        Performs some sanity checks on the unpublished release
-        """
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-        if failIfNotPub:
-            if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-                raise mint_error.PublishedReleaseNotPublished
-
-        return True
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def unpublishPublishedRelease(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-
-        self._checkUnpublishedRelease(pubReleaseId, projectId)
-
-        valDict = {'timePublished': None,
-                   'publishedBy': None}
-
-
-        try:
-            self.db.transaction()
-            result = self.publishedReleases.update(pubReleaseId, commit=False,
-                                                   **valDict)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-        return result
-
-    @typeCheck(int)
-    @requiresAuth
-    def deletePublishedRelease(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        projectId = self.publishedReleases.getProject(pubReleaseId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
-            raise mint_error.PublishedReleasePublished
-        self.publishedReleases.delete(pubReleaseId)
-        return True
-
-    @typeCheck(int)
-    @private
-    def isPublishedReleasePublished(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def getUnpublishedBuildsForProject(self, projectId):
-        self._filterProjectAccess(projectId)
-        return self.builds.getUnpublishedBuilds(projectId)
-
-    @typeCheck(int, int)
-    @private
-    def getBuildsForPublishedRelease(self, pubReleaseId, buildType = None):
-        """
-        Get builds in a release and optionally filters by buildtype
-        """
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        allBuilds = self.publishedReleases.getBuilds(pubReleaseId)
-
-        if buildType:
-            builds = []
-            for b in allBuilds:
-                if self.getBuildType(b) == buildType:
-                    builds.append(b)
-        else:
-            builds = allBuilds
-        
-        return builds
-
-    @typeCheck(int)
-    @private
-    def getUniqueBuildTypesForPublishedRelease(self, pubReleaseId):
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.getUniqueBuildTypes(pubReleaseId)
-
-    @typeCheck(int)
-    @private
-    def getPublishedReleasesByProject(self, projectId):
-        self._filterProjectAccess(projectId)
-        publishedOnly = False
-        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            publishedOnly = True
-        return self.publishedReleases.getPublishedReleasesByProject(projectId,
-                publishedOnly)
-
     @typeCheck(int)
     @private
     def getBuildTrove(self, buildId):
@@ -2516,8 +1760,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
         troveLabel = helperfuncs.parseVersion(troveVersion).trailingLabel()
         projectId = self.builds.get(buildId)['projectId']
@@ -2551,8 +1793,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         self.builds.update(buildId, description = desc)
         return True
 
@@ -2563,39 +1803,8 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         self.builds.update(buildId, name = name)
         return True
-
-    @typeCheck(int, int, bool)
-    @requiresAuth
-    @private
-    def setBuildPublished(self, buildId, pubReleaseId, published):
-        self._filterBuildAccess(buildId)
-        buildData = self.builds.get(buildId, fields=['projectId', 'buildType'])
-        if not self._checkProjectAccess(buildData['projectId'],
-                userlevels.WRITERS):
-            raise mint_error.PermissionDenied()
-        if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
-            raise mint_error.PublishedReleaseMissing()
-        if self.isPublishedReleasePublished(pubReleaseId):
-            raise mint_error.PublishedReleasePublished()
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-        if published and (buildData['buildType'] != buildtypes.AMI and buildData['buildType'] != buildtypes.IMAGELESS and not self.getBuildFilenames(buildId)):
-            raise mint_error.BuildEmpty()
-        # this exception condition is completely masked. re-enable it if the
-        # structure of this code changes
-        #if published and self.builds.getPublished(buildId):
-        #    raise mint_error.BuildPublished()
-        pubReleaseId = published and pubReleaseId or None
-        return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
-
-    @typeCheck(int)
-    @private
-    def getBuildPublished(self, buildId):
-        return self.builds.getPublished(buildId)
 
     @typeCheck(int)
     @private
@@ -2615,8 +1824,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
                 buildType, buildId)
@@ -2629,8 +1836,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
 
         buildDict = self.builds.get(buildId)
         buildType = buildDict['buildType']
@@ -2762,8 +1967,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        if self.builds.getPublished(buildId):
-            raise mint_error.BuildPublished()
 
         return self._setBuildFilenames(buildId, filenames)
 
@@ -2828,8 +2031,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildFileAccess(fileId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
-        # Note bene: this can be done after a build has been published,
-        # thus we don't have to check to see if the build is published.
 
         cu = self.db.transaction()
         try:
@@ -2953,64 +2154,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         else:
             raise mint_error.FileMissing
 
-    @typeCheck(int, ((str, unicode),))
-    @requiresAuth
-    def getTroveVersionsByArch(self, projectId, troveNameWithLabel):
-        self._filterProjectAccess(projectId)
-
-        def dictByArch(versionList, trove):
-            archMap = {}
-            for v, flavors in reversed(sorted(versionList[trove].items())):
-                for f in flavors:
-                    arch = helperfuncs.getArchFromFlavor(f)
-
-                    l = archMap.setdefault(arch, [])
-                    l.append((v.asString(), v.freeze(), f.freeze()))
-            return archMap
-
-        project = projects.Project(self, projectId)
-        trove, label = troveNameWithLabel.split('=')
-        label = versions.Label(label)
-
-        client = self.reposMgr.getUserClient(self.auth)
-        versionList = client.repos.getTroveVersionList(project.getFQDN(),
-                {trove: None})
-
-        # group trove by major architecture
-        return dictByArch(versionList, trove)
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    def getAllTroveLabels(self, projectId, serverName, troveName):
-        self._filterProjectAccess(projectId)
-        client = self.reposMgr.getUserClient(self.auth)
-
-        troves = client.repos.getAllTroveLeaves(str(serverName),
-                {str(troveName): None})
-        if troveName in troves:
-            ret = sorted(list(set(str(x.branch().label()) for x in troves[troveName])))
-        else:
-            ret = []
-        return ret
-
-    @typeCheck(int, ((str, unicode),), ((str, unicode),))
-    def getTroveVersions(self, projectId, labelStr, troveName):
-        self._filterProjectAccess(projectId)
-        client = self.reposMgr.getUserClient(self.auth)
-
-        troves = client.repos.getTroveVersionsByLabel(
-                    {str(troveName): {versions.Label(str(labelStr)): None}}
-                )[troveName]
-        versionDict = dict((x.freeze(), [y for y in troves[x]]) for x in troves)
-        versionList = sorted(versionDict.keys(), reverse = True)
-
-        # insert a tuple of (flavor differences, full flavor) into versionDict
-        strFlavor = lambda x: str(x) and str(x).replace(',', ', ') or '(no flavor)'
-        for v, fList in versionDict.items():
-            diffDict = deps.flavorDifferences(fList)
-            versionDict[v] = sorted([(not diffDict[x].isEmpty() and str(diffDict[x]) or strFlavor(x), str(x)) for x in fList])
-
-        return [versionDict, versionList]
-
     @typeCheck(int)
     @requiresAuth
     def getAllProjectLabels(self, projectId):
@@ -3032,56 +2175,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
              trove.startswith('fileset-')) and
             not trove.endswith(':source'))
         return troves
-
-    @typeCheck(int)
-    @requiresAuth
-    def getBuildStatus(self, buildId):
-        self._filterBuildAccess(buildId)
-
-        buildDict = self.builds.get(buildId)
-        return { 'status': buildDict['status'],
-                'message': buildDict['statusMessage'] }
-
-    ### Site reports ###
-    @private
-    @typeCheck()
-    @requiresAdmin
-    def listAvailableReports(self):
-        reportNames = reports.getAvailableReports()
-        res = {}
-        for rep in reportNames:
-            repObj = self._getReportObject(rep)
-            if repObj is not None:
-                res[rep] = repObj.title
-        return res
-
-    def _getReportObject(self, name):
-        if name not in reports.__dict__:
-            raise mint_error.InvalidReport
-        repModule = reports.__dict__[name]
-        for objName in repModule.__dict__.keys():
-            try:
-                if objName != 'MintReport' and \
-                       MintReport in repModule.__dict__[objName].__bases__:
-                    return repModule.__dict__[objName](self.db)
-            except AttributeError:
-                pass
-
-    @private
-    @typeCheck(str)
-    @requiresAdmin
-    def getReport(self, name):
-        if name not in reports.getAvailableReports():
-            raise mint_error.InvalidReport
-        return self._getReportObject(name).getReport()
-
-    @private
-    @typeCheck(str)
-    @requiresAdmin
-    def getReportPdf(self, name):
-        if name not in reports.getAvailableReports():
-            raise mint_error.PermissionDenied
-        return base64.b64encode(self._getReportObject(name).getPdf())
 
     # mirrored labels
     @private
@@ -3231,7 +2324,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                     entitlement=mirror['sourceEntitlement'],
                     )
         elif not backgroundMirror:
-            self.unhideProject(projectId)
+            self.projects.unhide(projectId)
             for projectId in projectIds:
                 self.deleteProject(projectId)
 
@@ -3505,63 +2598,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         except mcp_error.BuildSystemUnreachableError:
             util.rethrow(mint_error.BuildSystemDown)
 
-
-    #
-    # EC2 Support for rBO
-    #
-    
-    @typeCheck(tuple)
-    @private
-    def validateEC2Credentials(self, authToken):
-        """
-        Validate the EC2 credentials
-        @param authToken: the EC2 authentication credentials
-        @type  authToken: C{tuple}
-        @return: True if the credentials are valid
-        @rtype: C{bool}
-        @raises: C{EC2Exception}
-        """
-        return ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https')).validateCredentials()
-    
-    @typeCheck(tuple, list)
-    @private
-    def getEC2KeyPairs(self, authToken, keyNames):
-        """
-        Get the EC2 key pairs given a list of key names, or get all key pairs
-        if no key names are specified.
-        @param authToken: the EC2 authentication credentials
-        @type  authToken: C{tuple}
-        @param keyNames: a list of string key names or an empty list
-        @type  keyNames: C{list}
-        @return: a tuple consisting of the key name, fingerprint, and material
-        @rtype: C{tuple}
-        @raises: C{EC2Exception}
-        """
-        ec2Wrapper = ec2.EC2Wrapper(authToken, self.cfg.proxy.get('https'))
-        return ec2Wrapper.getAllKeyPairs(keyNames)
-
-    @private
-    def getProxies(self):
-        return self._getProxies()
-
-    @private
-    @requiresAuth
-    @typeCheck(int, str, str, ((str, unicode),))
-    def addProductVersion(self, projectId, namespace, name, description):
-        self._filterProjectAccess(projectId)
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-        # Check the namespace
-        projects._validateNamespace(namespace)
-        # make sure it is a valid product version
-        projects._validateProductVersion(name)
-        project = projects.Project(self, projectId)
-        versionId = self.restDb.productMgr.createProductVersion(
-                                                 project.getFQDN(),
-                                                 name, namespace, description,
-                                                 None)
-        return versionId
-
     @private
     @requiresAuth
     @typeCheck(int)
@@ -3574,109 +2610,9 @@ If you would not like to be %s %s of this project, you may resign from this proj
             return ret
 
     @private
-    @requiresAuth
-    @typeCheck(int)
-    def getStagesForProductVersion(self, versionId):
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        return [s.name for s in pd.getStages()]
-
-    @private
-    @requiresAuth
-    @typeCheck(int)
-    def getProductDefinitionForVersion(self, versionId):
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        sio = StringIO.StringIO()
-        # Since we write back what we read in, we should not validate here
-        pd.serialize(sio, validate = False)
-        return sio.getvalue()
-
-    @private
-    @requiresAuth
-    @typeCheck(int, ((str, unicode),), str)
-    def setProductDefinitionForVersion(self, versionId, productDefinitionXMLString,
-            rebaseToPlatformLabel):
-        # XXX: Need exception handling here
-        pd = proddef.ProductDefinition(fromStream=productDefinitionXMLString)
-
-        # TODO put back overrides
-
-        cclient = self.reposMgr.getClient(self.auth.userId)
-        if rebaseToPlatformLabel:
-            pd.rebase(cclient, rebaseToPlatformLabel)
-        pd.saveToRepository(cclient,
-                'Product Definition commit from rBuilder\n')
-        return True
-
-    @private
-    @requiresAuth
-    @typeCheck(int, ((str, unicode),))
-    def editProductVersion(self, versionId, newDesc):
-        return self.productVersions.update(versionId, description = newDesc)
-
-    @private
     @typeCheck(int)
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
-
-    @private
-    @requiresAuth
-    @typeCheck(int, ((str, unicode),))
-    def getBuildTaskListForDisplay(self, versionId, stageName):
-        """
-        Get a list of build tasks to be completed for display purposes only
-        @param versionId: the product version id
-        @param stageName: the name of the stage to use
-        @return: a list of task dicts as 
-                 {buildName, buildTypeName, buildFlavorName, imageGroup}
-        """
-
-        taskList = []
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        builds = pd.getBuildsForStage(stageName)
-        stageLabel = pd.getLabelForStage(stageName)
-        for build in builds:
-            task = dict()
-
-            # set the build name
-            task['buildName'] = build.getBuildName()
-
-            # set the build type
-            buildTypeDt = buildtemplates.getDataTemplateByXmlName(
-                              build.getBuildImage().containerFormat)
-            task['buildTypeName'] = buildtypes.typeNamesMarketing[buildTypeDt.id]
-
-            # get the name of the flavor.  If we don't have a name mapped to
-            # it, specify that it is custom
-            flavor = str(build.getBuildBaseFlavor())
-            flavorMap = buildtypes.makeBuildFlavorMap(pd)
-            if flavorMap.has_key(flavor):
-                buildFlavor = flavorMap[flavor]
-            else:
-                buildFlavor = "Custom Flavor: %s" % flavor
-            task['buildFlavorName'] = buildFlavor
-
-            # set the image group
-            task['imageGroup'] = "%s=%s" % (build.getBuildImageGroup(),
-                    stageLabel)
-
-            taskList.append(task)
-
-        return taskList
-
-    @requiresAuth
-    def createPackageTmpDir(self):
-        '''
-        Creates a directory for use by the package creator UI and Service.
-        This directory is the receiving target for uploads, and the cache
-        location for pc service operations.
-
-        @rtype: String
-        @return: A X{uploadDirectoryHandle} to be used with subsequent calls to
-        file upload methods
-        '''
-        path = tempfile.mkdtemp('', packagecreator.PCREATOR_TMPDIR_PREFIX,
-            dir = os.path.join(self.cfg.dataPath, 'tmp'))
-        return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
         repoToken = os.urandom(16).encode('hex')
@@ -4167,80 +3103,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         pc = self.getPackageCreatorClient()
         return pc.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
 
-    @typeCheck(str, str, dict)
-    @requiresAdmin
-    def addTarget(self, targetType, targetName, dataDict):
-        """
-        Add a new deployment target to rBuilder.
-        @param targetType: a string identifying the type of deployment target
-                           eg. 'ec2'
-        @type targetType: C{str}
-        @param targetName: a string representing the name of the deployement
-                           target. eg. 'aws'. together with targetType, these
-                           values uniquely identify a specific deployment target
-                           instance
-        @type targetName: C{str}
-        @param dataDict: a dictionary of target specific data. keys are strings
-                         and values must be json serializable objects.
-        returns: True
-        raises: TargetExists if addTarget is called with targetType, targetName
-                that duplicate an existing target.
-        """
-        targetId = self.targets.addTarget(targetType, targetName)
-        self.targetData.addTargetData(targetId, dataDict)
-        return True
-
-    @typeCheck(str, str)
-    @requiresAdmin
-    def deleteTarget(self, targetType, targetName):
-        """
-        delete a deployment target from rBuilder.
-        @param targetType: a string identifying the type of deployment target
-                           eg. 'ec2'
-        @type targetType: C{str}
-        @param targetName: a string representing the name of the deployement
-                           target. eg. 'aws'. together with targetType, these
-                           values uniquely identify a specific deployment target
-                           instance
-        returns: True
-        raises: TargetMissing if targetType, targetName don't map to an existing
-                target
-        """
-        targetId = self.targets.getTargetId(targetType, targetName)
-        self.targetData.deleteTargetData(targetId)
-        self.targets.deleteTarget(targetId)
-        return True
-
-    @typeCheck(str, str)
-    @requiresAdmin
-    def getTargetData(self, targetType, targetName):
-        """
-        Get dictionary of target specific data
-        @param targetType: a string identifying the type of deployment target
-                           eg. 'ec2'
-        @type targetType: C{str}
-        @param targetName: a string representing the name of the deployement
-                           target. eg. 'aws'. together with targetType, these
-                           values uniquely identify a specific deployment target
-                           instance
-        returns: dict representing target specific data
-        raises: TargetMissing if targetType, targetName don't map to an existing
-                target
-        """
-        # an admin-only interface to retrieve the data associated with a target
-        # XXX it's not clear if this function should be more open, but just
-        # not return all data
-        return self._getTargetData(targetType, targetName)
-
-    def _getTargetData(self, targetType, targetName, supressException = False):
-        default = -1
-        if supressException:
-            default = None
-        targetId = self.targets.getTargetId(targetType, targetName, default)
-        if targetId is None:
-            return {}
-        return self.targetData.getTargetData(targetId)
-
     @typeCheck(str)
     @requiresAuth
     def getAllBuildsByType(self, buildType):
@@ -4252,8 +3114,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             # module call for speed reasons
             hostname = buildData.pop('hostname')
             buildId = buildData['buildId']
-            buildData['buildPageUrl'] = \
-                    self._getBuildPageUrl(buildId, hostname = hostname)
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
 
             buildFilenames = self.getBuildFilenames(buildId)
@@ -4276,22 +3136,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         if fileNames:
             ret['filename'] = os.path.basename(fileNames[0])
         return ret
-
-    def getAvailablePlatforms(self):
-        """
-        Returns a list of available platforms and their names (descriptions).
-        Any platform definitions that cannot be fetched will be skipped (and
-        an error message will be logged).
-        @rtype: C{list} of C{tuple}s. Each tuple is a pair; first element is
-           the platform label, the second element is the platform name.
-        """
-        return zip(self.cfg.availablePlatforms, self.cfg.availablePlatformNames)
-
-    def isPlatformAcceptable(self, platformLabel):
-        return (platformLabel in set(self.cfg.acceptablePlatforms + self.cfg.availablePlatforms))
-
-    def isPlatformAvailable(self, platformLabel):
-        return (platformLabel in self.cfg.availablePlatforms)
 
     def _setAuth(self, authToken):
         auth = self.users.checkAuth(authToken)

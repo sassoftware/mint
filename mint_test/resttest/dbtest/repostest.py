@@ -21,7 +21,7 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
 
         self.setDbUser(db, 'owner')
         self.createProduct('bar', developers=['developer'], users=['user'],
-                           private=True)
+                           private=True, db=db)
         reposMgr = db.productMgr.reposMgr
         assert(not reposMgr._isProductExternal('bar'))
         repos = reposMgr.getUserClient().getRepos()

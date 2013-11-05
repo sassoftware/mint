@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 import os
@@ -9,13 +9,12 @@ import time
 from mint import buildtypes
 from mint.lib import database
 from mint.lib import data as mintdata
-from mint.helperfuncs import rewriteUrlProtocolPort, hostPortParse
 from mint import helperfuncs
 from mint import searcher
 from mint import userlevels
 from mint.mint_error import (ItemNotFound, DuplicateItem, DuplicateName,
         DuplicateShortname, DuplicateHostname, DuplicateLabel, LabelMissing,
-        RepositoryAlreadyExists, LastOwner)
+        RepositoryAlreadyExists)
 
 from conary import dbstore
 from conary.lib import util
@@ -217,29 +216,6 @@ JOIN Projects ep
             ret.append((x, level, hasRequests))
         return ret
 
-    def getNewProjects(self, limit, showFledgling):
-        cu = self.db.cursor()
-
-        if showFledgling:
-            fledgeQuery = ""
-        else:
-            fledgeQuery = "AND EXISTS(SELECT troveName FROM Commits WHERE projectId=Projects.projectId LIMIT 1)"
-
-        cu.execute("""SELECT projectId, hostname, name, description, timeModified
-                FROM Projects WHERE NOT hidden AND NOT external %s ORDER BY timeCreated DESC
-                LIMIT ?""" % fledgeQuery, limit)
-
-        ids = []
-        for x in cu.fetchall():
-            ids.append(list(x))
-
-            # cast id and timestamp to int
-            ids[-1][0] = int(ids[-1][0])
-            ids[-1][4] = int(ids[-1][4])
-            ids[-1][3] = helperfuncs.truncateForDisplay(ids[-1][3])
-
-        return ids
-
     def search(self, terms, modified, limit, offset, includeInactive=False, byPopularity=True, filterNoDownloads = True):
         """
         Returns a list of projects matching L{terms} of length L{limit}
@@ -408,17 +384,6 @@ class LabelsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
-
-    def getDefaultProjectLabel(self, projectId):
-        cu = self.db.cursor()
-
-        cu.execute ("""SELECT label 
-                      FROM Labels 
-                      WHERE projectId=?
-                      ORDER BY projectId LIMIT 1""", projectId)
-
-        label = cu.fetchone()
-        return label[0]
 
     def _getAllLabelsForProjects(self, projectId = None,
             overrideAuth = False, newUser = '', newPass = ''):
@@ -742,31 +707,6 @@ class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId", "level"]
 
-    def getOwnersByProjectName(self, projectname):
-        cu = self.db.cursor()
-        cu.execute("""SELECT u.username, u.email
-                      FROM Projects pr, ProjectUsers p, Users u
-                      WHERE pr.projectId=p.projectId AND p.userId=u.userId
-                      AND pr.hostname=?
-                      AND p.level=? AND pr.disabled=0""", projectname,
-                   userlevels.OWNER)
-        data = []
-        for r in cu.fetchall():
-            data.append(list(r))
-        return data
-
-    def getMembersByProjectId(self, projectId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT p.userId, u.username, p.level
-                      FROM ProjectUsers p, Users u
-                      WHERE p.userId=u.userId AND p.projectId=?
-                      ORDER BY p.level, u.username""",
-                   projectId)
-        data = []
-        for r in cu.fetchall():
-            data.append( [r[0], r[1], r[2]] )
-        return data
-
     def getUserlevelForProjectMember(self, projectId, userId):
         cu = self.db.cursor()
         cu.execute("""SELECT level FROM ProjectUsers
@@ -818,28 +758,7 @@ class ProjectUsersTable(database.DatabaseTable):
         if commit:
             self.db.commit()
 
-    def onlyOwner(self, projectId, userId):
-        cu = self.db.cursor()
-        # verify userId is an owner of the project.
-        cu.execute("SELECT level from ProjectUsers where projectId=? and userId = ?", projectId, userId)
-        res = cu.fetchall()
-        if (not bool(res)) or (res[0][0] != userlevels.OWNER):
-            return False
-        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.OWNER)
-        return not cu.fetchone()[0]
-
-    def lastOwner(self, projectId, userId):
-        cu = self.db.cursor()
-        # check that there are developers
-        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.DEVELOPER)
-        if not cu.fetchone()[0]:
-            return False
-        return self.onlyOwner(projectId, userId)
-
     def delete(self, projectId, userId, commit=True, force=False):
-        if self.lastOwner(projectId, userId):
-            if not force:
-                raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
         if commit:

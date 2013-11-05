@@ -27,10 +27,7 @@ from mint.db import mirror
 from mint.db import pkgindex
 from mint.db import platforms
 from mint.db import projects
-from mint.db import pubreleases
-from mint.db import requests
 from mint.db import stats
-from mint.db import targets
 from mint.db import users
 
 
@@ -48,18 +45,13 @@ class TableCache(object):
         self.projectUsers = projects.ProjectUsersTable(db)
         self.builds = builds.BuildsTable(db)
         self.pkgIndex = pkgindex.PackageIndexTable(db)
-        self.membershipRequests = requests.MembershipRequestTable(db)
         self.commits = stats.CommitsTable(db)
         self.buildData = builds.BuildDataTable(db)
         self.inboundMirrors = mirror.InboundMirrorsTable(db)
         self.outboundMirrors = mirror.OutboundMirrorsTable(db, cfg)
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
         self.outboundMirrorsUpdateServices = mirror.OutboundMirrorsUpdateServicesTable(db)
-        self.publishedReleases = pubreleases.PublishedReleasesTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
-
-        self.targets = targets.TargetsTable(db)
-        self.targetData = targets.TargetDataTable(db)
 
         self.platforms = platforms.PlatformsTable(db, cfg)
         self.platformSources = platforms.PlatformSourcesTable(db, cfg)
@@ -67,7 +59,6 @@ class TableCache(object):
         self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
         self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
 
-        self.users.confirm_table.db = db
         self.projects.reposDB.cfg = cfg
 
 class Database(object):
@@ -96,23 +87,18 @@ class Database(object):
         self.projectUsers = tables.projectUsers
         self.builds = tables.builds
         self.pkgIndex = tables.pkgIndex
-        self.membershipRequests = tables.membershipRequests
         self.commits = tables.commits
         self.buildData = tables.buildData
         self.inboundMirrors = tables.inboundMirrors
         self.outboundMirrors = tables.outboundMirrors
         self.updateServices = tables.updateServices
         self.outboundMirrorsUpdateServices = tables.outboundMirrorsUpdateServices
-        self.publishedReleases = tables.publishedReleases
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms
         self.platformSources = tables.platformSources
         self.platformSourceData = tables.platformSourceData
         self.platformsPlatformSources = tables.platformsPlatformSources
         self.platformsContentSourceTypes = tables.platformsContentSourceTypes
-
-        self.targets = tables.targets
-        self.targetData = tables.targetData
 
     @property
     def db(self):

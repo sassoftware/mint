@@ -158,12 +158,6 @@ class BaseRestTest(mint_rephelp.MintDatabaseHelper):
                                    name = 'Image 3')
         self.setImageFiles(db, self.productShortName, imageId3)
 
-        releaseId = db.createRelease(self.productShortName, 'Release Name', '',
-                'v1', imageIds)
-        releaseId2 = db.createRelease(self.productShortName, 'Release Name', '',
-                'v1', [imageId3])
-        db.publishRelease(self.productShortName, releaseId2, True)
-
     def mockProddef(self):
         oldLoadFromRepository = proddef.PlatformDefinition.loadFromRepository
         def newLoadFromRepository(slf, *args, **kw):

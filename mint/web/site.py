@@ -210,22 +210,6 @@ class SiteHandler(WebHandler):
             self._resetPasswordById(userId)
             self._setInfo("Password successfully reset for user %s." % \
                     user.username)
-        elif operation == "user_cancel":
-            if userId == self.auth.userId:
-                self._addErrors("You cannot close your account from this "
-                    "interface.")
-            else:
-                self.client.removeUserAccount(userId)
-                self._setInfo("Account deleted for user %s." % user.username)
-                deletedUser = True
-
-        elif operation == "user_promote_admin":
-            self.client.promoteUserToAdmin(userId)
-            self._setInfo("Promoted %s to administrator." % user.username)
-        elif operation == "user_demote_admin":
-            self.client.demoteUserFromAdmin(userId)
-            self._setInfo("Revoked administrative privileges for %s." % \
-                    user.username)
         else:
             self._addErrors("Please select a valid user adminstration action "
                 "from the menu.")

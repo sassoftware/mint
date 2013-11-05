@@ -1,10 +1,6 @@
-#!/usr/bin/python
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-from mint import buildtypes
 from mint import jobstatus
 
 from mint.rest.modellib import Model
@@ -63,48 +59,6 @@ class ImageId(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
 
-class PublishOptions(Model):
-    shouldMirror = fields.BooleanField()
-
-class Release(Model):
-    id = fields.AbsoluteUrlField(isAttribute=True)
-    releaseId = fields.IntegerField()
-    hostname = fields.CharField()
-    name = fields.CharField()
-    version = fields.CharField()
-    description = fields.CharField()
-    published = fields.BooleanField()
-    imageIds = fields.ListField(ImageId)
-    images = fields.UrlField('products.releases.images', 
-                              ['hostname', 'releaseId'])
-    creator = fields.UrlField('users', 'creator') 
-    updater = fields.UrlField('users', 'updater') 
-    publisher = fields.UrlField('users', 'publisher') # not modifiable
-    timeCreated = fields.DateTimeField(editable=False) # not modifiable
-    timePublished = fields.DateTimeField(editable=False) # not modifiable
-    timeMirrored = fields.DateTimeField(editable=False) # not modifiable
-    timeUpdated = fields.DateTimeField(editable=False) # not modifiable
-    shouldMirror = fields.BooleanField()
-    imageCount = fields.IntegerField()
-
-    def get_absolute_url(self):
-        return ('products.releases', self.hostname, str(self.releaseId))
-
-    def __repr__(self):
-        return "models.Release(%r, %r, %r)" % (self.hostname, self.releaseId, 
-                                               self.name)
-
-class UpdateRelease(Model):
-    class Meta(object):
-        name = 'release'
-    hostname = fields.CharField()
-    name = fields.CharField()
-    version = fields.CharField()
-    description = fields.CharField()
-    imageIds = fields.ListField(ImageId)
-    published = fields.BooleanField()
-    shouldMirror = fields.BooleanField()
-
 
 class ImageStatus(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
@@ -136,7 +90,6 @@ class Image(Model):
     id = fields.AbsoluteUrlField(isAttribute=True)
     imageId = fields.IntegerField()
     hostname = fields.CharField()
-    release = fields.UrlField('products.releases', ['hostname', 'releaseId']) 
     imageType = fields.CharField()
     imageTypeName = fields.CharField()
     name = fields.CharField()
@@ -147,8 +100,6 @@ class Image(Model):
     trailingVersion = fields.CharField()
     troveFlavor = fields.FlavorField()
     troveLastChanged = fields.DateTimeField()
-    released = fields.BooleanField()
-    published = fields.BooleanField()
     version = fields.UrlField('products.versions', 
                              ['hostname', 'version'])
     stage = fields.UrlField('products.versions.stages', 
@@ -171,9 +122,6 @@ class Image(Model):
     # a DictField which doesn't exist yet.
     amiId    = fields.CharField()
 
-    # This is needed for construction of a URI only
-    releaseId = fields.CharField(display=False)
-
     def get_absolute_url(self):
         return ('products.images', self.hostname, str(self.imageId))
 
@@ -194,10 +142,3 @@ class ImageList(Model):
         name = 'images'
 
     images = fields.ListField(Image, displayName='image')
-
-class ReleaseList(Model):
-    class Meta(object):
-        name = 'releases'
-
-    releases = fields.ListField(Release, displayName='release')
-

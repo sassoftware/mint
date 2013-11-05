@@ -1,8 +1,8 @@
 #
-# Copyright (c) rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
-SUBDIRS = templates db django_rest image_gen lib reports rest scripts web
+SUBDIRS = templates db django_rest image_gen lib rest scripts web
 
 python_files = $(wildcard *.py)
 

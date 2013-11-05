@@ -289,8 +289,8 @@ class MintConfig(conarycfg.ConfigFile):
     noticesRssFeed          = None
     commitActionEmail       = None
     commitAction            = None
-    rBuilderOnline          = None
-    rBuilderExternal        = None
+    rBuilderOnline          = (CfgBool, False)
+    rBuilderExternal        = (CfgBool, False)
     groupApplianceLabel     = None
     companyName             = None
     corpSite                = None

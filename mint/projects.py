@@ -46,9 +46,6 @@ class Project(database.TableObject):
     def getFQDN(self):
         return self.fqdn
 
-    def getLabel(self):
-        return self.server.getDefaultProjectLabel(self.id)
-
     def getDesc(self):
         return self.description
 
@@ -70,9 +67,6 @@ class Project(database.TableObject):
     def getVersion(self):
         return self.version
 
-    def getMembers(self):
-        return self.server.getMembersByProjectId(self.id)
-
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
 
@@ -85,9 +79,6 @@ class Project(database.TableObject):
         except mint_error.ItemNotFound:
             return userlevels.NONMEMBER
 
-    def updateUserLevel(self, userId, level):
-        return self.server.setUserLevel(userId, self.id, level)
-
     def addMemberById(self, userId, level):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, userId, "", level)
@@ -96,17 +87,11 @@ class Project(database.TableObject):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, 0, username, level)
 
-    def listJoinRequests(self):
-        return self.server.listJoinRequests(self.id)
-
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
-
-    def setNamespace(self, namespace):
-        return self.server.setProjectNamespace(self.id, namespace)
 
     def setCommitEmail(self, commitEmail):
         return self.server.setProjectCommitEmail(self.id, commitEmail)
@@ -135,18 +120,6 @@ class Project(database.TableObject):
     def projectAdmin(self, userName):
         return self.server.projectAdmin(self.id, userName)
 
-    def lastOwner(self, userId):
-        return self.server.lastOwner(self.id, userId)
-
-    def onlyOwner(self, userId):
-        return self.server.onlyOwner(self.id, userId)
-
-    def orphan(self):
-        pass
-
-    def adopt(self, auth):
-        self.addMemberByName(auth.username, userlevels.OWNER)
-
     def getUrl(self, baseUrl=None):
         if not baseUrl:
             baseUrl = 'http://%s%s' % (self.server._cfg.siteHost,
@@ -155,12 +128,6 @@ class Project(database.TableObject):
 
     def getBuilds(self):
         return self.server.getBuildsForProject(self.id)
-
-    def getUnpublishedBuilds(self):
-        return self.server.getUnpublishedBuildsForProject(self.id)
-
-    def getPublishedReleases(self):
-        return self.server.getPublishedReleasesByProject(self.id)
 
     def getApplianceValue(self):
         if not self.isAppliance:

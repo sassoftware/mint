@@ -8,7 +8,6 @@ import time
 
 from mint import helperfuncs
 from mint.mint_error import *
-from mint import usertemplates
 from mint.db import users
 from mint.lib import database
 
@@ -38,52 +37,11 @@ class User(database.TableObject):
     def setEmail(self, newEmail):
         return self.server.setUserEmail(self.id, newEmail)
 
-    def validateNewEmail(self, newEmail):
-        return self.server.validateNewEmail(self.id,newEmail)
-
-    def setDisplayEmail(self, newEmail):
-        # NOTE: .strip done pre-insert for Kid's sake
-        return self.server.setUserDisplayEmail(self.id, newEmail.strip())
-
     def setPassword(self, newPassword):
         self.server.setPassword(self.id, newPassword)
 
-    def setBlurb(self, blurb):
-        # NOTE: .strip done pre-insert for Kid's sake
-        self.server.setUserBlurb(self.id, blurb.strip())
-
     def setFullName(self, fullName):
         self.server.setUserFullName(self.id, fullName)
-
-    def cancelUserAccount(self):
-        self.server.cancelUserAccount(self.id)
-
-    def setDataValue(self, name, value):
-        self.server.setUserDataValue(self.username, name, value)
-
-    def getDataValue(self, name):
-        return self.server.getUserDataValue(self.username, name)
-
-    def getDefaultedData(self):
-        return self.server.getUserDataDefaulted(self.username)
-
-    def getDataTemplate(self):
-        return usertemplates.userPrefsVisibleTemplate
-    
-    def getDefaultedDataAWS(self):
-        return self.server.getUserDataDefaultedAWS(self.username)
-    
-    def getDataTemplateAWS(self):
-        return usertemplates.userPrefsAWSTemplate
-
-    def getDataDict(self, template = None):
-        dataDict = self.server.getUserDataDict(self.username)
-        if not template:
-            template = self.getDataTemplate()
-        for name in template:
-            if name not in dataDict:
-                dataDict[name] = template[name][1]
-        return dataDict
 
 
 class Authorization(object):

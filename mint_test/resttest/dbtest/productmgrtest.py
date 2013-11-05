@@ -250,8 +250,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
                                     userlevels.USER, userlevels.DEVELOPER)
         membership, = db.listMembershipsForUser('other').members
         assert(membership.level == 'Developer' and membership.hostname == 'foo')
-        self.assertRaises(mint_error.LastOwner,
-                          db.setMemberLevel, 'foo', 'owner', 'developer')
         db.setMemberLevel('foo', 'other', 'owner')
         reposMgr.editUser._mock.assertCalled('foo.rpath.local2', 'other', 
                                              userlevels.OWNER)
@@ -273,8 +271,6 @@ class ProductManagerTest(mint_rephelp.MintDatabaseHelper):
         reposMgr = db.productMgr.reposMgr
         productId = self.createProduct('foo', owners=['owner'], users=['user'],
                                        developers=['developer'], db=db)
-        self.assertRaises(mint_error.LastOwner, db.deleteMember, 
-                          'foo', 'owner')
         db.deleteMember('foo', 'user')
         assert(not db.listMembershipsForUser('user').members)
         publisher.notify._mock.assertCalled('UserProductRemoved', userId, 

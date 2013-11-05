@@ -524,7 +524,7 @@ class RepositoryHandle(object):
                 " --username=%(authUser)s "
                 " --password=%(authPass)s "
                 " --module='mint.rbuilderaction --config=%(config)s"
-                    "--user=%%(user)s --hostname=%(fqdn)s'")
+                    " --user=%%(user)s --hostname=%(fqdn)s'")
         if self.commitEmail:
             action += (" --module='conary.changemail --user=%%(user)s"
                     " --from=%(commitFromEmail)s --email=%(commitEmail)s'")

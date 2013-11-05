@@ -1,9 +1,7 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All rights reserved
-#
-import base64
+
 import time
 import StringIO
 import xmlrpclib
@@ -12,7 +10,6 @@ from mint import builds
 from mint import mint_error
 from mint.rest import errors as rest_error
 from mint import projects
-from mint import pubreleases
 from mint import users
 from mint import packagecreator
 from mint.mint_error import *
@@ -146,14 +143,6 @@ class MintClient:
         """
         return projects.Project(self.server, projectId)
 
-    def getProjectsByMember(self, userId):
-        """
-        Return a list of Project objects of which the provided user is a member.
-        @param userId: database id of the requested user
-        @rtype: list of L{mint.projects.Project}
-        """
-        return [(projects.Project(self.server, x[0]['projectId'], initialData=x[0]), x[1], x[2]) for x in self.server.getProjectDataByMember(userId)]
-
     def getUser(self, userId):
         """
         Return a User object for the given userId.
@@ -172,70 +161,12 @@ class MintClient:
         level = self.server.getUserLevel(userId, projectId)
         return (self.getUser(userId), level)
 
-    def userHasRequested(self, projectId, userId):
-        return self.server.userHasRequested(projectId, userId)
-
-    def deleteJoinRequest(self, projectId, userId):
-        return self.server.deleteJoinRequest(projectId, userId)
-
-    def listJoinRequests(self, projectId):
-        return self.server.listJoinRequests(projectId)
-
-    def setJoinReqComments(self, projectId, comments):
-        return self.server.setJoinReqComments(projectId, comments)
-
-    def getJoinReqComments(self, projectId, userId):
-        return self.server.getJoinReqComments(projectId, userId)
-
-    def registerNewUser(self, username, password, fullName, email, displayEmail,
-                blurb, active = False):
-        """
-        Request access for a new user.
-        @param username: requested username
-        @type username: str
-        @param password: password for new user
-        @type password: str
-        @param fullName: full name of the new user
-        @type fullName: str
-        @param email: email address of the new user
-        @type email: str
-        @param displayEmail: spam-safe e-mail address
-        @type displayEmail: str
-        @param blurb: User bio/info/description
-        @type blurb: str
-        @param active: True to activate user immediately,
-                       False to send a confirmation request
-                       to email and require confirmation
-                       before logging in.
-        @type active: bool
-        @returns: database id of new user
-        """
-        return self.server.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
-
-    def getConfirmation(self, username):
-        return self.server.getConfirmation(username)
-
-    def confirmUser(self, confirmId):
-        """
-        Check a provided confirmation code against the database of pending new users.
-        @param confirmId: confirmation code
-        """
-        return self.server.confirmUser(confirmId)
-
     def removeUserAccount(self, userId):
         """
         Remove a user account without prejudigous.
         @param userId: User account id
         """
         return self.server.removeUserAccount(userId)
-
-    def isUserAdmin(self, userId):
-        """
-        Checks to see if a given user has administrative privileges.
-        @param userId: the userId to check
-        @return: True if the user whose id is userId is an admin
-        """
-        return self.server.isUserAdmin(userId)
 
     def getUserIdByName(self, username):
         """
@@ -297,14 +228,6 @@ class MintClient:
         """
         return self.server.getProjectsList()
 
-    def getNewProjects(self, limit, showFledgling):
-        """
-        Return a list of newest projects
-        @param limit:     Number of items to return
-        @param showFledgling: Boolean to show fledgling (empty) projects or not.
-        """
-        return self.server.getNewProjects(limit, showFledgling)
-
     def getLabelsForProject(self, projectId,
             overrideAuth = False, newUser = '', newPass = ''):
         """
@@ -338,34 +261,6 @@ class MintClient:
         """
         return self.server.getUsers(sortOrder, limit, offset)
 
-    def hideProject(self, projectId):
-        """
-        Mark a project as hidden so that it doesn't show up in any listing,
-        and is not accessible except by developers and owners of the project
-        """
-        return self.server.hideProject(projectId)
-
-    def unhideProject(self, projectId):
-        """
-        Mark a project previously hidden as unhidden so that it shows up in
-        browse and search listings, and becomes accessible through all other
-        access methods, and not just to project developers and owners.
-        """
-        return self.server.unhideProject(projectId)
-    
-    def setProductVisibility(self, projectId, makePrivate):
-        """
-        Set the visibility of a product
-        @param projectId: the project id
-        @type  projectId: C{int}
-        @param makePrivate: True to make private, False to make public
-        @type  makePrivate: C{bool}
-        @raise PermissionDenied: if not the product owner
-        @raise PublicToPrivateConversionError: if trying to convert a public
-               product to private
-        """
-        return self.server.setProductVisibility(projectId, makePrivate)
-
     def getBuild(self, buildId):
         """
         Retrieve a L{builds.Build} object by build id.
@@ -386,14 +281,6 @@ class MintClient:
         """
         buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
-
-    def createPackageTmpDir(self):
-        """
-        Create a new temporary location for storing package data
-        @returns: an ID that uniquely references this temporary location
-        @rtype: str
-        """
-        return self.server.createPackageTmpDir()
 
     def _filterFactories(self, factories):
         """
@@ -516,76 +403,6 @@ class MintClient:
                 bf['size'] = int(bf['size'])
         return filenames
 
-    def getPublishedReleaseList(self, limit=10, offset=0):
-        """
-        Get a list of the most recent published releases as ordered
-        by their published date.
-        @param limit: The number of published releases to display
-        @param offset: List @limit starting at item @offset
-        """
-        return [(x[0], x[1], self.getPublishedRelease(x[2])) for x in \
-                self.server.getPublishedReleaseList(limit, offset)]
-
-    def newPublishedRelease(self, projectId):
-        """
-        Create a new published release, which is a collection of 
-        builds (images, group troves, etc.).
-        @param projectId: the project to be associated with the release
-        @returns: an object representing the new published release
-        @rtype: L{mint.pubreleases.PublishedRelease}
-        """
-        pubReleaseId = self.server.newPublishedRelease(projectId)
-        return self.getPublishedRelease(pubReleaseId)
-
-    def getPublishedRelease(self, pubReleaseId):
-        """
-        Get a published release by its id.
-        @param pubReleaseId: the id of the published release
-        @returns: an object representing the published release
-        @rtype: L{mint.pubreleases.PublishedRelease}
-        """
-        # XXX broken
-        #return self.server.getPublishedRelease(pubReleaseId)
-        return pubreleases.PublishedRelease(self.server, pubReleaseId)
-
-    def deletePublishedRelease(self, pubReleaseId):
-        """
-        Delete a published release. This has the side effect of unlinking
-        any builds associated with that release.
-        @param pubReleaseId: the id of the published release
-        @returns: True if successful, False otherwise
-        @rtype: bool
-        """
-        return self.server.deletePublishedRelease(pubReleaseId)
-
-    def publishPublishedRelease(self, pubReleaseId, shouldMirror):
-        """
-        Publish a published release. The release will become visible on
-        the project homepage and RSS feed, and users without read
-        access will be able to download the images. Depending on the
-        value of I{shouldMirror}, the release may be mirrored to
-        all configured Update Services.
-
-        @param pubReleaseId: the id of the published release
-        @param shouldMirror: if True, the release will be marked for
-            mirroring
-        @type shouldMirror: bool
-        """
-        return self.server.publishPublishedRelease(pubReleaseId, shouldMirror)
-
-    def unpublishPublishedRelease(self, pubReleaseId):
-        """
-        Unpublish a published release. The release will no longer be
-        visible on the project homepage and RSS feed, and
-        unprivileged users will not be able to see the associated
-        builds. If the release was marked for mirroring, it will no
-        longer be mirrored, although if it has already been mirrored
-        the troves will not be removed from the mirror.
-
-        @param pubReleaseId: the id of the published release
-        """
-        return self.server.unpublishPublishedRelease(pubReleaseId)
-
     def getrAPAPassword(self, host, role):
         return self.server.getrAPAPassword(host, role)
 
@@ -607,20 +424,6 @@ class MintClient:
     def getFileInfo(self, fileId):
         return self.server.getFileInfo(fileId)
 
-    def promoteUserToAdmin(self, userId):
-        """
-        Promotes a user to an administrator.
-        @param userId: the userId to promote
-        """
-        return self.server.promoteUserToAdmin(userId)
-
-    def demoteUserFromAdmin(self, userId):
-         """
-         Demotes a user from administrator.
-         @param userId: the userId to promote
-         """
-         return self.server.demoteUserFromAdmin(userId)
-
     def getJobServerStatus(self):
          """
          Hack to get the job server status for rBuilder Appliance.
@@ -641,16 +444,6 @@ class MintClient:
 
     def cleanupSessions(self):
         self.server.cleanupSessions()
-
-    # report functions
-    def listAvailableReports(self):
-        return self.server.listAvailableReports()
-
-    def getReportPdf(self, name):
-        return base64.b64decode(self.server.getReportPdf(name))
-
-    def getReport(self, name):
-        return self.server.getReport(name)
 
     def addInboundMirror(self, targetProjectId, sourceLabels,
             sourceUrl, sourceAuthType='none', sourceUsername='',
@@ -676,15 +469,6 @@ class MintClient:
 
     def delOutboundMirror(self, outboundMirrorId):
         return self.server.delOutboundMirror(outboundMirrorId)
-
-    def isProjectMirroredByRelease(self, projectId):
-        '''
-        Returns True if the given project is configured for outbound
-        mirroring and is using "mirror by release".
-
-        @param projectId: id of project to check
-        '''
-        return self.server.isProjectMirroredByRelease(projectId)
 
     def getInboundMirrors(self):
         return self.server.getInboundMirrors()
@@ -722,12 +506,6 @@ class MintClient:
 
     def getOutboundMirrorGroups(self, outboundMirrorId):
         return self.server.getOutboundMirrorGroups(outboundMirrorId)
-
-    def getBuildsForPublishedRelease(self, pubReleaseId):
-        return self.server.getBuildsForPublishedRelease(pubReleaseId)
-
-    def getMirrorableReleasesByProject(self, projectId):
-        return self.server.getMirrorableReleasesByProject(projectId)
 
     def addUpdateService(self, hostname, adminUser, adminPassword,
             description):
@@ -768,30 +546,8 @@ class MintClient:
         return self.server.setBuildFilenamesSafe(buildId, outputToken,
                 filenames)
 
-    def addProductVersion(self, projectId, namespace, name, description=''):
-        return self.server.addProductVersion(projectId, namespace, name,
-                                             description)
-
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
-
-    def getStagesForProductVersion(self, versionId):
-        return self.server.getStagesForProductVersion
-
-    def getProductDefinitionForVersion(self, versionId):
-        pdXMLString = self.server.getProductDefinitionForVersion(versionId)
-        return proddef.ProductDefinition(fromStream=pdXMLString)
-
-    def setProductDefinitionForVersion(self, versionId, productDefinition,
-            rebaseToPlatformLabel=None):
-        sio = StringIO.StringIO()
-        productDefinition.serialize(sio)
-        if not rebaseToPlatformLabel: rebaseToPlatformLabel = ''
-        return self.server.setProductDefinitionForVersion(versionId, sio.getvalue(),
-                rebaseToPlatformLabel)
-
-    def editProductVersion(self, versionId, newDesc):
-        return self.server.editProductVersion(versionId, newDesc)
 
     def getProductVersionListForProduct(self, projectId):
         return self.server.getProductVersionListForProduct(projectId)
@@ -806,18 +562,6 @@ class MintClient:
         return self.server.newBuildsFromProductDefinition(versionId, stage,
                                                           force, buildNames,
                                                           versionSpec)
-        
-    def getBuildTaskListForDisplay(self, versionId, stageName):
-        return self.server.getBuildTaskListForDisplay(versionId, stageName)
-
-    def addTarget(self, targetType, targetName, dataDict):
-        return self.server.addTarget(targetType, targetName, dataDict)
-
-    def deleteTarget(self, targetType, targetName):
-        return self.server.deleteTarget(targetType, targetName)
-
-    def getTargetData(self, targetType, targetName):
-        return self.server.getTargetData(targetType, targetName)
 
     def getAllBuildsByType(self, buildType):
         return self.server.getAllBuildsByType(buildType)
@@ -836,17 +580,6 @@ class MintClient:
     def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
         return self.server.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
 
-    def getAvailablePlatforms(self):
-        return self.server.getAvailablePlatforms()
-
-    def isPlatformAcceptable(self, platformLabel):
-        return self.server.isPlatformAcceptable(platformLabel)
-
-    def isPlatformAvailable(self, platformLabel):
-        return self.server.isPlatformAvailable(platformLabel)
-
-    def getProxies(self):
-        return self.server.getProxies()
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

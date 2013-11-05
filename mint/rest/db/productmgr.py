@@ -78,12 +78,7 @@ class ProductManager(manager.Manager):
                 domainname, namespace, description, cr.username AS creator,
                 projectUrl, p.timeCreated,
                 p.timeModified, commitEmail, prodtype, backupExternal,
-                hidden, m.level AS role, fqdn AS repositoryHostname,
-                ( SELECT pubReleaseId FROM PublishedReleases r
-                    WHERE r.projectId = p.projectId
-                    AND timePublished IS NOT NULL
-                    ORDER BY timePublished DESC LIMIT 1
-                ) AS latestRelease
+                hidden, m.level AS role, fqdn AS repositoryHostname
             FROM Projects p
             LEFT JOIN ProjectUsers m ON (
                 p.projectId = m.projectId
@@ -351,18 +346,9 @@ class ProductManager(manager.Manager):
         fqdn = self._getProductFQDN(projectId)
         username = self.db.userMgr._getUsername(userId)
         isMember, oldLevel = self._getMemberLevel(projectId, userId)
-
-        if level != userlevels.USER:
-            self.db.db.membershipRequests.deleteRequest(projectId, userId,
-                                                        commit=False)
         if isMember:
             if level == oldLevel:
                 return
-            if (level != userlevels.OWNER and oldLevel == userlevels.OWNER
-                and self.db.db.projectUsers.onlyOwner(projectId, userId)):
-                # TODO: this error is not quite right.  We're not explicitly
-                # trying to "orphan" the project just demote the last owner.
-                raise mint_error.LastOwner
             cu = self.db.cursor()
 
             cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
@@ -388,13 +374,6 @@ class ProductManager(manager.Manager):
     def deleteMember(self, projectId, userId, notify=True):
         fqdn = self._getProductFQDN(projectId)
         username = self.db.userMgr._getUsername(userId)
-        if self.db.db.projectUsers.lastOwner(projectId, userId):
-            # This check ensures there are no developers assigned
-            # to this project.  (As opposed to onlyOwner which merely
-            # checks that this user is not the last owner.)  TODO:   
-            # rename these checks to be clearer and move them here,
-            # and create separate exceptions. 
-            raise mint_error.LastOwner
         self.reposMgr.deleteUser(fqdn, username)
         self.db.db.projectUsers.delete(projectId, userId)
         if notify:

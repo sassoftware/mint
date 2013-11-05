@@ -176,8 +176,6 @@ class ReposTest(restbase.BaseRestTest):
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <released>false</released>
-    <published>false</published>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
@@ -212,8 +210,6 @@ class ReposTest(restbase.BaseRestTest):
     <troveVersion>/testproject.rpath.local2@yournamespace:testproject-1.0-devel/1-1-1</troveVersion>
     <trailingVersion>1-1-1</trailingVersion>
     <troveFlavor></troveFlavor>
-    <released>false</released>
-    <published>false</published>
     <version href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0">1.0</version>
     <stage href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development">Development</stage>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>

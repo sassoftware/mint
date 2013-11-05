@@ -38,22 +38,17 @@ class ImageManager(manager.Manager):
             SELECT
                 p.hostname,
                 pv.name AS version,
-                b.buildId AS imageId, b.pubReleaseId AS "releaseId",
+                b.buildId AS imageId,
                     b.buildType AS imageType, b.name, b.description,
                     b.troveName, b.troveVersion, b.troveFlavor,
                     b.troveLastChanged, b.timeCreated, b.timeUpdated,
                     b.status AS statusCode, b.statusMessage, b.buildCount,
                     b.stageName AS stage, b.output_trove,
-                pr.timePublished,
-                pr.name AS release,
                 cr_user.username AS creator, up_user.username AS updater
 
             FROM Builds b
                 JOIN Projects p USING ( projectId )
                 %(join)s
-                -- NB: USING() would be typical but sqlite seems upset?
-                LEFT JOIN PublishedReleases pr ON (
-                    b.pubReleaseId = pr.pubReleaseId )
                 LEFT JOIN ProductVersions pv ON (
                     b.productVersionId = pv.productVersionId )
                 LEFT JOIN Users cr_user ON ( b.createdBy = cr_user.userId )
@@ -77,8 +72,6 @@ class ImageManager(manager.Manager):
         toGetMetadata = {}
         for row in rows:
             imageType = row['imageType']
-            row['released'] = bool(row['releaseId'])
-            row['published'] = bool(row.pop('timePublished', False))
             if row['troveFlavor'] is not None:
                 row['troveFlavor'] = deps.ThawFlavor(row['troveFlavor'])
                 row['architecture'] = helperfuncs.getArchFromFlavor(
@@ -304,10 +297,6 @@ class ImageManager(manager.Manager):
                       WHERE buildId = ?''', imageId)
         imageType = cu.fetchone()[0]
         return imageType
-
-    def listImagesForRelease(self, fqdn, releaseId):
-        return self._getImages(fqdn, '', ' AND b.pubReleaseId=?',
-                               [releaseId])
 
     def listImagesForProductVersion(self, fqdn, version):
         return self._getImages(fqdn, '',

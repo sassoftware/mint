@@ -12,10 +12,7 @@ from mint_test import mint_rephelp
 from mint.rest.api import models
 from mint.rest.modellib import converter
 
-class ReleaseModelTest(mint_rephelp.MintDatabaseHelper):
-    def testReleaseModel(self):
-        release = converter.fromText('xml', data, models.UpdateRelease, None, None)
-        assert(release.imageIds[0].imageId == 1)
+class ImageModelTest(mint_rephelp.MintDatabaseHelper):
 
     def testImageListModel(self):
         images = converter.fromText('xml', imageList, models.ImageList, None, 

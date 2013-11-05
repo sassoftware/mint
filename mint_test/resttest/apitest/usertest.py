@@ -6,20 +6,7 @@
 #
 
 import testsetup
-
-import os
 import re
-import time
-
-from conary import conaryclient
-from conary import constants as conaryConstants
-from conary.lib import util
-from mint import buildtypes
-from mint import constants
-from rmake import constants as rmakeConstants
-
-from rpath_proddef import api1 as proddef
-
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
@@ -36,8 +23,15 @@ class SiteTest(restbase.BaseRestTest):
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
 <users>
-  <user id="http://%(server)s:%(port)s/api/users/%(username)s">
+  <user id="http://%(server)s:%(port)s/api/users/mintauth">
     <userId>1</userId>
+    <username>mintauth</username>
+    <fullName>Internal Super-User</fullName>
+    <active>true</active>
+    <products href="http://%(server)s:%(port)s/api/users/mintauth/products"/>
+  </user>
+  <user id="http://%(server)s:%(port)s/api/users/%(username)s">
+    <userId>2</userId>
     <username>adminuser</username>
     <fullName>Full Name</fullName>
     <email>%(username)s@foo.com</email>

@@ -25,9 +25,7 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)
         self.createUser('other')
-        assert(not db.userMgr._isUserAdmin('other'))
         db.userMgr.makeAdmin('other')
-        assert(db.userMgr._isUserAdmin('other'))
 
     def testCreateUser(self):
         db = self.openMintDatabase(createRepos=False)

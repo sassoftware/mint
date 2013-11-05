@@ -27,35 +27,6 @@ class ImageManagerTest(mint_rephelp.MintDatabaseHelper):
         self.failUnlessEqual(image.hostname, 'foo2')
         self.failUnlessEqual(image.architecture, 'sparc64')
 
-    def testListImagesForRelease(self):
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createProduct('foo', owners=['admin'], db=db)
-        imageId = self.createImage(db, 'foo', buildtypes.INSTALLABLE_ISO,
-                                   name='Image1')
-        self.setImageFiles(db, 'foo', imageId)
-        imageId2 = self.createImage(db, 'foo', buildtypes.AMI, 
-                                    name='Image2')
-        self.createImage(db, 'foo', buildtypes.TARBALL, name='Image3')
-        self.setImageFiles(db, 'foo', imageId2)
-        releaseId = db.createRelease('foo', 'name', '', 'v1', [imageId, imageId2])
-        images = db.listImagesForRelease('foo', releaseId).images
-        assert(len(images) == 2)
-        images = dict((x.name, x) for x in images)
-        image1 = images['Image1']
-        image2 = images['Image2']
-        assert(image1.imageId == imageId)
-        assert(image2.imageId == imageId2)
-
-        # Try the ordering both ways
-        imageIds = [ imageId, imageId2 ]
-        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
-        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
-
-        imageIds.reverse()
-        ret = db.imageMgr._getFilesForImages('hostName', imageIds)
-        self.failUnlessEqual([x.imageId for x in ret ], imageIds)
-
     def testListImagesForTrove(self):
         db = self.openMintDatabase(createRepos=False)
         self.createUser('admin', admin=True)

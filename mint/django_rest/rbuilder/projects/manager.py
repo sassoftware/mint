@@ -214,11 +214,6 @@ class ProjectManager(basemanager.BaseManager):
         else:
             oldMember = None
 
-        # Delete outstanding membership requests
-        if level != userlevels.USER:
-            self.restDb.db.membershipRequests.deleteRequest(
-                project.project_id, user.userid, commit=False)
-
         if oldMember:
             # If old level is the same, nothing to do
             if level == oldMember.level:

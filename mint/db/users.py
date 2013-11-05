@@ -16,23 +16,12 @@ from mint import templates
 from mint import searcher
 from mint import userlisting
 from mint.mint_error import (DuplicateItem, InvalidUsername,
-        IllegalUsername, UserAlreadyExists, AlreadyConfirmed, ItemNotFound)
+        IllegalUsername, UserAlreadyExists, ItemNotFound)
 from mint.lib import auth_client
 from mint.lib import data
 from mint.lib import database
 from mint.lib import maillib
 
-def confirmString():
-    """
-    Generate a confirmation string
-    """
-    hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
-    return sha1helper.sha1ToString(hash)
-
-class ConfirmationsTable(database.KeyedTable):
-    name = 'Confirmations'
-    key = 'userId'
-    fields = ['userId', 'timeRequested', 'confirmation']
 
 class UsersTable(database.KeyedTable):
     name = 'Users'
@@ -50,7 +39,6 @@ class UsersTable(database.KeyedTable):
     def __init__(self, db, cfg):
         self.cfg = cfg
         database.DatabaseTable.__init__(self, db)
-        self.confirm_table = ConfirmationsTable(db)
         self.authClient = auth_client.getClient(cfg.authSocket)
 
     def changePassword(self, username, password):
@@ -142,28 +130,6 @@ class UsersTable(database.KeyedTable):
                 'admin':        isAdmin,
                 }
 
-    def validateNewEmail(self, userId, email):
-        user = self.get(userId)
-        confirm = confirmString()
-
-        message = templates.write(templates.validateNewEmail, username = user['username'],
-            cfg = self.cfg, confirm = confirm)
-
-        maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
-                "Your %s account's email address must be confirmed" % self.cfg.productName, message)
-        self.invalidateUser(userId, confirm)
-        return True
-
-    def invalidateUser(self, userId, confirm = None):
-        if not confirm:
-            confirm = confirmString()
-        try:
-            self.confirm_table.new(userId = userId,
-                                   timeRequested = int(time.time()),
-                                   confirmation = confirm)
-        except DuplicateItem:
-            self.confirm_table.update(userId, confirmation = confirm)
-
     def validateUsername(self, username):
         if username.lower() == self.cfg.authUser.lower():
             raise IllegalUsername
@@ -179,8 +145,6 @@ class UsersTable(database.KeyedTable):
 
     def registerNewUser(self, username, password, fullName, email,
                         displayEmail, blurb, active):
-        if self.cfg.sendNotificationEmails and not active:
-            maillib.validateEmailDomain(email)
         self.validateUsername(username)
 
         salt, passwd = self._mungePassword(password)
@@ -196,18 +160,8 @@ class UsersTable(database.KeyedTable):
                               timeCreated = time.time(),
                               timeAccessed = 0,
                               blurb = blurb,
-                              active = int(active))
-
-            if self.cfg.sendNotificationEmails and not active:
-                confirm = confirmString()
-                message = templates.write(templates.registerNewUser,
-                    username = username, cfg = self.cfg, confirm = confirm)
-                maillib.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
-                                           email, "Welcome to %s!" % \
-                                           self.cfg.productName, message)
-                self.confirm_table.new(userId = userId,
-                                       timeRequested = int(time.time()),
-                                       confirmation = confirm)
+                              active=1,
+                              )
 
         except DuplicateItem:
             self.db.rollback()
@@ -218,22 +172,6 @@ class UsersTable(database.KeyedTable):
         else:
             self.db.commit()
         return userId
-
-    def confirm(self, confirm):
-        cu = self.db.cursor()
-
-        cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
-        if len(cu.fetchall()) != 1:
-            raise AlreadyConfirmed
-        else:
-            cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
-            r = cu.fetchone()
-
-            cu.execute("UPDATE Users SET active=1 WHERE userId=?", r[0])
-            cu.execute("DELETE FROM Confirmations WHERE userId=?", r[0])
-            self.db.commit()
-
-            return r[0]
 
     def search(self, terms, limit, offset, includeInactive=False):
         """

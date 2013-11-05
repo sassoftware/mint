@@ -50,13 +50,6 @@ class ProductTest(restbase.BaseRestTest):
                                     body=newProduct1 % uhash)
             self.failUnlessEqual(str(err), errmsg)
 
-    def testProductLatestReleases(self):
-        # test where we actually have a published release
-        self.setupReleases()
-        client = self.getRestClient()
-        req, prd = client.call('GET', '/products/%s' % self.productShortName)
-        assert(prd.latestRelease == 2)
-
     def testUpdateProduct(self):
         # test where we actually have a published release
         self.setupReleases()
@@ -105,7 +98,6 @@ class ProductTest(restbase.BaseRestTest):
   <versions href="http://%(server)s:%(port)s/api/products/foobar/versions/"/>
   <members href="http://%(server)s:%(port)s/api/products/foobar/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/foouser">foouser</creator>
-  <releases href="http://%(server)s:%(port)s/api/products/foobar/releases/"/>
   <images href="http://%(server)s:%(port)s/api/products/foobar/images/"/>
 </product>
 """

@@ -123,7 +123,7 @@ def registerCommits(argSet, commitList):
             trovesSeen.add((name, version))
     db.db.commit()
 
-    if proddefHosts:
+    if proddefHosts and db.db.driver != 'sqlite':
         tool = repository_sync.SyncTool(cfg, db)
         for hostname in proddefHosts:
             tool.syncReposByFQDN(hostname)

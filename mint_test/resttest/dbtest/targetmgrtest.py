@@ -217,23 +217,23 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
                 userCreds[('type1', 'name2')][0][1])])
 
         self.failUnlessEqual(tmgr.getTargetsForUsers('type1'), [
-            (2, userName1, 'name1', 1, dict(data = '11', description="name1"),
+            (3, userName1, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][0][1]),
-            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
+            (3, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
+            (4, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
+            (5, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
         self.failUnlessEqual(tmgr.getTargetsForUsers('type2'), [])
 
         self.failUnlessEqual(tmgr.getUniqueTargetsForUsers('type1'), [
-            (2, userName1, 'name2', 3, dict(data = '12', description="name2"),
+            (3, userName1, 'name2', 3, dict(data = '12', description="name2"),
                 userCreds[('type1', 'name2')][0][1]),
-            (3, userName2, 'name1', 2, dict(data = '11', description="name1"),
+            (4, userName2, 'name1', 2, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][1][1]),
-            (4, userName3, 'name1', 1, dict(data = '11', description="name1"),
+            (5, userName3, 'name1', 1, dict(data = '11', description="name1"),
                 userCreds[('type1', 'name1')][2][1]),
         ])
 

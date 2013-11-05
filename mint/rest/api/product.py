@@ -1,10 +1,6 @@
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-
-from restlib import response
 
 from mint import mint_error
 from mint.rest import errors
@@ -14,7 +10,6 @@ from mint.rest.api import models
 from mint.rest.api import productversion
 from mint.rest.api import repos
 from mint.rest.api import requires
-from mint.rest.api import releases
 
 from mint.rest.middleware import auth
 
@@ -45,7 +40,7 @@ class ProductController(base.BaseController):
             'members'    : ProductMemberController,
             'repos'      : repos.RepositoryController,
             'images'     : images.ProductImagesController,
-            'releases'   : releases.ProductReleasesController  }
+            }
 
     @auth.public
     def index(self, request):

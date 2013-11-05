@@ -74,7 +74,7 @@ def _createUsers(db):
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
         cu.execute("""INSERT INTO Users (username, fullName, active, is_admin)
-                VALUES ('mintauth', 'Internal Super-User', 1, true)""")
+                VALUES ('mintauth', 'Internal Super-User', 1, ?)""", (True,))
     if db.driver != 'sqlite':
         # Create a case-insensitive unique constraint on username
         db.createIndex('Users', 'users_username_casei_uq',

@@ -118,9 +118,6 @@ class Build(database.TableObject):
             self.buildType = self.server.getBuildType(self.buildId)
         return self.buildType
 
-    def getStatus(self):
-        return self.server.getBuildStatus(self.id)
-
     def getFiles(self):
         filenames = self.server.getBuildFilenames(self.buildId)
         for bf in filenames:
@@ -149,13 +146,6 @@ class Build(database.TableObject):
                 if f.satisfies(x):
                     return x
         return deps.Flavor()
-
-    def setPublished(self, pubReleaseId, published):
-        return self.server.setBuildPublished(self.buildId,
-                pubReleaseId, published)
-
-    def getPublished(self):
-        return self.server.getBuildPublished(self.buildId)
 
     def getDataTemplate(self):
         return buildtemplates.getDataTemplate(self.buildType)
@@ -255,9 +245,3 @@ class Build(database.TableObject):
         Note this is not the full build filename: the extension is not supplied.
         """
         return self.server.getBuildBaseFileName(self.buildId)
-
-    def getBuildPageUrl(self):
-        """
-        Return the URL to the build's rBuilder page.
-        """
-        return self.server.getBuildPageUrl(self.buildId)

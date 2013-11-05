@@ -76,15 +76,6 @@ class AuthenticationManager(manager.Manager):
             if not cu.fetchall():
                 raise errors.BuildNotFound(buildId)
 
-    def requireReleaseOnHost(self, hostname, releaseId):
-        cu = self.db.cursor()
-        cu.execute('''SELECT hostname FROM PublishedReleases
-                      JOIN Projects USING(projectId)
-                      WHERE pubReleaseId=?''', releaseId)
-        releaseHost, = self.db._getOne(cu, errors.ReleaseNotFound, releaseId)
-        if hostname != releaseHost:
-            raise errors.ReleaseNotFound(releaseId)
-
     def requireImageToken(self, hostname, imageId, token):
         cu = self.db.cursor()
         cu.execute("""

@@ -119,25 +119,6 @@ class BuildsTable(database.KeyedTable):
         else:
             return name, version, flavor
 
-    def getPublished(self, buildId):
-        cu = self.db.cursor()
-        cu.execute("SELECT COALESCE((SELECT pubReleaseId FROM Builds WHERE buildId=?), 0)", buildId)
-        pubReleaseId = cu.fetchone()[0]
-        if pubReleaseId:
-            cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
-            res = cu.fetchone()
-            if res:
-                return bool(res[0])
-        return False
-
-    def getUnpublishedBuilds(self, projectId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM Builds
-                      WHERE projectId = ? AND pubReleaseId IS NULL""",
-                      projectId)
-        res = cu.fetchall()
-        return [x[0] for x in res]
-
     def buildExists(self, buildId):
         cu = self.db.cursor()
 

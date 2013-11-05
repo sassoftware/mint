@@ -21,10 +21,8 @@ import sys
 from conary.conaryclient import mirror
 from conary import conaryclient, conarycfg
 from conary import versions
-from conary.deps import deps
 from conary.repository import errors
 
-from mint import helperfuncs
 from mint.client import MintClient
 from mint.scripts.mirror import MirrorScript
 
@@ -79,97 +77,13 @@ class Script(MirrorScript):
                 privRepos = sourceRepos = \
                     conaryclient.ConaryClient(sourceCCfg).getRepos()
 
-                if useReleases:
-                    # Using published release based mirroring
-                    releases = client.getMirrorableReleasesByProject(
-                        int(sourceProjectId))
-
-                    # Create the mirror user, deleting it if it already
-                    # exists
-                    try:
-                        privRepos.deleteUserByName(reposHost, mirrorUser)
-                    except errors.UserNotFound:
-                        pass
-                    mirrorPassword = helperfuncs.genPassword(64)
-                    privRepos.addUser(reposHost, mirrorUser, mirrorPassword)
-
-                    # Create the mirror role if it doesn't exist yet
-                    try:
-                        privRepos.addRole(reposHost, mirrorRole)
-                        privRepos.addAcl(reposHost, mirrorRole, 'ravenous-bugblatter-beast',
-                            reposHost + '@dummy:label')
-                    except errors.RoleAlreadyExists:
-                        pass
-                    privRepos.setRoleCanMirror(reposHost, mirrorRole, True)
-                    privRepos.updateRoleMembers(reposHost, mirrorRole,
-                        [mirrorUser])
-
-                    # Get the list of troves that *should* be mirrored
-                    newTroves = set()
-                    for pubReleaseId in releases:
-                        builds = client.getBuildsForPublishedRelease(
-                          pubReleaseId)
-                        for buildId in builds:
-                            build = client.getBuild(buildId)
-                            name = build.troveName
-                            # troveVersion has a timestamp;
-                            # listTroveAccess will not. "un-freeze"
-                            #the version to make sure they match.
-                            version = str(versions.ThawVersion(
-                                build.troveVersion))
-                            flavor = deps.ThawFlavor(build.troveFlavor)
-                            newTroves.add((name, version, flavor))
-
-                    # Get the list of troves that *are* marked for mirroring
-                    oldTroves = set()
-                    for name, version, flavor in privRepos.listTroveAccess(
-                      reposHost, mirrorRole):
-                        oldTroves.add((name, str(version), flavor))
-
-                    # Add and remove trove access as needed to make
-                    # trove access match the mirrorable published
-                    # release list.
-                    removeAccess = [(n, versions.VersionFromString(v), f)
-                        for (n, v, f) in oldTroves - newTroves]
-                    if removeAccess:
-                        privRepos.deleteTroveAccess(mirrorRole, removeAccess)
-
-                    addAccess = [(n, versions.VersionFromString(v), f)
-                        for (n, v, f) in newTroves - oldTroves]
-                    if addAccess:
-                        privRepos.addTroveAccess(mirrorRole, addAccess)
-
-                    # Now that we've brought trove access up to date,
-                    # delete our admin access to this project's
-                    # repository and replace it with the mirror user.
-                    sourceCfg.user.addServerGlob(reposHost, mirrorUser,
-                            mirrorPassword)
-
-                    # And re-open the repository
-                    sourceRepos = conaryclient.ConaryClient(sourceCCfg).getRepos()
-
-                    # Configure for recursive mirroring of available groups
-                    names = set('+' + x[0] for x in newTroves)
+                # Using label+group based mirroring
+                if allLabels:
                     cfg.labels = []
-                    cfg.configLine('matchTroves ' + ' '.join(names))
-                    cfg.configLine('recurseGroups True')
-
-                    # For now, always force a full sync, as older
-                    # releases may have been added to the mirrorable
-                    # list since the last mirror. Later we might be
-                    # able to only force a sync if the oldest
-                    # unmirrored group is newer than the oldest
-                    # mirror mark, but this would require a new repos
-                    # call (to get the trove timestamp).
-                    fullSync = True
                 else:
-                    # Using label+group based mirroring
-                    if allLabels:
-                        cfg.labels = []
-                    else:
-                        cfg.labels = [versions.Label(labelStr) for labelStr in targetLabels.split(" ")]
-                    cfg.configLine('matchTroves ' + ' '.join(matchStrings))
-                    cfg.configLine('recurseGroups %s' % bool(recurse))
+                    cfg.labels = [versions.Label(labelStr) for labelStr in targetLabels.split(" ")]
+                cfg.configLine('matchTroves ' + ' '.join(matchStrings))
+                cfg.configLine('recurseGroups %s' % bool(recurse))
 
                 # Configure targets
                 obmt = client.getOutboundMirrorTargets(outboundMirrorId)
@@ -210,10 +124,6 @@ class Script(MirrorScript):
                     finally:
                         if fullSync:
                             client.setOutboundMirrorSync(outboundMirrorId, False)
-
-                if useReleases:
-                    # Delete temporary mirror user
-                    privRepos.deleteUserByName(reposHost, mirrorUser)
 
             except KeyboardInterrupt:
                 log.info("Outbound mirror killed by user")

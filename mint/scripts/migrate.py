@@ -1057,13 +1057,6 @@ class MigrateTo_49(SchemaMigration):
         schema._createCapsuleIndexerSchema(self.db)
         drop_tables(self.db, 'ci_rhn_errata_package')
 
-        if self.cfg:
-            from mint import config
-            from mint.scripts import migrate_catalog_data
-            cfg = config.getConfig()
-            conv = migrate_catalog_data.TargetConversion(cfg, self.db)
-            conv.run()
-
         # Drop uniq constraint on targetName
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Targets DROP CONSTRAINT targets_targetname_key")

@@ -947,6 +947,8 @@ class ProductVersionTest(restbase.BaseRestTest):
             self.createUser('foouser2')
             kw['username'] = 'foouser2'
         client = self.getRestClient(**kw)
+        if notLoggedIn:
+            client.restDb.auth.userId = None
         req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -972,7 +974,6 @@ class ProductVersionTest(restbase.BaseRestTest):
     <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
     <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
     <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-    <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
   </product>
 </products>
@@ -1002,6 +1003,8 @@ class ProductVersionTest(restbase.BaseRestTest):
             self.createUser('foouser')
             kw['username'] = 'foouser'
         client = self.getRestClient(**kw)
+        if notLoggedIn:
+            client.restDb.auth.userId = None
         req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
@@ -1026,7 +1029,6 @@ class ProductVersionTest(restbase.BaseRestTest):
   <versions href="http://%(server)s:%(port)s/api/products/testproject/versions/"/>
   <members href="http://%(server)s:%(port)s/api/products/testproject/members/"/>
   <creator href="http://%(server)s:%(port)s/api/users/adminuser">adminuser</creator>
-  <releases href="http://%(server)s:%(port)s/api/products/testproject/releases/"/>
   <images href="http://%(server)s:%(port)s/api/products/testproject/images/"/>
 </product>
 """
@@ -1055,6 +1057,8 @@ class ProductVersionTest(restbase.BaseRestTest):
             self.createUser('foouser')
             kw['username'] = 'foouser'
         client = self.getRestClient(**kw)
+        if notLoggedIn:
+            client.restDb.auth.userId = None
         req, response = client.call('GET', uri, convert=True)
         exp = """\
 <?xml version='1.0' encoding='UTF-8'?>
