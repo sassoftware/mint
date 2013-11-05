@@ -45,6 +45,7 @@
 ^scripts/httpd-graceful$
 ^scripts/job-cleanup$
 ^scripts/migrate-config$
+^scripts/mint-admin$
 ^scripts/mirror-inbound$
 ^scripts/mirror-outbound$
 ^scripts/pki-tool$

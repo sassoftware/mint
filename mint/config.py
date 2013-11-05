@@ -93,7 +93,7 @@ class MintConfig(conarycfg.ConfigFile):
     # Backend configuration
     adminMail               = (CfgString, 'mint@rpath.org')
     authPass                = (CfgString, None)
-    authUser                = (CfgString, None)
+    authUser                = (CfgString, 'mintauth')
     bugsEmail               = (CfgString, None)
     bugsEmailName           = (CfgString, 'rBuilder Bugs')
     bugsEmailSubject        = (CfgString, 'rBuilder Unhandled Exception Report from %(hostname)s')
@@ -297,7 +297,7 @@ class MintConfig(conarycfg.ConfigFile):
     visibleBuildTypes       = None
     excludeBuildTypes       = None
     includeBuildTypes       = None
-    useInternalConaryProxy  = True
+    useInternalConaryProxy  = (CfgBool, True)
     packageCreatorConfiguration = None
 
     # AMI configuration -- migrated in schema (45, 6)

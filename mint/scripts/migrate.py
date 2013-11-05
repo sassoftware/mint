@@ -5527,7 +5527,7 @@ class MigrateTo_68(SchemaMigration):
 
 class MigrateTo_69(SchemaMigration):
     '''diamond'''
-    Version = (69, 1)
+    Version = (69, 2)
 
     def migrate(self):
         cu = self.db.cursor()
@@ -5537,6 +5537,12 @@ class MigrateTo_69(SchemaMigration):
     def migrate1(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD proddef_version text")
+        return True
+
+    def migrate2(self):
+        cu = self.db.cursor()
+        cu.execute("""INSERT INTO Users (username, fullName, active, is_admin)
+                VALUES ('mintauth', 'Internal Super-User', 1, true)""")
         return True
 
 

@@ -54,9 +54,10 @@ fi
 auth_file=/srv/rbuilder/config/config.d/01_authpass.conf
 if [ ! -f $auth_file ]
 then
-    conf_tmp=$(mktemp --tmpdir=$(dirname $auth_file))
-    echo authPass $(rand_passwd) >$conf_tmp
-    mv $conf_tmp $auth_file
+    auth_tmp=$(mktemp --tmpdir=$(dirname $auth_file))
+    echo authPass $(rand_passwd) >$auth_tmp
+    chown apache:apache $auth_tmp
+    mv $auth_tmp $auth_file
 fi
 
 

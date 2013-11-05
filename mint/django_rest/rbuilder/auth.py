@@ -52,6 +52,10 @@ class rBuilderBackend(object):
             user = User.objects.get(user_name=username, deleted=False)
         except User.DoesNotExist:
             return None
+        if (mintConfig
+                and username == mintConfig.authUser
+                and password == mintConfig.authPass):
+            return user
         if password is ValidPasswordToken:
             self.update_login_time(user)
             return user

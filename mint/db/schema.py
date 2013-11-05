@@ -18,7 +18,7 @@ from conary.dbstore import sqlerrors, sqllib
 log = logging.getLogger(__name__)
 
 # database schema major version
-RBUILDER_DB_VERSION = sqllib.DBversion(69, 1)
+RBUILDER_DB_VERSION = sqllib.DBversion(69, 2)
 
 def _createTrigger(db, table, column="changed"):
     retInsert = db.createTrigger(table, column, "INSERT")
@@ -73,6 +73,8 @@ def _createUsers(db):
             deleted              BOOLEAN       NOT NULL    DEFAULT false
         ) %(TABLEOPTS)s""" % db.keywords)
         db.tables['Users'] = []
+        cu.execute("""INSERT INTO Users (username, fullName, active, is_admin)
+                VALUES ('mintauth', 'Internal Super-User', 1, true)""")
     if db.driver != 'sqlite':
         # Create a case-insensitive unique constraint on username
         db.createIndex('Users', 'users_username_casei_uq',

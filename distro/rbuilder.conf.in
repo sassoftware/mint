@@ -11,8 +11,6 @@
 configured              False
 
 # Miscellany
-authUser                mintauth
-#authPass                mintpass
 debugMode               False
 encryptCredentials      True
 
