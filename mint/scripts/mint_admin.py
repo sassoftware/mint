@@ -2,6 +2,7 @@
 # Copyright (c) SAS Institute Inc.
 #
 
+import getpass
 import json
 import robj
 import sys
@@ -25,6 +26,23 @@ class Command(AbstractCommand):
         self.api = robj.connect("https://%s:%s@localhost/api/v1" %
                 (self.cfg.authUser, self.cfg.authPass))
 
+    def _prompt(self, argSet, arg, query):
+        if arg in argSet:
+            return argSet[arg]
+        else:
+            return raw_input(query)
+
+    def _password(self, argSet):
+        if 'password-stdin' in argSet:
+            return sys.stdin.readline().rstrip('\r\n')
+        elif 'password' in argSet:
+            return argSet['password']
+        while True:
+            password = getpass.getpass("Password: ")
+            password2 = getpass.getpass("Password (repeat): ")
+            if password == password2:
+                return password
+
 
 class Script(mainhandler.MainHandler):
     commandList = [ HelpCommand ]
@@ -41,7 +59,6 @@ class Script(mainhandler.MainHandler):
         return self.main()
 
 
-@Script.commandList.append
 class UserList(Command):
     commands = ['user-list']
 
@@ -63,9 +80,46 @@ class UserList(Command):
             print fmt % ('Username', 'Admin', 'Full Name')
             for x in self.api.users:
                 print fmt % (x.user_name, x.is_admin.title(), x.full_name)
+Script.commandList.append(UserList)
 
 
-@Script.commandList.append
+class UserAdd(Command):
+    commands = ['user-add']
+
+    def addParameters(self, argDef):
+        super(UserAdd, self).addParameters(argDef)
+        argDef['User Add Options'] = {
+                'user-name': options.ONE_PARAM,
+                'full-name': options.ONE_PARAM,
+                'email': options.ONE_PARAM,
+                'admin': options.ONE_PARAM,
+                'password': options.ONE_PARAM,
+                'password-stdin': options.NO_PARAM,
+                }
+
+    def runCommand(self, cfg, argSet, otherArgs):
+        user_name = self._prompt(argSet, 'user-name', "User name: ")
+        full_name = self._prompt(argSet, 'full-name', "Full name: ")
+        email = self._prompt(argSet, 'email', "Email: ")
+        is_admin = self._prompt(argSet, 'admin', "Admin? ").lower()[0] in 'yt'
+        password = self._password(argSet)
+        user = dict(
+                user_name=user_name,
+                full_name=full_name,
+                email=email,
+                is_admin=is_admin,
+                password=password,
+                )
+        user = self.api.users.append(user)
+        if 'json' in argSet:
+            json.dump({'user_id': int(user.user_id)})
+            print
+        else:
+            print "Created user '%s' with ID '%s'" % (
+                    user.user_name, user.user_id)
+Script.commandList.append(UserAdd)
+
+
 class ProjectList(Command):
     commands = ['project-list']
 
@@ -86,3 +140,4 @@ class ProjectList(Command):
             ret.append(item)
         json.dump(ret, sys.stdout)
         print
+Script.commandList.append(ProjectList)
