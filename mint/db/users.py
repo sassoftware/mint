@@ -1,18 +1,16 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
+
 import os
-import random
 import time
 
 from conary import repository
 from conary.lib.digestlib import md5
-from conary.lib import sha1helper
 
 from conary.repository.netrepos.netauth import nameCharacterSet
 from conary.repository.netrepos.auth_tokens import ValidPasswordToken
 
-from mint import templates
 from mint import searcher
 from mint import userlisting
 from mint.mint_error import (DuplicateItem, InvalidUsername,
@@ -20,7 +18,6 @@ from mint.mint_error import (DuplicateItem, InvalidUsername,
 from mint.lib import auth_client
 from mint.lib import data
 from mint.lib import database
-from mint.lib import maillib
 
 
 class UsersTable(database.KeyedTable):
@@ -42,6 +39,8 @@ class UsersTable(database.KeyedTable):
         self.authClient = auth_client.getClient(cfg.authSocket)
 
     def changePassword(self, username, password):
+        if username == self.cfg.authUser:
+            raise ValueError
         salt, passwd = self._mungePassword(password)
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",

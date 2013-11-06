@@ -32,6 +32,9 @@ class UserExceptions(object):
     class UserSelfRemovalException(BaseException):
         "Users are not allowed to remove themselves"
         status = 403
+    class CannotChangeUserException(BaseException):
+        "That user cannot be changed"
+        status = 403
     class CannotDeleteUserException(BaseException):
         "That user cannot be deleted"
         status = 403
@@ -116,6 +119,8 @@ class UsersManager(basemanager.BaseManager):
         dbuser = models.User.objects.get(pk=user_id, deleted=False)
         if user.user_name and user.user_name != dbuser.user_name:
             raise self.exceptions.UserCannotChangeNameException()
+        if dbuser.user_name == self.cfg.authUser:
+            raise self.exceptions.CannotChangeUserException()
 
         # only admins can edit these bits
         if not by_user or not by_user.is_admin:

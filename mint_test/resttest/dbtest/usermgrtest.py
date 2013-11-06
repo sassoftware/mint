@@ -56,27 +56,5 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         self.setDbUser(db, 'admin')
         adminId = db.getUser('admin').userId
 
-    def testCancelUserAccount(self):
-        userName = 'JeanValjean'
-        db = self.openMintDatabase(createRepos=False)
-        self.createUser('admin', admin=True)
-        self.createUser(userName, admin=False)
-        self.createProduct('foo', owners=['admin', userName], db=db)
-
-        targetType = 'tType'
-        targetName = 'tName'
-        targetData = dict(data = "abc")
-        db.targetMgr.addTarget(targetType, targetName, targetData)
-
-        db.targetMgr.setTargetCredentialsForUser(targetType, targetName,
-                userName, dict(userData = "cde"))
-
-        userId = db.userMgr.getUserId(userName)
-        db.userMgr.cancelUserAccount(userName)
-
-        # User no longer exists
-        self.failUnlessRaises(errors.UserNotFound,
-            db.userMgr.getUserId, userName)
-
 
 testsetup.main()
