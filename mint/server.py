@@ -935,6 +935,9 @@ class MintServer(object):
         """
         if not self.auth.admin and userId != self.auth.userId:
             raise mint_error.PermissionDenied
+        user = self.users.get(userId)
+        if user['username'] == self.cfg.authUser:
+            raise mint_error.PermissionDenied
 
         self.setEC2CredentialsForUser(userId, '', '', '', True)
 

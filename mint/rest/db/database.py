@@ -417,11 +417,6 @@ class Database(DBInterface):
         self.productMgr.deleteMember(product.productId, userId)
 
     @commitafter
-    def cancelUserAccount(self, username):
-        self.auth.requireUserAdmin(username)
-        self.userMgr.cancelUserAccount(username)
-
-    @commitafter
     def createProductVersion(self, fqdn, productVersion):
         self.auth.requireProductOwner(fqdn)
         versionId = self.productMgr.createProductVersion(

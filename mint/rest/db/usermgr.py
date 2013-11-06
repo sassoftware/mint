@@ -22,28 +22,6 @@ def _mungePassword(password):
 
 class UserManager(manager.Manager):
 
-    def cancelUserAccount(self, username):
-        """Removes the user account from the authrepo and mint databases.
-        Also removes the user from each project listed in projects.
-        """
-        userId = self.getUserId(username)
-
-        #Handle projects
-        projectList = self.db.listMembershipsForUser(username).members
-        for membership in projectList:
-            productId = self.db.getProductId(membership.hostname)
-            self.db.productMgr.deleteMember(productId, userId, notify=False)
-
-        cu = self.db.cursor()
-        cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
-                   userId)
-        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        cu.execute("DELETE FROM Users WHERE userId=?", userId)
-        cu.execute("DELETE FROM UserData where userId=?", userId)
-        self.publisher.notify('UserCancelled', userId)
-        return True
-
     def getUserId(self, username):
         cu = self.db.cursor()
         cu.execute("""SELECT userId FROM Users WHERE username=?""", username)

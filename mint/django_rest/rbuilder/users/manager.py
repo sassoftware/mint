@@ -32,6 +32,9 @@ class UserExceptions(object):
     class UserSelfRemovalException(BaseException):
         "Users are not allowed to remove themselves"
         status = 403
+    class CannotDeleteUserException(BaseException):
+        "That user cannot be deleted"
+        status = 403
     class MintException(BaseException):
         def __init__(self, exc):
             self.msg = exc.msg
@@ -165,7 +168,9 @@ class UsersManager(basemanager.BaseManager):
         if not len(deleting) > 0:
             raise self.exceptions.UserNotFoundException()
         deleting = deleting[0]
-        
+        if deleting.user_name == self.cfg.authUser:
+            raise self.exceptions.CannotDeleteUserException()
+
         # so that the old user name can be recycled, add a random number
         # on the end 
         oldUserName = deleting.user_name
