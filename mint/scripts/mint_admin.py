@@ -4,6 +4,7 @@
 
 import getpass
 import json
+import os
 import robj
 import sys
 from conary.command import HelpCommand
@@ -23,6 +24,9 @@ class Command(AbstractCommand):
     def processConfigOptions(self, cfg, *args, **kwargs):
         AbstractCommand.processConfigOptions(self, cfg, *args, **kwargs)
         self.cfg = cfg
+        if not self.cfg.authPass and os.getuid() != 0:
+            sys.exit("error: Can't authenticate. "
+                    "This script must be run as root.")
         self.api = robj.connect("https://%s:%s@localhost/api/v1" %
                 (self.cfg.authUser, self.cfg.authPass))
 
@@ -42,6 +46,15 @@ class Command(AbstractCommand):
             password2 = getpass.getpass("Password (repeat): ")
             if password == password2:
                 return password
+
+    def _collection(self, coll):
+        # empty collections can't be iterated over. xml solves all problems,
+        # except the ones that it doesn't solve.
+        try:
+            for x in coll:
+                yield x
+        except TypeError:
+            pass
 
 
 class Script(mainhandler.MainHandler):
@@ -71,14 +84,14 @@ class UserList(Command):
                 email=x.email,
                 is_admin=True if x.is_admin.lower() == 'true' else False,
                 )
-                for x in self.api.users]
+                for x in self._collection(self.api.users)]
             json.dump(ret, sys.stdout)
             print
         else:
             users = list(self.api.users)
             fmt = '%-31s %-7s %s'
             print fmt % ('Username', 'Admin', 'Full Name')
-            for x in self.api.users:
+            for x in self._collection(self.api.users):
                 print fmt % (x.user_name, x.is_admin.title(), x.full_name)
 Script.commandList.append(UserList)
 
@@ -125,7 +138,7 @@ class ProjectList(Command):
 
     def runCommand(self, cfg, argSet, otherArgs):
         ret = []
-        for project in self.api.projects:
+        for project in self._collection(self.api.projects):
             item = dict((x, getattr(project, x, None)) for x in [
                 'repository_hostname',
                 'name',
