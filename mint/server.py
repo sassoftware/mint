@@ -46,6 +46,7 @@ from mint.rest import errors as rest_errors
 from mint.scripts import repository_sync
 
 from conary import conarycfg
+from conary import trovetup
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
@@ -152,6 +153,8 @@ def private(func):
 # Due to it's recursive nature, the behavior of this function is quite
 # different from a simple isinstance call.
 def checkParam(param, paramType):
+    if paramType is None:
+        return True
     if type(paramType) == tuple:
         if len(paramType) == 1:
             # paramType[0] is a tuple of possible values
@@ -1686,9 +1689,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
 
         return build
 
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
     def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
         buildId = self.builds.new(projectId = projectId,
@@ -1873,8 +1873,11 @@ If you would not like to be %s %s of this project, you may resign from this proj
             buildName = buildDefinition.name
             buildId = self.newBuildWithOptions(projectId, buildName, n, v, f,
                     buildType, buildSettings, imageModel=imageModel,
-                    start=False, productVersionId=versionId,
-                    stageName=stageName)
+                    start=False,
+                    productVersionId=versionId,
+                    stageName=stageName,
+                    _proddef=pd,
+                    )
             buildIds.append(buildId)
             self.startImageJob(buildId)
         return buildIds
@@ -1919,18 +1922,32 @@ If you would not like to be %s %s of this project, you may resign from this proj
         return self._getBuildPageUrl(buildId)
 
     @typeCheck(int, ((str, unicode), ), str, str, str, str, dict, bool, list,
-            int, str)
+            int, str, None)
     @requiresAuth
     @private
     def newBuildWithOptions(self, projectId, buildName, groupName,
             groupVersion, groupFlavor, buildType, buildSettings, start=False,
-            imageModel=None, productVersionId=None, stageName=None):
+            imageModel=None, productVersionId=None, stageName=None,
+            _proddef=None,
+            ):
         self._filterProjectAccess(projectId)
 
         version = helperfuncs.parseVersion(groupVersion)
         groupVersion = version.freeze()
         flavor = helperfuncs.parseFlavor(groupFlavor)
         groupFlavor = flavor.freeze()
+
+        pd = None
+        if not productVersionId:
+            # Detect branch and stage based on the group's label
+            label = version.trailingLabel().asString()
+            productVersionId, stageName = self._getProductVersionForLabel(
+                    projectId, label)
+        if productVersionId:
+            if _proddef:
+                pd = _proddef
+            else:
+                pd = self._getProductDefinitionForVersionObj(productVersionId)
 
         # Make sure we convert from Unicode to UTF-8
         buildName = buildName.encode('UTF-8')
@@ -1943,7 +1960,7 @@ If you would not like to be %s %s of this project, you may resign from this proj
                       statusMessage=jobstatus.statusNames[jobstatus.WAITING])
 
         newBuild = builds.Build(self, buildId)
-        newBuild.setTrove(groupName, groupVersion, groupFlavor)
+        self.setBuildTrove(buildId, groupName, groupVersion, groupFlavor)
         if not imageModel:
             imageModel = ['install "%s=%s/%s[%s]"\n' % (
                     groupName,
@@ -1954,19 +1971,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
         buildType = buildtypes.xmlTagNameImageTypeMap[buildType]
         newBuild.setBuildType(buildType)
 
-        if productVersionId and stageName:
-            versionId, stage = productVersionId, stageName
-        else:
-            # Detect branch and stage based on the group's label
-            label = version.trailingLabel().asString()
-            versionId, stage = self._getProductVersionForLabel(projectId, label)
-        if versionId and stage:
-            pd = self._getProductDefinitionForVersionObj(versionId)
+        if pd:
             platName = pd.getPlatformName()
             if 'platformName' in newBuild.getDataTemplate():
                 newBuild.setDataValue('platformName', str(platName))
             # RCE-814
-            self.builds.setProductVersion(buildId, versionId, stage)
+            self.builds.setProductVersion(buildId, productVersionId, stageName,
+                    proddefVersion=pd.getLoadedTrove())
 
         template = newBuild.getDataTemplate()
 
@@ -2120,9 +2131,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self._deleteBuild(buildId, force=False)      
 
-    @typeCheck(int, dict)
-    @requiresAuth
-    @private
     def updateBuild(self, buildId, valDict):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
@@ -2154,9 +2162,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             raise mint_error.BuildPublished()
         return self.buildData.setDataValue(buildId, name, value, dataType)
 
-    @typeCheck(int, str, str, str, str, str)
-    @private
-    @requiresAuth
     def resolveExtraTrove(self, projectId, specialTroveName, specialTroveVersion,
             specialTroveFlavor, imageGroupVersion, imageGroupFlavor):
         searchPath = []
@@ -2231,8 +2236,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
             ret.append(text)
         return ret
 
-    @typeCheck(int)
-    @private
     def serializeBuild(self, buildId):
         self._filterBuildAccess(buildId)
 
@@ -2264,11 +2267,13 @@ If you would not like to be %s %s of this project, you may resign from this proj
                         'conaryCfg' : cfgData,
                         'repoToken': repoToken,
                         }
-        if buildDict['productVersionId']:
-            r['proddefLabel'] = self._getProductVersionLabel(project,
-                    buildDict['productVersionId'])
+        if buildDict['proddef_version']:
+            proddefTup = trovetup.TroveSpec(buildDict['proddef_version'])
+            proddefVersion = versions.VersionFromString(proddefTup[1])
+            r['proddefLabel'] = str(proddefVersion.trailingLabel())
+            r['proddefVersion'] = buildDict['proddef_version']
         else:
-            r['proddefLabel'] = ''
+            r['proddefLabel'] = r['proddefVersion'] = ''
         if buildDict['image_model']:
             r['imageModel'] = self._partitionLines(buildDict['image_model'])
 
@@ -2507,9 +2512,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         self._filterBuildAccess(buildId)
         return self.builds.getTrove(buildId)
 
-    @typeCheck(int, str, str, str)
-    @requiresAuth
-    @private
     def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
@@ -2519,11 +2521,6 @@ If you would not like to be %s %s of this project, you may resign from this proj
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
         troveLabel = helperfuncs.parseVersion(troveVersion).trailingLabel()
         projectId = self.builds.get(buildId)['projectId']
-        productVersionId, stage = self._getProductVersionForLabel(projectId, 
-                                                                  troveLabel)
-        if productVersionId:
-            self.builds.setProductVersion(buildId, productVersionId, stage)
-
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
             self.buildData.removeDataValue(buildId, x)

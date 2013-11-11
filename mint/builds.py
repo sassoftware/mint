@@ -108,11 +108,6 @@ class Build(database.TableObject):
     def getChangedTime(self):
         return self.troveLastChanged
 
-    def setTrove(self, troveName, troveVersion, troveFlavor):
-        self.server.setBuildTrove(self.buildId,
-            troveName, troveVersion, troveFlavor)
-        self.refresh()
-
     def setBuildType(self, buildType):
         assert(buildType in buildtypes.TYPES)
         self.buildType = buildType

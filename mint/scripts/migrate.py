@@ -5527,11 +5527,16 @@ class MigrateTo_68(SchemaMigration):
 
 class MigrateTo_69(SchemaMigration):
     '''diamond'''
-    Version = (69, 0)
+    Version = (69, 1)
 
     def migrate(self):
         cu = self.db.cursor()
         cu.execute("ALTER TABLE Builds ADD image_model text")
+        return True
+
+    def migrate1(self):
+        cu = self.db.cursor()
+        cu.execute("ALTER TABLE Builds ADD proddef_version text")
         return True
 
 
