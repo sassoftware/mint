@@ -77,9 +77,6 @@ rm -f /srv/rbuilder/data/platformName.cache
 # Old pcreator sessions are no longer useful (or desirable)
 rm -rf /srv/rbuilder/tmp/users
 
-# raa-web user needs to be in apache group so that rbuilder-generated is readable by rapa
-usermod -a -G apache raa-web
-
 # Primary migration is done, exit maintenance mode now since some scripts need
 # to talk to local repositories.
 rm -f /srv/rbuilder/run/maintenance.lock
