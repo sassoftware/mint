@@ -8,6 +8,7 @@ class appengine (
     $admin_email                    = 'UNSET',
     $project_domain                 = 'UNSET',
     $namespace                      = 'sas',
+    $sentry_dsn                     = 'UNSET',
     ) {
 
     $site_fqdn = $hostname ? {
@@ -23,6 +24,11 @@ bugsEmail $admin_email
 ",
     }
 
+    $_sentry_dsn = $sentry_dsn ? {
+        'UNSET' => '',
+        default => "sentryDSN $sentry_dsn",
+    }
+
     $host_part   = regsubst($site_fqdn, '^([^.]+)[.](.*)$', '\1')
     $domain_part = regsubst($site_fqdn, '^([^.]+)[.](.*)$', '\2')
 
@@ -36,6 +42,7 @@ secureHost          $site_fqdn
 namespace           $namespace
 projectDomainName   $project_domain
 $email
+$_sentry_dsn
 ",
         notify => Service['gunicorn'],
     }

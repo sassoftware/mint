@@ -1,21 +1,21 @@
 #
-# Copyright (c) 2008 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 
 import os
 
 from mint import helperfuncs
-from mint import shimclient
+from mint import client
 from mint import mint_error
 
 from conary.lib import util
 
 def setupRmake(cfg, rmakeConfigFilePath, restartRmake=False):
     # Create a product (as the admin user) for use by the internal rmake.
-    adminClient = shimclient.ShimMintClient(cfg,
-        [cfg.authUser, cfg.authPass])
+    assert cfg.authPass
+    adminClient = client.MintClient(
+            'https://%s:%s@localhost/xmlrpc-private/' % (cfg.authUser,
+                cfg.authPass))
 
     shortName = 'rmake-repository'
 
