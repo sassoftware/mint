@@ -1,4 +1,3 @@
-/var/log/rbuilder/capsule-indexer.log
 /var/log/rbuilder/conary-db-migration.log
 /var/log/rbuilder/load-mirror.log
 /var/log/rbuilder/mirror-inbound.log
@@ -13,21 +12,29 @@
     notifempty
     size 10M
     compress
-    compresscmd /usr/bin/xz
-    compressext xz
 }
 
-/var/log/rbuilder/nginx_access.log
-/var/log/rbuilder/nginx_error.log
+/var/log/rbuilder/capsule-indexer.log
+/var/log/rbuilder/platforms.log
 /var/log/rbuilder/repository.log {
     missingok
     notifempty
     size 10M
     compress
-    compresscmd /usr/bin/xz
-    compressext xz
     sharedscripts
     postrotate
-        [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+        /sbin/service gunicorn reload >& /dev/null
+    endscript
+}
+
+/var/log/rbuilder/nginx_access.log
+/var/log/rbuilder/nginx_error.log {
+    missingok
+    notifempty
+    size 10M
+    compress
+    sharedscripts
+    postrotate
+        /sbin/service nginx reload >& /dev/null
     endscript
 }
