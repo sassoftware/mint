@@ -47,11 +47,15 @@ $_sentry_dsn
         notify => Service['gunicorn'],
     }
 
-    service { 'gunicorn': ensure => running, enable => true }
-    service { 'mcp-dispatcher': ensure => running, enable => true }
-    service { 'rbuilder-credstore': ensure => running, enable => true }
-    service { 'pgbouncer': ensure => running, enable => true }
-    service { 'postgresql-rbuilder': ensure => running, enable => true }
-    #service { 'rmake-messagebus': ensure => running, enable => true }
-    #service { 'jabberd': ensure => running, enable => true }
+    include appengine::rmake
+
+    service { 'gunicorn':               ensure => running, enable => true }
+    service { 'rbuilder-credstore':     ensure => running, enable => true }
+    service { 'postgresql-rbuilder':    ensure => running, enable => true }
+    service { 'pgbouncer':              ensure => running, enable => true, require => Service['postgresql-rbuilder'] }
+    service { 'mcp-dispatcher':         ensure => running, enable => true, require => Service['rmake-messagebus'] }
+    service { 'jobmaster':              ensure => running, enable => true, require => Service['rmake-messagebus'] }
+    service { 'jabberd':                ensure => running, enable => true }
+    service { 'rmake3':                 ensure => running, enable => true, require => Service['jabberd'] }
+    service { 'rmake3-node':            ensure => running, enable => true, require => Service['jabberd'] }
 }

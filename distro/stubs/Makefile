@@ -17,8 +17,6 @@ install: default-install
 	# (InitialContents, possibly group-writable w/ Ownership)
 	install -D -m0664 noderc.rapa \
 		$(DESTDIR)/etc/rmake/node.d/25_rbuilder-rapa.conf
-	install -D -m0664 serverrc.rapa \
-		$(DESTDIR)/etc/rmake/server.d/25_rbuilder-rapa.conf
 	# "dot-keep" files to preserve the empty config directories.
 	# This is marginally simpler than policy as long as the
 	# dirs are root-owned, and keeps everything in one place.

@@ -9,16 +9,8 @@ export PGDATA PGPORT
 superopt="--user=postgres"
 pgbopt="--no-psqlrc --quiet --user=pgbouncer --port=6432"
 
-if [ -f /var/lock/subsys/rmake-node ]
-then
-    node_stopped=1
-    /sbin/service rmake-node stop
-fi
-if [ -f /var/lock/subsys/rmake ]
-then
-    rmake_stopped=1
-    /sbin/service rmake stop
-fi
+[ -f /var/lock/subsys/rmake-node ] && /sbin/service rmake-node stop
+[ -f /var/lock/subsys/rmake ] && /sbin/service rmake stop
 
 # "service rmake reset" doesn't clean up postgres yet
 psql $pgbopt -Xc 'kill rmake2'
@@ -30,9 +22,7 @@ psql $pgbopt -Xc 'resume rmake2'
     || echo "Warning: failed to delete project rmake-repository"
 /usr/sbin/rmake-server reset \
     || echo "Warning: failed to delete rMake database"
-runuser -s /bin/bash apache -c ./rmake-setup
+# Creates repository and repository user, and restarts rmake and rmake-node
+puppet apply /usr/share/rbuilder/scripts/rmake-setup.pp
 
-[ -n "$rmake_stopped" ] && /sbin/service rmake start
-[ -n "$node_stopped" ] && /sbin/service rmake-node start
-/sbin/service gunicorn reload
 exit 0

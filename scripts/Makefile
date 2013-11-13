@@ -17,7 +17,7 @@ static_files =				\
 	preconfigure			\
 	rbuilder-debug			\
 	rmake-reset			\
-	rmake-setup			\
+	rmake-setup.pp			\
 	set-authuserpass		\
 	set-password			\
 	update-package-index		\
