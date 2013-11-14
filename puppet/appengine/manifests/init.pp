@@ -48,6 +48,7 @@ $_sentry_dsn
     }
 
     include appengine::rmake
+    include appengine::projects
 
     service { 'gunicorn':               ensure => running, enable => true }
     service { 'rbuilder-credstore':     ensure => running, enable => true }

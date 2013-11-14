@@ -1,7 +1,7 @@
 Puppet::Type.newtype(:rbuilder_project) do
     ensurable
 
-    newparam(:short_name) do
+    newparam(:name) do
       desc "Project unique name"
       isnamevar
     end
@@ -19,9 +19,19 @@ Puppet::Type.newtype(:rbuilder_project) do
     end
 
     newparam(:hidden) do
-      desc "If :true, the project requires authentication to read"
+      desc "If true, the project requires authentication to read"
       newvalues(:true, :false)
       defaultto false
+    end
+
+    newparam(:external) do
+      desc "If true, the project is external"
+      newvalues(:true, :false)
+      defaultto false
+    end
+
+    newparam(:upstream_url) do
+      desc "URL of the upstream repository if external"
     end
 
     autorequire(:service) do

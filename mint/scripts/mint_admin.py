@@ -178,6 +178,8 @@ class ProjectAdd(Command):
                 'repository-hostname': options.ONE_PARAM,
                 'description': options.ONE_PARAM,
                 'hidden': options.NO_PARAM,
+                'external': options.NO_PARAM,
+                'upstream-url': options.ONE_PARAM,
                 }
 
     def runCommand(self, cfg, argSet, otherArgs):
@@ -186,7 +188,9 @@ class ProjectAdd(Command):
             name=self._prompt(argSet, 'name', "Display name: "),
             description=self._prompt(argSet, 'description', "Description: "),
             repository_hostname=self._prompt(argSet, 'repository-hostname', "Repository hostname: "),
+            upstream_url=self._prompt(argSet, 'upstream-url', "Upstream URL: "),
             hidden='hidden' in argSet,
+            external='external' in argSet,
             )
         project = self.api.projects.append(project)
         if 'json' in argSet:
