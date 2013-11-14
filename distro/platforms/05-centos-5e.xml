@@ -1,7 +1,0 @@
-<platform>
-  <label>centos.rpath.com@rpath:centos-5e</label>
-  <platformName>CentOS 5</platformName>
-  <abstract>false</abstract>
-  <configurable>false</configurable>
-  <upstream_url>https://devrepos.unx.sas.com/conary/</upstream_url>
-</platform>

@@ -9,6 +9,7 @@ class appengine (
     $project_domain                 = 'UNSET',
     $namespace                      = 'sas',
     $sentry_dsn                     = 'UNSET',
+    $upstream_url                   = 'https://updates.sas.com/conary/',
     ) {
 
     $site_fqdn = $hostname ? {
@@ -49,6 +50,7 @@ $_sentry_dsn
 
     include appengine::rmake
     include appengine::projects
+    include appengine::platforms
 
     service { 'gunicorn':               ensure => running, enable => true }
     service { 'rbuilder-credstore':     ensure => running, enable => true }

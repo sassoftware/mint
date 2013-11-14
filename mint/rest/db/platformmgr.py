@@ -628,12 +628,15 @@ class Platforms(object):
         upi = pkgindexer.UpdatePackageIndex()
         return upi.run()
 
-    def _updateExternalPackageIndex(self):
+    def _updateExternalPackageIndex(self, fqdn):
         """
         Update the external package index.
         """
+        # Disabled for now
+        return
         upie = pkgindexer.UpdatePackageIndexExternal()
-        return upie.run()
+        upie.log = logging.getLogger('pkgindexer')
+        return upie.action(fqdn=fqdn)
 
     def _setupPlatform(self, platform):
         platformId = int(platform.platformId)
@@ -663,7 +666,7 @@ class Platforms(object):
                 if project['external'] == 1:
                     self._setupExternalProject(hostname, domainname, 
                         authInfo, url, projectId, mirror)
-                    self._updateExternalPackageIndex()
+                    self._updateExternalPackageIndex(project['fqdn'])
                 else:
                     self._updateInternalPackageIndex()
 
@@ -681,7 +684,8 @@ class Platforms(object):
             # Update package index if the project is in proxy mode. In mirror
             # mode there's no content yet.
             if not mirror:
-                self._updateExternalPackageIndex()
+                project = self.db.db.projects.get(projectId)
+                self._updateExternalPackageIndex(fqdn=project['fqdn'])
 
         return projectId
 

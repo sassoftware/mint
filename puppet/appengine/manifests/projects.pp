@@ -9,10 +9,7 @@ class appengine::projects {
         external                => true,
         display_name            => "SAS Infrastructure",
         repository_hostname     => "pdt.cny.sas.com",
-        upstream_url            => $sas_internal ? {
-            true => "https://devrepos.unx.sas.com/conary/",
-            default => "https://updates.sas.com/conary/",
-            },
+        upstream_url            => $appengine::upstream_url,
     }
 
     exec { '/usr/share/rbuilder/scripts/repository-sync': }

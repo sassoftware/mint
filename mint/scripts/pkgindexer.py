@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 from mint import config
@@ -177,7 +177,7 @@ class UpdatePackageIndexExternal(PackageIndexer):
         else:
             self.db.rollback()
 
-    def action(self):
+    def action(self, fqdn=None):
         self.log.info("Updating package index")
 
         self.db = dbstore.connect(self.cfg.dbPath, driver = self.cfg.dbDriver)
@@ -188,10 +188,15 @@ class UpdatePackageIndexExternal(PackageIndexer):
         self.db.commit()
 
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId, fqdn, EXISTS(SELECT * FROM InboundMirrors
+        sql = """SELECT projectId, fqdn, EXISTS(SELECT * FROM InboundMirrors
                            WHERE projectId=targetProjectId) AS localMirror
                          FROM Projects
-                         WHERE external AND NOT hidden AND NOT disabled""")
+                         WHERE external AND NOT hidden AND NOT disabled"""
+        args = []
+        if fqdn:
+            sql += " AND fqdn = ?"
+            args.append(fqdn)
+        cu.execute(sql, args)
 
         labels = {}
         projectIds = {}

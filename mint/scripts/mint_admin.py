@@ -31,8 +31,12 @@ class Command(AbstractCommand):
         if not self.cfg.authPass and os.getuid() != 0:
             sys.exit("error: Can't authenticate. "
                     "This script must be run as root.")
-        self.api = robj.connect("https://%s:%s@localhost/api/v1" %
+        api = robj.connect("https://%s:%s@localhost/api" %
                 (self.cfg.authUser, self.cfg.authPass))
+        for v in self._collection(api.api_versions):
+            if v.name == 'v1':
+                self.api = v
+                break
 
     def _prompt(self, argSet, arg, query):
         if arg in argSet:
@@ -51,7 +55,8 @@ class Command(AbstractCommand):
             if password == password2:
                 return password
 
-    def _collection(self, coll):
+    @staticmethod
+    def _collection(coll):
         # empty collections can't be iterated over. xml solves all problems,
         # except the ones that it doesn't solve.
         try:
@@ -200,6 +205,67 @@ class ProjectAdd(Command):
             print "Created project '%s' with ID %s" % (project.short_name,
                     project.project_id)
 Script.commandList.append(ProjectAdd)
+
+
+class PlatformList(Command):
+    commands = ['platform-list']
+
+    def runCommand(self, cfg, argSet, otherArgs):
+        ret = []
+        for platform in self._collection(self.api.platforms):
+            item = dict(
+                    platform_name=platform.platformName,
+                    label=platform.label,
+                    upstream_url=platform.upstream_url,
+                    abstract=platform.abstract.lower() == 'true',
+                    enabled=platform.enabled.lower() == 'true',
+                    )
+            ret.append(item)
+        json.dump(ret, sys.stdout)
+        print
+Script.commandList.append(PlatformList)
+
+
+class PlatformAdd(Command):
+    commands = ['platform-add']
+
+    def addParameters(self, argDef):
+        super(PlatformAdd, self).addParameters(argDef)
+        argDef['Platform Add Options'] = {
+                'label': options.ONE_PARAM,
+                'platform-name': options.ONE_PARAM,
+                'upstream-url': options.ONE_PARAM,
+                'abstract': options.NO_PARAM,
+                'enabled': options.NO_PARAM,
+                }
+
+    def runCommand(self, cfg, argSet, otherArgs):
+        data = dict(
+            label=self._prompt(argSet, 'label', "Platform label: "),
+            platformName=self._prompt(argSet, 'platform-name', "Display name: "),
+            upstream_url=self._prompt(argSet, 'upstream-url', "Upstream URL: "),
+            abstract='abstract' in argSet,
+            enabled='enabled' in argSet,
+            isPlatform=True,
+            )
+        for platform in self._collection(self.api.platforms):
+            if platform.label == data['label']:
+                for key, value in data.items():
+                    setattr(platform, key, value)
+                platform.persist()
+                break
+        else:
+            platform = self.api.platforms.append(data)
+            # Enabling a platform doesn't currently work on the initial POST,
+            # you have to PUT it again
+            platform.persist(force=True)
+        if 'json' in argSet:
+            json.dump({'platform_id': int(platform.platformId)}, sys.stdout)
+            print
+        else:
+            print "Created platform '%s' with ID %s" % (platform.label,
+                    platform.platformId)
+Script.commandList.append(PlatformAdd)
 
 
 class _RmakeUser(Command):

@@ -103,10 +103,6 @@ done
 [ $n -ne 0 ] && echo
 service nginx reload
 
-# Create initial platforms
-echo Updating platforms ...
-$scriptdir/create-platforms
-
 echo Updating branch/stage information ...
 $scriptdir/repository-sync
 

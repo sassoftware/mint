@@ -1,7 +1,0 @@
-<platform>
-  <label>rhel.rpath.com@rpath:rhel-5-server</label>
-  <platformName>Red Hat Enterprise Linux 5</platformName>
-  <abstract>false</abstract>
-  <configurable>false</configurable>
-  <upstream_url>https://devrepos.unx.sas.com/conary/</upstream_url>
-</platform>

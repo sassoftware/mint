@@ -311,7 +311,7 @@ class ProductManager(manager.Manager):
             self.reposMgr.addExternalRepository(productId, 
                                                 hostname, domainname, url,
                                                 authInfo, mirror)
-        if self.auth.userId is not None:
+        if self.auth.userId > -1:
             self.setMemberLevel(productId, self.auth.userId, userlevels.OWNER)
         self.publisher.notify('ExternalProductCreated', productId)
         cu.execute("""UPDATE querysets_queryset SET tagged_date = NULL
