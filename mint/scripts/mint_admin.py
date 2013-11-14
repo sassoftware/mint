@@ -322,6 +322,5 @@ class RmakeUserCreate(_RmakeUser):
             print >> f, "reposName", fqdn
             print >> f, "reposUser", fqdn, self.user, password
             print >> f, "reposUrl https://localhost/repos/%s/" % fqdn
-            print >> f, "reposName https://localhost/"
         print '[]'
 Script.commandList.append(RmakeUserCreate)
