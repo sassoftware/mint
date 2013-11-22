@@ -7,11 +7,9 @@ import logging
 import os
 import re
 import json
-import socket
 import stat
 import sys
 import time
-import tempfile
 import StringIO
 
 from mint import buildtypes
@@ -24,7 +22,6 @@ from mint.lib import profile
 from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
 from mint import builds
-from mint import ec2
 from mint import helperfuncs
 from mint import jobstatus
 from mint import maintenance
@@ -44,11 +41,8 @@ from conary import trovetup
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
-from conary.lib import networking as cny_net
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.lib.http import http_error
-from conary.lib.http import request as cny_req
 from conary.repository.errors import TroveNotFound, UserNotFound
 from conary.repository import netclient
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
