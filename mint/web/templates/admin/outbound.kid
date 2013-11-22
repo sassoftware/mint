@@ -40,14 +40,11 @@
                                 <a href="editOutbound?id=${data.get('id')}">${data.get('projectName')}</a>
                                 <br />
                                 <div>
-                                    <span py:if="data['useReleases']" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;All releases</span>
-                                    <span py:if="not data['useReleases']" py:strip="True">
-                                        <span py:if="not data['groups']" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;All packages<br /></span>
-                                        <div py:for="g in data.get('groups',[])" py:strip="True">${g}<br /></div>
+                                  <span py:if="not data['groups']" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;All packages<br /></span>
+                                  <div py:for="g in data.get('groups',[])" py:strip="True">${g}<br /></div>
 
-                                        <span py:if="data['allLabels']" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;All labels</span>
-                                        <div py:for="l in data.get('labels', [])" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;${l}<br /></div>
-                                    </span>
+                                  <span py:if="data['allLabels']" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;All labels</span>
+                                  <div py:for="l in data.get('labels', [])" py:strip="True">&nbsp;&nbsp;&nbsp;&nbsp;${l}<br /></div>
                                 </div>
                             </td>
                             <td style="padding-top: 4px;"><div py:if="not data.get('targets', [])" style="color: red;">No targets defined</div><div py:for="tId, tUrl in data.get('targets', [])">${tUrl}<br /></div></td>

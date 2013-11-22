@@ -452,123 +452,6 @@ class MintServer(object):
         """Return an instance of a rMake 3 client."""
         return rmk_client.RmakeClient('http://localhost:9998')
 
-    def _configureSputnik(self, sp, urlhostname):
-        """Try to configure remote sputnik.
-
-        It might fail if the upsrv is too old to have a sputnik (pre-5.7) in
-        which case we should succeed anyway with just the repository setup.
-        """
-        result = sp.configure.Network.index()
-        if 'errors' in result:
-            log.error("Error configuring update service %s", urlhostname)
-            for error in result['errors']:
-                log.error("  %s", error.rstrip())
-            return
-        fqdn = result.get('host_hostName')
-        if not fqdn:
-            log.warning("Update service %s has no FQDN configured "
-                    "-- not creating certificate pair.", urlhostname)
-            return
-
-        log.info("Creating certificate pair for update service %s", fqdn)
-        x509_pem, pkey_pem = self.restDb.createCertificate(
-                purpose='upsrv %s' % (fqdn,),
-                desc='rPath Update Service',
-                issuer='hg_ca',
-                common=fqdn,
-                conditional=True,
-                )
-        confDict = {
-            'x509_pem': x509_pem,
-            'pkey_pem': pkey_pem,
-            }
-
-        rbuilder_ip = procutil.getNetName()
-        if rbuilder_ip != 'localhost':
-            confDict['xmpp_host'] = rbuilder_ip
-
-        ret = sp.rusconf.RusConf.pushConfiguration(confDict)
-        if 'errors' in ret:
-            # Too old to have a sputnik installation.
-            if ('method "pushConfiguration" is not supported'
-                    not in ret['errors'][-1]):
-                log.error("Error configuring update service %s: %s",
-                        urlhostname, ret['errors'][-1])
-                raise mint_error.UpdateServiceUnknownError(urlhostname)
-            log.warning("Update service %s does not support system inventory "
-                    "-- only repository services will be configured.",
-                    urlhostname)
-            return
-
-        # At this point, the rmake node should be connecting back to our XMPP
-        # server. Push the new JID to rmake's whitelist so it can authenticate.
-        jid = ret.get('jid')
-        try:
-            client = self._getRmakeClient()
-            client.registerWorker(jid)
-        except:
-            log.exception("Failed to register remote update service %s "
-                    "(JID %s) with local rMake dispatcher:", fqdn, jid)
-        else:
-            log.info("Registered update service %s w/ JID %s", fqdn, jid)
-
-    def _configureUpdateService(self, hostname, adminUser, adminPassword):
-        import xmlrpclib
-        from mint.lib import proxiedtransport
-        mirrorUser = ''
-        try:
-            # Connect to the rUS via XML-RPC
-            urlhostname = hostname
-            if ':' not in urlhostname:
-                hostport = cny_net.HostPort(urlhostname, 8003)
-                protocol = 'https'
-            else:
-                # Hack to allow testsuite, which passes 'hostname:port'
-                # and isn't using HTTPS
-                hostport = cny_net.HostPort(urlhostname)
-                protocol = 'http'
-
-            url = cny_req.URL(scheme=protocol,
-                    userpass=(adminUser, util.ProtectedString(adminPassword)),
-                    hostport=hostport,
-                    path='/rAA/xmlrpc/')
-            transport = proxiedtransport.ProxiedTransport(
-                    proxyMap=self.cfg.getProxyMap())
-            sp = util.ServerProxy(url, transport=transport)
-
-            mirrorUser = helperfuncs.generateMirrorUserName("%s.%s" % \
-                    (self.cfg.hostName, self.cfg.siteDomainName), hostname)
-
-            # Add a user to the update service with mirror permissions
-            try:
-                mirrorPassword = \
-                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
-            except socket.error:
-                from M2Crypto import m2xmlrpclib, SSL
-                SSL.Connection.clientPostConnectionCheck = None
-                sp = xmlrpclib.ServerProxy(url, transport=m2xmlrpclib.SSL_Transport())
-                mirrorPassword = \
-                    sp.mirrorusers.MirrorUsers.addRandomUser(mirrorUser)
-
-            self._configureSputnik(sp, urlhostname)
-        except http_error.ResponseError, e:
-            if e.errcode == 403:
-                raise mint_error.UpdateServiceAuthError(urlhostname)
-            else:
-                raise mint_error.UpdateServiceConnectionFailed(urlhostname,
-                        "%d %s" % (e.errcode, e.reason))
-        except socket.error, e:
-            raise mint_error.UpdateServiceConnectionFailed(urlhostname, 
-                                                           str(e[1]))
-
-        if mirrorPassword == '':
-            # rUS is in proxy mode
-            return 'proxy_mode', ''
-        elif isinstance(mirrorPassword, dict):
-            raise mint_error.UpdateServiceUnknownError(urlhostname)
-        else:
-            return (mirrorUser, mirrorPassword)
-
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
             raise mint_error.InvalidClientVersion(
@@ -2341,7 +2224,7 @@ class MintServer(object):
                                        targetLabels = ' '.join(targetLabels),
                                        allLabels = int(allLabels),
                                        recurse = int(recurse),
-                                       useReleases = int(useReleases),
+                                       useReleases = 0,
                                        fullSync = 1)
         else:
             cu = self.db.cursor()
@@ -2351,7 +2234,7 @@ class MintServer(object):
                                            targetLabels = ' '.join(targetLabels),
                                            allLabels = int(allLabels),
                                            recurse = int(recurse),
-                                           useReleases = int(useReleases),
+                                           useReleases = 0,
                                            mirrorOrder = mirrorOrder,
                                            fullSync = 1)
         return id
@@ -2426,11 +2309,8 @@ class MintServer(object):
     @private
     @requiresAdmin
     @typeCheck(str, str, str, ((str, unicode),))
-    def addUpdateService(self, hostname, adminUser, adminPassword,
+    def addUpdateService(self, hostname, mirrorUser, mirrorPassword,
             description=''):
-        mirrorUser, mirrorPassword = \
-                self._configureUpdateService(hostname, adminUser,
-                        adminPassword)
         return self.updateServices.new(hostname = hostname,
                 description = description,
                 mirrorUser = mirrorUser,
@@ -2449,9 +2329,13 @@ class MintServer(object):
 
     @private
     @requiresAdmin
-    @typeCheck(int, ((str, unicode),)) 
-    def editUpdateService(self, upsrvId, newDesc):
-        return self.updateServices.update(upsrvId, description = newDesc)
+    @typeCheck(int, str, str, str, ((str, unicode),))
+    def editUpdateService(self, upsrvId, hostname, mirrorUser, mirrorPassword, newDesc):
+        return self.updateServices.update(upsrvId,
+                hostname=hostname,
+                description=newDesc,
+                mirrorUser=mirrorUser,
+                mirrorPassword=mirrorPassword)
 
     @private
     @requiresAdmin

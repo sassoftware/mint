@@ -337,7 +337,6 @@ class AdminHandler(WebHandler):
             mirrorData['projectName'] = project.name
             mirrorData['projectUrl'] = project.getUrl(self.baseUrl)
             mirrorData['orderHTML'] = self._makeMirrorOrderingLinks("OutboundMirror", len(mirrors), order, i, outboundMirrorId)
-            mirrorData['useReleases'] = int(useReleases)
             mirrorData['allLabels'] = allLabels
             if not allLabels:
                 mirrorData['labels'] = label.split(' ')
@@ -345,7 +344,7 @@ class AdminHandler(WebHandler):
             mirrorData['ordinal'] = i
             matchStrings = self.client.getOutboundMirrorMatchTroves(outboundMirrorId)
             mirrorData['groups'] = self.client.getOutboundMirrorGroups(outboundMirrorId)
-            mirrorData['mirrorSources'] = not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not (useReleases or mirrorData['groups'])
+            mirrorData['mirrorSources'] = not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(matchStrings)) and not mirrorData['groups']
             rows.append(mirrorData)
 
         return self._write('admin/outbound', rows = rows)
@@ -361,7 +360,6 @@ class AdminHandler(WebHandler):
             obmt = self.client.getOutboundMirrorTargets(id)
             kwargs.update({'projectId': obm['sourceProjectId'],
                            'mirrorSources': not set(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES).issubset(set(obm['matchStrings'].split())),
-                           'useReleases': int(obm['useReleases']),
                            'allLabels': obm['allLabels'],
                            'selectedLabels': json.dumps(obm['targetLabels'].split()),
                            'selectedGroups': json.dumps(obmg),
@@ -371,7 +369,6 @@ class AdminHandler(WebHandler):
         else:
             kwargs.update({'projectId': -1,
                            'mirrorSources': 0,
-                           'useReleases': 1,
                            'allLabels': 1,
                            'selectedLabels': json.dumps([]),
                            'selectedGroups': json.dumps([]),
@@ -381,47 +378,46 @@ class AdminHandler(WebHandler):
         return self._write('admin/editOutbound', isNew=isNew, id=id, projects = projects, kwargs = kwargs)
 
     @intFields(projectId = None, id = -1)
-    @boolFields(mirrorSources=False, allLabels=False, useReleases=True)
+    @boolFields(mirrorSources=False, allLabels=False)
     @listFields(str, labelList=[])
     @listFields(str, groups=[])
     @listFields(int, selectedTargets=[])
     @strFields(mirrorBy = 'label', action = "Cancel")
     def processEditOutbound(self, projectId, mirrorSources, allLabels,
             labelList, id, mirrorBy, groups, action, selectedTargets,
-            useReleases, *args, **kwargs):
+            *args, **kwargs):
 
         if action == "Cancel":
             self._redirectHttp("admin/outbound")
 
         inputKwargs = {}
         for key in ('projectId', 'mirrorSources', 'allLabels', 'id',
-          'mirrorBy', 'selectedTargets', 'useReleases'):
+                'mirrorBy', 'selectedTargets'):
             inputKwargs[key] = locals()[key]
         inputKwargs['selectedLabels'] = labelList
         inputKwargs['selectedGroups'] = groups
 
         matchTroveList = []
-        if not useReleases:
-            if not labelList and not allLabels:
-                self._addErrors("No labels were selected")
+        if not labelList and not allLabels:
+            self._addErrors("No labels were selected")
 
-            # compute the match troves expression
-            if mirrorBy == 'group':
-                if not groups:
-                    self._addErrors("No groups were selected")
-                else:
-                    matchTroveList.extend(['+%s' % (g,) for g in groups])
+        # compute the match troves expression
+        if mirrorBy == 'group':
+            if not groups:
+                self._addErrors("No groups were selected")
             else:
-                if not mirrorSources:
-                    matchTroveList.extend(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES)
-                # make sure we include everything else if we are not in
-                # mirror by group mode
-                matchTroveList.extend(mirrormod.INCLUDE_ALL_MATCH_TROVES)
+                matchTroveList.extend(['+%s' % (g,) for g in groups])
+        else:
+            if not mirrorSources:
+                matchTroveList.extend(mirrormod.EXCLUDE_SOURCE_MATCH_TROVES)
+            # make sure we include everything else if we are not in
+            # mirror by group mode
+            matchTroveList.extend(mirrormod.INCLUDE_ALL_MATCH_TROVES)
 
         if not self._getErrors():
             recurse = (mirrorBy == 'group')
             outboundMirrorId = self.client.addOutboundMirror(projectId,
-                    labelList, allLabels, recurse, useReleases, id=id)
+                    labelList, allLabels, recurse, False, id=id)
             self.client.setOutboundMirrorMatchTroves(outboundMirrorId,
                 matchTroveList)
             self.client.setOutboundMirrorTargets(outboundMirrorId,
@@ -471,17 +467,17 @@ class AdminHandler(WebHandler):
         else:
             kwargs.setdefault('id', -1)
             kwargs.setdefault('hostname', '')
-            kwargs.setdefault('adminUser', '')
-            kwargs.setdefault('adminPassword', '')
+            kwargs.setdefault('mirrorUser', '')
+            kwargs.setdefault('mirrorPassword', '')
             kwargs.setdefault('description', '')
 
         return self._write('admin/editUpdateService', id=id, isNew = isNew,
                 kwargs = kwargs)
 
     @intFields(id = -1)
-    @strFields(hostname = '', adminUser = '', adminPassword = '',
+    @strFields(hostname = '', mirrorUser = '', mirrorPassword = '',
             description = '', action = 'Cancel')
-    def processEditUpdateService(self, id, hostname, adminUser, adminPassword,
+    def processEditUpdateService(self, id, hostname, mirrorUser, mirrorPassword,
             description, action, *args, **kwargs):
         if action == "Cancel":
             self._redirectHttp("admin/updateServices")
@@ -491,24 +487,24 @@ class AdminHandler(WebHandler):
             hostname = hostname.strip()
 
         inputKwargs = {'hostname': hostname,
-            'adminUser': adminUser,
-            'adminPassword': adminPassword,
+            'mirrorUser': mirrorUser,
+            'mirrorPassword': mirrorPassword,
             'description': description}
 
         # these are only necessary during a first time setup of an update
         # service
         if not hostname and id == -1:
             self._addErrors('No hostname specified')
-        if not adminUser and id == -1:
+        if not mirrorUser and id == -1:
             self._addErrors('No username specified')
-        if not adminPassword and id == -1:
+        if not mirrorPassword and id == -1:
             self._addErrors('No password specified')
 
         if not self._getErrors():
             if id == -1:
                 try:
-                    self.client.addUpdateService(hostname, adminUser,
-                            adminPassword, description)
+                    self.client.addUpdateService(hostname, mirrorUser,
+                            mirrorPassword, description)
                 except Exception, e:
                     log.exception("Failed to add update service %s:", hostname)
                     self._addErrors("Failed to add Update Service: %s" % \
@@ -516,7 +512,8 @@ class AdminHandler(WebHandler):
                 else:
                     self._setInfo("Update Service added")
             else:
-                self.client.editUpdateService(id, description)
+                self.client.editUpdateService(id, hostname, mirrorUser,
+                        mirrorPassword, description)
                 self._setInfo("Update Service changed")
 
         if not self._getErrors():

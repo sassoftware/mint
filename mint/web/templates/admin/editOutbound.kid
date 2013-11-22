@@ -3,8 +3,9 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', 'admin.kid'">
 <!--
-    Copyright (c) 2005-2008 rPath, Inc.
-    All Rights Reserved
+#
+# Copyright (c) SAS Institute Inc.
+#
 -->
 <?python
     from mint.web.templatesupport import projectText
@@ -21,12 +22,8 @@
                 getProjectLabels(getElement('projectId').value,
                     ${kwargs['selectedLabels']});
                 connect('projectId', 'onchange', addOutboundMirror_onProjectChange);
-                addOutboundMirror_setUseReleases(${kwargs['useReleases']});
                 connect('mirrorByGroup', 'onclick', addOutboundMirror_onMirrorByGroup);
                 connect('mirrorByLabel', 'onclick', addOutboundMirror_onMirrorByGroup);
-                connect('useReleases', 'onclick', addOutboundMirror_onUseReleases);
-                connect('useLabels', 'onclick', addOutboundMirror_onUseReleases);
-
             });
         </script>
     </head>
@@ -85,32 +82,6 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="form-label"><em class="required">Method:</em></td>
-                    <td>
-                        <p class="help notopmargin">
-                            Select a method by which appliances will be
-                            mirrored.  Release-based publishing is the
-                            preferred method, as it will mirror precisely
-                            the groups from which you have built images.
-                            Label-based mirroring is also available for
-                            backwards compatibility and for certain
-                            scenarios in which it is more applicable.
-                        </p>
-                        <ul class="plainlist indent">
-                            <li><label>
-                                <input py:attrs="{'checked': kwargs['useReleases'] and 'checked' or None}" class="radio" type="radio"
-                                    name="useReleases" id="useReleases" value="1" />
-                                Mirror published releases
-                            </label></li>
-                            <li><label>
-                                <input py:attrs="{'checked': not kwargs['useReleases'] and 'checked' or None}" class="radio" type="radio"
-                                    name="useReleases" id="useLabels" value="0" />
-                                Mirror labels
-                            </label></li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
                     <td class="form-label"><em class="required">Labels:</em></td>
                     <td>
                         <p class="help notopmargin">
@@ -162,8 +133,7 @@
                 <tr>
                     <td class="form-label">Options:</td>
                     <td>
-                        <input py:attrs="{'checked': kwargs['mirrorSources'] and 'checked' or None,
-                                          'disabled': (kwargs['useReleases'] or (kwargs['mirrorBy'] == 'group')) and 'disabled' or ''}"
+                      <input py:attrs="{'checked': kwargs['mirrorSources'] and 'checked' or None}"
                                class="check" type="checkbox" name="mirrorSources" value="1" id="mirrorSources" />
                         <label for="mirrorSources">Include source components when mirroring (only valid when mirroring by label)</label>
                     </td>
