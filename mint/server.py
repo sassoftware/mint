@@ -2056,6 +2056,15 @@ class MintServer(object):
             not trove.endswith(':source'))
         return troves
 
+    @typeCheck(int)
+    @requiresAuth
+    def getBuildStatus(self, buildId):
+        self._filterBuildAccess(buildId)
+
+        buildDict = self.builds.get(buildId)
+        return { 'status': buildDict['status'],
+                'message': buildDict['statusMessage'] }
+
     # mirrored labels
     @private
     @typeCheck(int, (list, str), str, str, str, str, str, bool)
@@ -2489,6 +2498,16 @@ class MintServer(object):
             raise mint_error.ProductVersionNotFound()
         else:
             return ret
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getProductDefinitionForVersion(self, versionId):
+        pd = self._getProductDefinitionForVersionObj(versionId)
+        sio = StringIO.StringIO()
+        # Since we write back what we read in, we should not validate here
+        pd.serialize(sio, validate = False)
+        return sio.getvalue()
 
     @private
     @typeCheck(int)
