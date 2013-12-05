@@ -653,6 +653,10 @@ class RepositoryHandle(object):
             if injectedAuthType == 'userpass':
                 authToken.user = self._projectInfo['username']
                 authToken.password = self._projectInfo['password']
+            elif not authToken.password:
+                # This was a temporary token, replace it with anonymous when
+                # sending externally.
+                authToken.user = authToken.password = 'anonymous'
         # Always add any configured outbound entitlements.
         if injectedAuthType == 'entitlement':
             authToken.entitlements.append(
@@ -798,6 +802,9 @@ WHERE level >= 0
                 userId = ANY_WRITER
             if isToken:
                 if userPass == mintToken.password:
+                    # Don't send temporary tokens to external repositories.
+                    # getAuthToken will generate an anonymous token.
+                    mintToken.password = ''
                     return userId
             else:
                 if self._checkPassword(mintToken, userSalt, userPass):
