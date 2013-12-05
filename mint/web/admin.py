@@ -429,21 +429,12 @@ class AdminHandler(WebHandler):
     @listFields(int, remove = [])
     @boolFields(confirmed = False)
     def removeOutbound(self, remove, confirmed, **yesArgs):
-        if confirmed:
-            remove = json.loads(yesArgs['removeJSON'])
-            for outboundMirrorId in remove:
-                self.client.delOutboundMirror(int(outboundMirrorId))
+        if not remove:
+            self._addErrors("No outbound mirrors to delete.")
             self._redirectHttp("admin/outbound")
-        else:
-            if not remove:
-                self._addErrors("No outbound mirrors to delete.")
-                self._redirectHttp("admin/outbound")
-            message = 'Are you sure you want to remove the outbound mirror(s)?'
-            noLink = 'outbound'
-            yesArgs = {'func': 'removeOutbound', 'confirmed': 1,
-                    'removeJSON': json.dumps(remove)}
-            return self._write('confirm', message=message, noLink=noLink,
-                               yesArgs=yesArgs)
+        for outboundMirrorId in remove:
+            self.client.delOutboundMirror(int(outboundMirrorId))
+        self._redirectHttp("admin/outbound")
 
     def maintenance(self, *args, **kwargs):
         return self._write('admin/maintenance', kwargs = kwargs)
@@ -524,19 +515,10 @@ class AdminHandler(WebHandler):
     @listFields(int, remove = [])
     @boolFields(confirmed = False)
     def removeUpdateServices(self, remove, confirmed, **yesArgs):
-        if confirmed:
-            remove = json.loads(yesArgs['removeJSON'])
-            for updateServiceId in remove:
-                self.client.delUpdateService(int(updateServiceId))
-            self._setInfo("Update service(s) removed")
+        if not remove:
+            self._addErrors("No update services to delete.")
             self._redirectHttp("admin/updateServices")
-        else:
-            if not remove:
-                self._addErrors("No update services to delete.")
-                self._redirectHttp("admin/updateServices")
-            message = 'Are you sure you want to remove the update service(s)?'
-            noLink = 'updateServices'
-            yesArgs = {'func': 'removeUpdateServices', 'confirmed': 1,
-                    'removeJSON': json.dumps(remove)}
-            return self._write('confirm', message=message, noLink=noLink,
-                               yesArgs=yesArgs)
+        for updateServiceId in remove:
+            self.client.delUpdateService(int(updateServiceId))
+        self._setInfo("Update service(s) removed")
+        self._redirectHttp("admin/updateServices")
