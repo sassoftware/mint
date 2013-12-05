@@ -4,95 +4,18 @@
 
 import logging
 import base64
-import rpath_capsule_indexer
 import socket
 from webob import exc as web_exc
 
 from mint import maintenance
-from mint.db import database as mdb
-from mint.rest.db import database as rdb
 from mint.rest.errors import ProductNotFound
 
-from conary import errors as cerrors
 from conary.repository import transport
 from conary.repository.netrepos import proxy
 from conary.repository.netrepos import netserver
 from conary.server import wsgi_hooks
 
 log = logging.getLogger(__name__)
-
-
-class CapsuleFilterMixIn(object):
-    class _CapsuleDownloader(object):
-        def __init__(self, restDb):
-            self._restDb = restDb
-
-        def downloadCapsule(self, capsuleKey, sha1sum):
-            indexer = self._restDb.capsuleIndexer
-            msgTmpl = ("Error downloading capsule. "
-                "Upstream error message: (fault code: %s) %s")
-            try:
-                pkg = indexer.getPackage(capsuleKey, sha1sum)
-            except rpath_capsule_indexer.errors.RPCError, e:
-                raise cerrors.RepositoryError(msgTmpl %
-                    (e.faultCode, e.faultString))
-            if pkg is None:
-                raise cerrors.RepositoryError("Error downloading capsule.  Please check the repository logs and verify credentials")
-            fobj = file(indexer.getFullFilePath(pkg))
-            return self.fromFile(fobj)
-
-        def downloadCapsuleFile(self, capsuleKey, capsuleSha1sum, fileKey,
-                fileSha1sum):
-            return self.downloadCapsuleFiles(capsuleKey, capsuleSha1sum,
-                    [(fileKey, fileSha1sum)])[0]
-
-        def downloadCapsuleFiles(self, capsuleKey, capsuleSha1sum, fileList):
-            out = [None] * len(fileList)
-            fileKeys = []
-            fileSha1sums = []
-            fileIndexes = []
-            for n, (fileName, fileSha1sum) in enumerate(fileList):
-                if capsuleSha1sum == fileSha1sum or fileName == '':
-                    # Troves do contain the capsule too, it's legitimate to
-                    # request it; however, we can fall back to downloadCapsule
-                    # for it.
-                    # The SHA-1 check doesn't normally work because the
-                    # FileStreams.sha1 column is often null for capsule files,
-                    # but the repository will also return fileName='' if the
-                    # capsule fileId is the same as the contents fileId. Either
-                    # of these mean that the capsule itself is being requested.
-                    out[n] = self.downloadCapsule(capsuleKey, capsuleSha1sum)
-                else:
-                    fileKeys.append(fileName)
-                    fileSha1sums.append(fileSha1sum)
-                    fileIndexes.append(n)
-            if fileKeys:
-                indexer = self._restDb.capsuleIndexer
-                msgTmpl = ("Error downloading file from capsule. "
-                    "Upstream error message: (fault code: %s) %s")
-                try:
-                    fileObjs = indexer.getFilesFromPackage(capsuleKey,
-                            capsuleSha1sum, fileKeys, fileSha1sums)
-                except rpath_capsule_indexer.errors.RPCError, e:
-                    raise cerrors.RepositoryError(msgTmpl %
-                        (e.faultCode, e.faultString))
-                for n, fileObj in zip(fileIndexes, fileObjs):
-                    out[n] = self.fromFile(fileObj)
-            assert None not in out
-            return out
-
-        fromFile = proxy.ChangesetFilter.CapsuleDownloader.fromFile
-
-    def setRestDb(self, restDb):
-        self.CapsuleDownloader = lambda x: self._CapsuleDownloader(restDb)
-
-
-class CachingRepositoryServer(proxy.CachingRepositoryServer, CapsuleFilterMixIn):
-    withCapsuleInjection = True
-
-
-class ProxyRepositoryServer(proxy.ProxyRepositoryServer, CapsuleFilterMixIn):
-    pass
 
 
 class MintConaryHandler(wsgi_hooks.ConaryHandler):
@@ -156,32 +79,20 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
             # user is successfully authenticated to mint.
             authToken = handle.convertAuthToken(authToken, useRepoDb=True)
 
-        # TODO: Push restdb setup and capsule filtering down to repository.py,
-        # otherwise shims won't have access to it.
         if handle and handle.hasDatabase:
             # Local database
             serverCfg = handle.getNetServerConfig()
-            restDb = self._addCapsuleConfig(serverCfg, fqdn)
             netServer = handle.getServer(netserver.NetworkRepositoryServer,
                     serverCfg)
-            if restDb:
-                proxyClass = CachingRepositoryServer
-                serverCfg.proxyContentsDir = cfg.proxyContentsDir
-            else:
-                proxyClass = proxy.SimpleRepositoryFilter
+            proxyClass = proxy.SimpleRepositoryFilter
             proxyServer = proxyClass(serverCfg, handle.getURL(), netServer)
-            if restDb:
-                proxyServer.setRestDb(restDb)
             contentsStore = netServer.repos.contentsStore
-            # TODO: This shim server doesn't do capsule filtering, which may
-            # affect the conary REST API.
             shimRepo = handle.getShimServer()
         else:
             # Remote repository
             netServer = contentsStore = None
             overrideUrl = handle.getURL() if handle else None
             serverCfg, proxyServer, shimRepo = self._getProxyServer(fqdn,
-                    withCapsuleFilter=(handle is not None),
                     overrideUrl=overrideUrl,
                     )
 
@@ -198,7 +109,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
     def _loadAuth(self):
         pass
 
-    def _getProxyServer(self, fqdn, withCapsuleFilter, overrideUrl):
+    def _getProxyServer(self, fqdn, overrideUrl):
         """Create a ProxyRepositoryServer for remote proxied calls."""
         cfg, req = self.context.cfg, self.request
 
@@ -211,12 +122,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
             serverCfg.repositoryMap.append((fqdn, overrideUrl))
 
         restDb = None
-        if withCapsuleFilter:
-            restDb = self._addCapsuleConfig(serverCfg, fqdn)
-        if restDb:
-            serverClass = ProxyRepositoryServer
-        else:
-            serverClass = proxy.ProxyRepositoryServer
+        serverClass = proxy.ProxyRepositoryServer
 
         # Conary >= 1.1.26 proxies will add a Via header for all
         # requests forwarded for the Conary Proxy. If it contains our
@@ -235,23 +141,6 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
             proxyServer.setRestDb(restDb)
         shimRepo = None
         return serverCfg, proxyServer, shimRepo
-
-    def _getRestDb(self):
-        mintDb = mdb.Database(self.context.cfg, self.context.db)
-        restDb = rdb.Database(self.context.cfg, mintDb, dbOnly=True)
-        return restDb
-
-    def _addCapsuleConfig(self, conaryReposCfg, repName):
-        restDb = self._getRestDb()
-        indexer = restDb.capsuleMgr.getIndexer(repName)
-        if not indexer or not indexer.hasSources():
-            return
-        conaryReposCfg.excludeCapsuleContents = True
-        # These settings are only used by the filter
-        conaryReposCfg.injectCapsuleContentServers = [repName]
-        conaryReposCfg.capsuleServerUrl = "direct"
-        restDb.capsuleIndexer = indexer
-        return restDb
 
     def getApi(self):
         """Handle proxied REST requests"""
