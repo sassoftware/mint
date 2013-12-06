@@ -206,5 +206,8 @@ class rBuilderProduct(CPackageRecipe):
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
 
         # Attempt to isolate things that don't work when mint is just a library
-        r.ComponentSpec('appliance', '/usr/share/raa/')
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
+
+        r.PackageSpec('sasinside-role-appengine',
+            '/etc/nginx/conf.d/rbuilder-ledger.rbuilder',
+            )
