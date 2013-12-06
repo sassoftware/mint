@@ -210,6 +210,7 @@ class rBuilderProduct(CPackageRecipe):
 
         # vapp components
         r.Symlink('/usr/share/puppet/modules/appengine', '/opt/sasinside/thirdparty/puppet/modules/appengine')
+        r.Symlink('/usr/share/puppet/modules/sasinside-role-master-appengine', '/opt/sasinside/thirdparty/puppet/modules/sasinside-role-master-appengine')
         r.PackageSpec('sasinside-role-master-appengine',
             '/etc/nginx/conf.d/rbuilder-ledger.rbuilder',
             '/opt/sasinside/',
