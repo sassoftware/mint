@@ -208,6 +208,10 @@ class rBuilderProduct(CPackageRecipe):
         # Attempt to isolate things that don't work when mint is just a library
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
 
+        # vapp components
+        r.Symlink('/usr/share/puppet/modules/appengine', '/opt/sasinside/thirdparty/puppet/modules/appengine')
         r.PackageSpec('sasinside-role-master-appengine',
             '/etc/nginx/conf.d/rbuilder-ledger.rbuilder',
+            '/opt/sasinside/',
+            '/usr/share/puppet/modules/sasinside.*',
             )

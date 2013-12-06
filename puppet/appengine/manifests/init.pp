@@ -5,11 +5,11 @@
 
 class appengine (
     $hostname                       = 'UNSET',
-    $admin_email                    = 'UNSET',
-    $project_domain                 = 'UNSET',
+    $admin_email                    = '',
+    $project_domain                 = 'sas.app.engine',
     $namespace                      = 'sas',
     $sentry_dsn                     = 'UNSET',
-    $upstream_url                   = 'https://updates.sas.com/conary/',
+    $upstream_url                   = hiera('sas.repos.url', 'https://updates.sas.com/conary/'),
     ) {
 
     $site_fqdn = $hostname ? {
@@ -35,8 +35,8 @@ bugsEmail $admin_email
 
     file { '/srv/rbuilder/config/config.d/00_site.conf':
         ensure => file,
-        content => "
-configured True
+        content => "\
+configured          True
 hostName            $host_part
 siteDomainName      $domain_part
 secureHost          $site_fqdn
