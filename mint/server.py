@@ -9,6 +9,7 @@ import re
 import json
 import stat
 import sys
+import tempfile
 import time
 import StringIO
 
@@ -2513,6 +2514,21 @@ class MintServer(object):
     @typeCheck(int)
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
+
+    @requiresAuth
+    def createPackageTmpDir(self):
+        '''
+        Creates a directory for use by the package creator UI and Service.
+        This directory is the receiving target for uploads, and the cache
+        location for pc service operations.
+
+        @rtype: String
+        @return: A X{uploadDirectoryHandle} to be used with subsequent calls to
+        file upload methods
+        '''
+        path = tempfile.mkdtemp('', packagecreator.PCREATOR_TMPDIR_PREFIX,
+            dir = os.path.join(self.cfg.dataPath, 'tmp'))
+        return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
 
     def _getMinCfg(self, project):
         repoToken = os.urandom(16).encode('hex')
