@@ -125,7 +125,10 @@ class RepomanMixin(object):
 
         entitlements = conarycfg.EntitlementList()
         if entitlement:
-            entitlements.addEntitlement('*', entitlement)
+            entitlements.addEntitlement(fqdn, entitlement)
+        else:
+            for entClass, key in self.cfg.entitlement.find(fqdn):
+                entitlements.addEntitlement(fqdn, key, entClass)
 
         cache = netclient.ServerCache(repMap, userMap,
                 entitlements=entitlements, proxyMap=self.cfg.getProxyMap())
@@ -661,6 +664,9 @@ class RepositoryHandle(object):
         if injectedAuthType == 'entitlement':
             authToken.entitlements.append(
                     (None, self._projectInfo['entitlement']))
+        else:
+            authToken.entitlements.extend(
+                    self._cfg.entitlement.find(self.fqdn))
         return authToken
 
     def convertAuthToken(self, mintToken, useRepoDb=False):

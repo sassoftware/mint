@@ -102,6 +102,7 @@ class MintConfig(conarycfg.ConfigFile):
     dbPath                  = (CfgString, 'postgres@localhost.localdomain:6432/mint')
     debugMode               = (CfgBool, False)
     disableAuthorization    = (CfgBool, False)
+    entitlement             = conarycfg.CfgEntitlement
     maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
