@@ -16,11 +16,11 @@ class appengine::platforms {
         upstream_url            => $appengine::upstream_url,
     }
 
-    rbuilder_platform { 'windows.rpath.com@rpath:windows-common':
-        ensure                  => present,
-        display_name            => 'Windows Foundation Platform',
-        upstream_url            => $appengine::upstream_url,
-        abstract                => true,
-    }
+    #rbuilder_platform { 'windows.rpath.com@rpath:windows-common':
+    #    ensure                  => present,
+    #    display_name            => 'Windows Foundation Platform',
+    #    upstream_url            => $appengine::upstream_url,
+    #    abstract                => true,
+    #}
 
 }

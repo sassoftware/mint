@@ -45,7 +45,7 @@ bugsEmail $admin_email
         'UNSET' => '',
         default => "\
 proxy http $site_proxy
-proxy https $site_proxy",
+proxy https $site_proxy
 ",
     }
 
