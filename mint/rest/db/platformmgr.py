@@ -1421,20 +1421,20 @@ class PlatformDefCache(persistentcache.PersistentCache):
     def _getPlatDef(self, labelStr, url=None):
         reposMgr = self.getReposMgr()
         client = reposMgr.getAdminClient()
-        if url:
-            fqdn = labelStr.split('@')[0]
-            if reposMgr.db.siteAuth:
-                entitlement = reposMgr.db.siteAuth.entitlementKey
-                if reposMgr.db.isOffline():
-                    # Remote will not be reachable
-                    return None
-            else:
-                entitlement = None
-            serverProxy = reposMgr.db.reposShim.getServerProxy(fqdn, url, None,
-                    [entitlement])
-            client.repos.c.cache[fqdn] = serverProxy
-
         try:
+            if url:
+                fqdn = labelStr.split('@')[0]
+                if reposMgr.db.siteAuth:
+                    entitlement = reposMgr.db.siteAuth.entitlementKey
+                    if reposMgr.db.isOffline():
+                        # Remote will not be reachable
+                        return None
+                else:
+                    entitlement = None
+                serverProxy = reposMgr.db.reposShim.getServerProxy(fqdn, url,
+                        None, [entitlement])
+                client.repos.c.cache[fqdn] = serverProxy
+
             platDef = proddef.PlatformDefinition()
             platDef.loadFromRepository(client, labelStr)
             self.clearPlatformData(labelStr)
