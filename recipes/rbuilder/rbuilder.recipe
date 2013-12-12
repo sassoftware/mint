@@ -206,6 +206,7 @@ class rBuilderProduct(CPackageRecipe):
         r.PackageSpec('anaconda-custom', r'/usr/share/anaconda/')
 
         # Attempt to isolate things that don't work when mint is just a library
+        r.ComponentSpec('appliance', '/etc/sysconfig/ip6?tables')
         r.ComponentSpec('runtime', '/usr/share/rbuilder/scripts/')
 
         # vapp components
