@@ -170,7 +170,7 @@ typeNamesMarketing = {
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "KVM/Parallels/QEMU/Raw Hard Disk",
     VMWARE_IMAGE:       "VMware(R) Workstation/Fusion Virtual Appliance",
-    VMWARE_ESX_IMAGE:   "VMware(R) ESX/VCD Virtual Appliance",
+    VMWARE_ESX_IMAGE:   "VMware(R) ESX/VCD / Oracle(R) VirtualBox Virtual Appliance",
     VMWARE_OVF_IMAGE:   "VMware(R) Virtual Appliance OVF",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File",

@@ -503,7 +503,7 @@ image_types_get_xml = \
     <image_type_id>8</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/9">
-    <description>VMware(R) ESX/VCD Virtual Appliance</description>
+    <description>VMware(R) ESX/VCD / Oracle(R) VirtualBox Virtual Appliance</description>
     <name>VMware (R) ESX</name>
     <key>VMWARE_ESX_IMAGE</key>
     <image_type_id>9</image_type_id>
