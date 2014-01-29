@@ -27,9 +27,6 @@ class rBuilderTest(TestPackageRecipe):
         'mcp:python',
         'python-memcached:python',
         'python-devel',
-        'rapa:python',
-        'rapa-plugin-rPath',
-        'rapa-test:lib',
         'util-linux-ng',
         'python-webunit',
         'python-reportlab',
@@ -46,14 +43,8 @@ class rBuilderTest(TestPackageRecipe):
         'rpath-capsule-indexer-test:python',
       ]
 
-    pythonPath = [
-        '%(libdir)s/raa-test',
-        '%(libdir)s/raa',
-      ]
-
     codeDirs = {
         'mint': '%(libdir)s/python2.4/site-packages/mint',
-        'mint-rapa': '%(libdir)s/raa/rPath',
       }
 
     # DB (default sqlite)
@@ -76,8 +67,6 @@ class rBuilderTest(TestPackageRecipe):
     def test(r):
         environ = ''
         config = {}
-
-        environ += 'RAA_PLUGINS_PATH=%(libdir)s/raa '
 
         config['repos_db'] = (
             Flags.db_pgsql and 'postgresql'

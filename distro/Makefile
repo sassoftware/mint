@@ -22,16 +22,6 @@ install: default-install
 	install -D -m0644 metadataDescriptor.xml $(DESTDIR)/srv/rbuilder/data/metadataDescriptor.xml
 	# rBuilder entitlement
 	install -D -m0644 entitlements.xml $(DESTDIR)/etc/conary/entitlements.xml
-	# rAPA bits
-	install -D -m0644 prodlogo.png $(DESTDIR)/usr/share/raa/content/images/prodlogo.png
-	install -D -m0644 backup.flat $(DESTDIR)/etc/raa/backup.d/rBAFiles
-	install -D -m0755 backup.py $(DESTDIR)/etc/raa/backup.d/rbuilder-backup
-	install -D -m0644 console.msg $(DESTDIR)/etc/raa/console.msg
-	install -D -m0644 custom.cfg $(DESTDIR)/etc/raa/custom.cfg
-	install -D -m0644 collect.flat $(DESTDIR)/etc/raa/collect.d/rBAFiles
-	install -D -m0755 collect.sh $(DESTDIR)/etc/raa/collect.d/rBAScript
-	install -D -m0644 collectiontool.html $(DESTDIR)/usr/share/raa/content/collectiontool.html
-	install -D -m0644 status.html $(DESTDIR)/usr/share/raa/content/status.html
 	# gunicorn
 	install -D -m0644 gunicorn.conf $(DESTDIR)/etc/gunicorn.conf
 	install -D -m0644 gunicorn.sysconfig $(DESTDIR)/etc/sysconfig/gunicorn
