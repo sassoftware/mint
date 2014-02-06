@@ -515,8 +515,8 @@ class MintClient:
     def getUpdateService(self, upsrvId):
         return self.server.getUpdateService(upsrvId)
 
-    def editUpdateService(self, upsrvId, newDesc):
-        return self.server.editUpdateService(upsrvId, newDesc)
+    def editUpdateService(self, upsrvId, hostname, mirrorUser, mirrorPassword, newDesc):
+        return self.server.editUpdateService(upsrvId, hostname, mirrorUser, mirrorPassword, newDesc)
 
     def delUpdateService(self, upsrvId):
         return self.server.delUpdateService(upsrvId)
