@@ -105,7 +105,7 @@ class WebHandler(object):
         Mechanism to redirect old UI links to the new UI when not prefixed by
         /web/
         """
-        self._redirectHttp('ui/' + location)
+        self._redirectHttp('api')
 
     def _clearAuth(self):
         self.auth = users.Authorization()
