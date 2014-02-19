@@ -2130,32 +2130,8 @@ ZcY7o9aU
         nsmap = dict(dsc='http://www.rpath.com/permanent/descriptor-1.1.xsd')
         fields = doc.xpath('/dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
             namespaces=nsmap)
-        self.assertEquals(fields,
-            ['imageId', 'withConfiguration', 'system_configuration'])
+        self.assertEquals(fields, ['imageId'])
 
-        sfields = doc.xpath('/dsc:descriptor/dsc:dataFields/dsc:field'
-            '[dsc:name="system_configuration"]/'
-            'dsc:descriptor/dsc:dataFields/dsc:field/dsc:name/text()',
-            namespaces=nsmap)
-        self.assertEquals(sfields, ['blargh'])
-
-        # Now test that we saved the config in the DB
-        self.mgr.repeaterMgr.repeaterClient.reset()
-        job = self._testLaunchSystem(targets, img,
-            configData=dict(blargh='abc123'))
-        system = jmodels.JobSystemArtifact.objects.filter(job=job)[0].system
-        self.assertXMLEquals(system.configuration,
-            "<configuration><blargh>abc123</blargh></configuration>")
-
-        # Test errors
-        response = self._testLaunchSystem(targets, img,
-            configData=dict(johnny='is not here'), expectedStatusCode=400)
-        self.assertXMLEquals(response.content, """\
-<fault>
-  <code>400</code>
-  <message>Data validation error: [u"Missing field: 'blargh'"]</message>
-  <traceback></traceback>
-</fault>""")
 
 
     def testGetDescriptorDeploy(self):
@@ -2482,11 +2458,11 @@ ZcY7o9aU
         from smartform import descriptor
         descr = descriptor.ConfigurationDescriptor(fromStream=response.content)
         self.assertEquals([ x.name for x in descr.getDataFields() ],
-                ['imageId', 'device', 'propulsion', 'withConfiguration', 'system_configuration', ])
+                ['imageId', 'device', 'propulsion', ])
         # Make sure the default for propulsion is coals, while the
         # default for device is the target's default
         self.assertEquals([ x.default for x in descr.getDataFields() ],
-                [['7'], ['modulatoor'], ['coals'], ['False'], []])
+                [['7'], ['modulatoor'], ['coals']])
 
         # RCE-1712: duplicate name violation
         response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
