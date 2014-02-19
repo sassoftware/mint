@@ -6,7 +6,6 @@
 #
 
 from mint import buildtypes
-import testsetup
 
 import base64
 import os

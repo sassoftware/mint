@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 from mint import userlevels
 
@@ -132,5 +130,3 @@ class JoinRequestTest(fixtures.FixturedUnitTest):
                     "User watching a project killed join request.")
 
 
-if __name__ == "__main__":
-    testsuite.main()

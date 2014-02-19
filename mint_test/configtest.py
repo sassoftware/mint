@@ -6,8 +6,6 @@
 
 import unittest
 
-import testsuite
-testsuite.setup()
 
 from mint import config
 from mint import buildtypes
@@ -61,5 +59,3 @@ class ConfigTest(unittest.TestCase):
         cfg.configLine("includeBuildTypes INSTALLABLE_ISO")
         self.failUnlessEqual(cfg.includeBuildTypes, [buildtypes.INSTALLABLE_ISO])
 
-if __name__ == "__main__":
-    testsuite.main()

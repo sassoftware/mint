@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 import re
 import restbase
 from restlib import client as restClient
@@ -79,5 +78,3 @@ class SiteTest(restbase.BaseRestTest):
                          username = username, displayname = '%s'))
 
 
-if __name__ == "__main__":
-        testsetup.main()

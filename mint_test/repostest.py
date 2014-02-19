@@ -10,8 +10,6 @@ import time
 import difflib
 import shutil
 import tempfile
-import testsuite
-testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, FQDN
@@ -653,5 +651,3 @@ That is all."""
         res = ch.licenseCryptoReport(t='group-test', v=ver, f=fl, auth=None)
         self.failUnlessEqual(res[0][0], 'error')
 
-if __name__ == "__main__":
-    testsuite.main()

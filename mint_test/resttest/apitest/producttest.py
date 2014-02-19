@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 
 import os
 import re
@@ -135,5 +134,3 @@ newProduct1 = """
 
 
 
-if __name__ == "__main__":
-        testsetup.main()

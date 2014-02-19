@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 from mint import mint_error
 from mint import server
@@ -74,5 +72,3 @@ class AuthTest(fixtures.FixturedUnitTest):
         except mint_error.PermissionDenied:
             pass
 
-if __name__ == "__main__":
-    testsuite.main()

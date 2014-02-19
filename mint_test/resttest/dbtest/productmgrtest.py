@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import StringIO
-import testsetup
 from testutils import mock
 
 from rpath_proddef import api1 as proddef
@@ -471,4 +470,3 @@ refProductDefintion1 = """\
 """
 
 
-testsetup.main()

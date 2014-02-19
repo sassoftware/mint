@@ -3,9 +3,7 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
 import unittest
-testsuite.setup()
 
 import kid
 import logging
@@ -14,7 +12,6 @@ import sys
 import tempfile
 
 from mint_test import mint_rephelp
-from mint import config
 from mint.lib import copyutils
 from mint.lib import scriptlibrary
 from mint import templates
@@ -24,9 +21,11 @@ from mint.client import timeDelta
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport
 
-from conary import versions
 from conary.lib import util
 from conary.deps import deps
+
+from testrunner.testhelp import context, SkipTestException
+
 
 testTemplate = \
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -63,7 +62,7 @@ class HelperFunctionsTest(mint_rephelp.MintRepositoryHelper, unittest.TestCase):
         self.assertEqual(render.find("Not"), -1)
 
     def testPlainKidTemplateWithImport(self):
-        raise testsuite.SkipTestException("This plugin messes up the kid importer for the rapa tests, skipping for now")
+        raise SkipTestException("This plugin messes up the kid importer for the rapa tests, skipping for now")
         kid.enable_import()
         from templates import plainTextTemplate
         render = templates.write(plainTextTemplate, myString = "dubious text")
@@ -208,7 +207,7 @@ Much like Powdermilk Biscuits[tm]."""
     # Unfriendly because javascript is installed to a different location
     # when testing against installed rbuilder; this is more useful on
     # the developer's system anyway.
-    @testsuite.context("unfriendly")
+    @context("unfriendly")
     def testJavascript(self):
         # whizzyupload.js was validated with jslint
         whiteList = ['json.js', 'whizzyupload.js', 'swf_deeplink_history.js', 'history.js', 'iClouds.js', 'AC_OETags.js']
@@ -708,5 +707,3 @@ Much like Powdermilk Biscuits[tm]."""
             nurl = urlUnsplit(tup)
             self.failUnlessEqual(urlSplit(url), tup)
 
-if __name__ == "__main__":
-    testsuite.main()

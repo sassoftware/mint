@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import os
 import shutil
@@ -207,5 +205,3 @@ class RogueReport(MintReport):
             self.fail("problems compiling the script")
 
 
-if __name__ == "__main__":
-    testsuite.main()

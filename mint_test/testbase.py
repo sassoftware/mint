@@ -2,30 +2,21 @@
 # Copyright (c) 2008 rPath, Inc.  All Rights Reserved.
 #
 
-import testsuite
-testsuite.setup()
 
-import os
 import tempfile
 
-from testutils import os_utils
+from testrunner import testcase
 
 from conary.lib import util
 
-class TestCase(testsuite.TestCase):
+class TestCase(testcase.TestCase):
     def setUp(self):
-        testsuite.TestCase.setUp(self)
-        if testsuite.isIndividual():
-            self.workDir = '/tmp/catalog-service-test-' + os_utils.effectiveUser
-            self.cleanupDir = False
-            util.rmtree(self.workDir, ignore_errors = True)
-            util.mkdirChain(self.workDir)
-        else:
-            self.workDir = tempfile.mkdtemp(prefix='catalog-service-test-')
-            self.cleanupDir = True
+        testcase.TestCase.setUp(self)
+        self.workDir = tempfile.mkdtemp(prefix='catalog-service-test-')
+        self.cleanupDir = True
 
     def tearDown(self):
-        testsuite.TestCase.tearDown(self)
+        testcase.TestCase.tearDown(self)
         if self.cleanupDir:
             util.rmtree(self.workDir, ignore_errors = True)
 

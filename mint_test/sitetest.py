@@ -5,8 +5,6 @@
 # All Rights Reserved
 #
 
-import testsuite
-testsuite.setup()
 
 import cPickle
 import os
@@ -175,5 +173,3 @@ class Transport(xmlrpclib.Transport):
         xmlrpclib.Transport.send_user_agent(self, connection)
         connection.putheader('Cookie', self.cookie)
 
-if __name__ == "__main__":
-    testsuite.main()

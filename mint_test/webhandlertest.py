@@ -5,8 +5,6 @@
 # All Rights Reserved
 #
 
-import testsuite
-testsuite.setup()
 import unittest
 
 from mint.web import webhandler
@@ -75,5 +73,3 @@ class WebHandlerTestWithoutPort(unittest.TestCase):
                 'http://foo.test.local/nowhere')
 
 
-if __name__ == "__main__":
-    testsuite.main()

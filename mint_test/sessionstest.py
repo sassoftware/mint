@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import time
 
@@ -52,5 +50,3 @@ class SessionTest(fixtures.FixturedUnitTest):
         d = client.loadSession(sid)
         self.failIf(d, "Session data improperly survived race condition")
 
-if __name__ == "__main__":
-    testsuite.main()

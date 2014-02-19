@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 from testutils import mock
 
 from mint_rephelp import FQDN
@@ -483,6 +481,4 @@ class UpdateServiceTest(fixtures.FixturedUnitTest):
         # make sure cascading deletes worked
         self.failUnlessEqual([], adminClient.getOutboundMirrorTargets(omid))
 
-if __name__ == "__main__":
-    testsuite.main()
 

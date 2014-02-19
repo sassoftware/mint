@@ -7,9 +7,7 @@
 
 import os
 import re
-
-import testsetup
-import testsuite
+from testrunner import testcase
 
 from mint.rest import modellib
 from mint.rest.modellib import fields
@@ -20,9 +18,7 @@ class _Controller(object):
         return os.path.join(*components)
 
 
-class ModelLibTest(testsuite.TestCase):
-    def getFormatter(self):
-        return formatter
+class ModelLibTest(testcase.TestCase):
 
     def toString(self, item):
         controller = _Controller()
@@ -72,7 +68,7 @@ class ModelLibTest(testsuite.TestCase):
         #    "Model() got an unexpected keyword argument 'foo3'")
 
     def testModelXmlFormatterTypes(self):
-        raise testsuite.SkipTestException("elements are spontaneously reordered during automated tests")
+        raise testcase.SkipTestException("elements are spontaneously reordered during automated tests")
         class Model1(modellib.Model):
             class Meta(object):
                 name = "subnode"
@@ -179,5 +175,3 @@ class ModelLibTest(testsuite.TestCase):
         xml = self.getFieldString(Model(), 'url')
         self.assertEquals(xml, '<url>http://foo</url>')
 
-if __name__ == "__main__":
-    testsetup.main()

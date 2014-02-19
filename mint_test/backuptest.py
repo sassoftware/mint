@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import sys
 import os
@@ -264,5 +262,3 @@ class BackupTest(fixtures.FixturedUnitTest):
         if os.path.isdir('ignoreme'):
             util.rmtree('ignoreme')
 
-if __name__ == "__main__":
-    testsuite.main()

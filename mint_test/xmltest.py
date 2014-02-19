@@ -3,16 +3,14 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import fixtures
 
 import mint.server
-from mint import userlevels, mint_error
 from mint.mint_error import ParameterError
 from mint.server import deriveBaseFunc, checkParam, \
     typeCheck, SERVER_VERSIONS
+from testrunner.decorators import context
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 
@@ -121,7 +119,7 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
             self.assertRaises(ParameterError, foo, self,
                               'This is not an int')
 
-    @testsuite.context("quick")
+    @context("quick")
     @fixtures.fixture("Empty")
     def testPrivate(self, db, data):
         client = self.getClient("test")
@@ -170,5 +168,3 @@ class XmlInterfaceTest(fixtures.FixturedUnitTest):
             (True, ('InvalidClientVersion', 'Invalid client version 0. '
                 'Server accepts client versions %d' % SERVER_VERSIONS[-1])))
 
-if __name__ == "__main__":
-    testsuite.main()

@@ -3,7 +3,6 @@
 # Copyright (c) SAS Institute Inc.
 #
 
-import testsetup
 
 from mint import buildtypes
 
@@ -237,4 +236,3 @@ class TargetManagerTest(mint_rephelp.MintDatabaseHelper):
                 userCreds[('type1', 'name1')][2][1]),
         ])
 
-testsetup.main()

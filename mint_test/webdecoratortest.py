@@ -3,9 +3,7 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
 import unittest
-testsuite.setup()
 
 from mint import config
 from mint import mint_error
@@ -145,5 +143,3 @@ class WebDecoratorTest(unittest.TestCase):
         assert(w(self))
 
 
-if __name__ == "__main__":
-    testsuite.main()

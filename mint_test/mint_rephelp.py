@@ -1,22 +1,16 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-#
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 import logging
 import os
-import shutil
 import pwd
 import socket
 import sys
 import re
-import testsuite
-import time
 import urlparse
 from testutils import sqlharness
 from SimpleXMLRPCServer import SimpleXMLRPCServer,SimpleXMLRPCRequestHandler
 from testutils import mock
-from testrunner import pathManager
 # make webunit not so picky about input tags closed
 from webunit import SimpleDOM
 try:
@@ -33,7 +27,6 @@ from mint.lib import data
 import mint.client
 from mint.rest.db import reposmgr
 from mint import config
-from mint import cooktypes
 from mint import jobstatus
 from mint import server
 from mint import shimclient
@@ -46,7 +39,6 @@ from mint.rest.api import models
 from mint.flavors import stockFlavors
 
 from conary import dbstore
-from conary import sqlite3
 from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
@@ -56,6 +48,8 @@ from conary_test import rephelp
 from conary_test import resources
 
 from testrunner.testhelp import findPorts
+from mint_test import resources
+from proddef_test import resources as proddef_resources
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -178,10 +172,6 @@ def getIpAddresses():
 
     
 def getMintCfg(reposDir, serverRoot, port, securePort, reposDbPort, useProxy):
-    # write Mint configuration
-    mintPath = pathManager.getPath('MINT_PATH')
-
-
     cfg = config.MintConfig()
 
     sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
@@ -289,7 +279,7 @@ class RestDBMixIn(object):
 
     def setUpProductDefinition(self):
         from rpath_proddef import api1 as proddef
-        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaDir = proddef_resources.get_xsd()
         schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
         if not os.path.exists(os.path.join(schemaDir, schemaFile)):
             # Not running from a checkout
@@ -942,7 +932,7 @@ class WebRepositoryHelper(BaseWebHelper):
 
     def setUpProductDefinition(self):
         from rpath_proddef import api1 as proddef
-        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaDir = proddef_resources.get_xsd()
         schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
         if not os.path.exists(os.path.join(schemaDir, schemaFile)):
             # Not running from a checkout

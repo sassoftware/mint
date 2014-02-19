@@ -8,7 +8,6 @@
 import os
 import time
 
-import testsetup
 from testrunner import testcase
 
 from mint.lib import persistentcache
@@ -136,7 +135,3 @@ class TestPersistentCache(testcase.TestCaseWithWorkDir):
         self.failUnlessEqual(cache1.get(key1), -1)
         self.failUnlessEqual(cache1.get(key2), 3)
         self.failUnlessEqual(cache1.get(key3), 2)
-
-if __name__ == '__main__':
-    testsetup.testsuite.main()
-

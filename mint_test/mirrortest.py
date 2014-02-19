@@ -7,8 +7,6 @@
 
 import re
 import os
-import testsuite
-testsuite.setup()
 
 import tempfile
 
@@ -519,6 +517,3 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
             self.stopRepository(1)
             self.stopRepository(2)
 
-if __name__ == "__main__":
-    runTest = True
-    testsuite.main()

@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 
 import os
 import re
@@ -1166,5 +1165,3 @@ promoteGroup = """
 """
 
 
-if __name__ == "__main__":
-        testsetup.main()

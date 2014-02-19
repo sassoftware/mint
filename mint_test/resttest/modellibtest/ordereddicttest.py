@@ -5,15 +5,13 @@
 # All Rights Reserved
 #
 
-import os
+from testrunner import testcase
 
-import testsetup
-import testsuite
 
 from mint.rest.modellib import ordereddict
 
 
-class OrderedDictTest(testsuite.TestCase):
+class OrderedDictTest(testcase.TestCase):
     def testDict(self):
         items = [ (x,x+10) for x in range(10) ]
         odict = ordereddict.OrderedDict(items)
@@ -33,5 +31,3 @@ class OrderedDictTest(testsuite.TestCase):
         assert(odict.copy().keys() == [0,1,2,4,5,6,7,8,9,3])
         assert(odict.fromkeys([1,2,3,4]).keys() == [1,2,3,4])
         
-if __name__ == "__main__":
-    testsetup.main()

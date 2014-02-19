@@ -3,19 +3,17 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import sys
 import os
 import re
 import socket
 import tempfile
-import time
 from testrunner.testhelp import SkipTestException
+from testrunner.decorators import tests, context
 
 from mint_rephelp import MintRepositoryHelper
-from mint_rephelp import MINT_PROJECT_DOMAIN, FQDN
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import userlevels
 from mint.mint_error import *
@@ -23,7 +21,6 @@ from mint.mint_error import ParameterError, PermissionDenied
 from mint.lib import database
 from mint import urltypes
 
-from conary import dbstore
 from conary.conaryclient import ConaryClient
 from conary.lib import util
 
@@ -51,7 +48,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
                 % (scriptPath, configFile, projectName))
         return ret >> 8
 
-    @testsuite.context("quick")
+    @context("quick")
     @fixtures.fixture("Full")
     def testBasicAttributes(self, db, data):
         client = self.getClient("owner")
@@ -821,7 +818,7 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # call the database deletion script
         self.failUnless(client.deleteProject(project.id) == True, "Allow deleting external projects if local mirror")
         
-    @testsuite.tests('RBL-4225')
+    @tests('RBL-4225')
     @fixtures.fixture('Full')
     def testDeleteProjectNotAdmin(self, db, data):
         adminClient = self.getClient('admin')
@@ -1165,5 +1162,3 @@ class ProjectTestConaryRepository(MintRepositoryHelper):
                 rmake_setup.setupRmake, self.mintCfg, rmakeCfgPath)
 
 
-if __name__ == "__main__":
-    testsuite.main()

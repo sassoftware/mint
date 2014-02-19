@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import fixtures
 
@@ -75,5 +73,3 @@ class PkgIndexTest(fixtures.FixturedUnitTest):
         self.assertEquals(cu.fetchone()[0], 1)
 
 
-if __name__ == "__main__":
-    testsuite.main()

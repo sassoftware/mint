@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2007 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import fixtures
 
@@ -60,5 +58,3 @@ class InjectionTest(fixtures.FixturedUnitTest):
                     "protect against SQL injection")
 
 
-if __name__ == "__main__":
-    testsuite.main()

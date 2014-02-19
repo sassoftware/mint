@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import testsetup
 
 from conary import versions
 from conary.repository import errors as reposerrors
@@ -175,4 +174,3 @@ class ReposManagerTest(mint_rephelp.MintDatabaseHelper, auth_helper.AuthHelper):
         assert(list(trv.iterFileList())[0][1] == 'foo.recipe')
         assert(trv.getChangeLog().getMessage() == 'Changelog\n')
 
-testsetup.main()

@@ -3,22 +3,20 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import fixtures
 
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import userlevels
 from mint.mint_error import *
 from mint.lib import maillib
-from mint import users
 
 from conary import versions
 from conary.conaryclient import ConaryClient
 from conary.repository.netclient import UserNotFound
 from conary import dbstore
+from testrunner import testhelp
 from testutils import mock
 
 class AccountTest(fixtures.FixturedUnitTest):
@@ -33,7 +31,7 @@ class AccountTest(fixtures.FixturedUnitTest):
         except TypeError:
             return None
 
-    @testsuite.context("quick")
+    @testhelp.context("quick")
     @fixtures.fixture('Empty')
     def testBasicAttributes(self, db, data):
         client, userId = self.getClient('test'), data['test']
@@ -268,7 +266,7 @@ class AccountTest(fixtures.FixturedUnitTest):
     # here so we can use the _getConfirmation shortcut...
     @fixtures.fixture('Full')
     def testSearchUnconfUsers(self, db, data):
-        raise testsuite.SkipTestException("relocate me")
+        raise testhelp.SkipTestException("relocate me")
         client, userId = self.quickMintUser("testuser", "testpass")
 
         newUserId = client.registerNewUser("newuser", "memberpass", "Test Member",
@@ -299,7 +297,7 @@ class AccountTest(fixtures.FixturedUnitTest):
     def testChangePassword(self, db, data):
         '''Check repository access after changing a user's password'''
 
-        raise testsuite.SkipTestException("Can't be ported without "
+        raise testhelp.SkipTestException("Can't be ported without "
             "repository fixture")
 
         client, userId = self.quickMintAdmin("testuser", "testpass")
@@ -399,7 +397,7 @@ class AccountTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture('Full')
     def testExternalModify(self, db, data):
-        raise testsuite.SkipTestException("Can't be ported without "
+        raise testhelp.SkipTestException("Can't be ported without "
             "repository fixture")
         client, userId = self.quickMintAdmin('foouser', 'foopass')
         client2, userId2 = self.quickMintUser('foouser1', 'foopass1')
@@ -446,5 +444,3 @@ class AccountTest(fixtures.FixturedUnitTest):
                     "addMember didn't change internal project acl's")
 
 
-if __name__ == "__main__":
-    testsuite.main()

@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
 
@@ -128,5 +126,3 @@ class LabelsTest(fixtures.FixturedUnitTest):
         cu.execute("SELECT mirrorOrder FROM InboundMirrors")
         self.failUnlessEqual([0, 1], [x[0] for x in cu.fetchall()])
 
-if __name__ == "__main__":
-    testsuite.main()

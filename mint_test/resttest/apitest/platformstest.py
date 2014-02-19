@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 
 import os
 import re
@@ -439,5 +438,3 @@ class NewPlatformTest(BaseTest):
         self.failUnlessEqual(plat.abstract, True)
         self.failUnlessEqual(plat.configurable, True)
 
-if __name__ == "__main__":
-        testsetup.main()

@@ -5,8 +5,6 @@
 # All Rights Reserved
 #
 
-import testsuite
-testsuite.setup()
 
 import os
 
@@ -202,5 +200,3 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
             os.chmod(lockDir, fMode)
 
 
-if __name__ == "__main__":
-    testsuite.main()

@@ -1,33 +1,19 @@
-#!/usr/bin/python
 #
-# Copyright (c) 2005-2008 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-import testsuite
-testsuite.setup()
 
 import os
 
-from mint_test import mint_rephelp
 import fixtures
 from mint.web import site
 from mint.lib.data import RDT_STRING
-from mint.lib import database
-from mint.web.webhandler import HttpNotFound, HttpMoved
-from mint import jobstatus
-from mint import buildtypes
-from mint import userlevels
+from mint.web.webhandler import HttpMoved
 from mint import users
 
-from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_HOST, FQDN
-
-from conary import versions
-from conary.lib import util
-
-from testrunner import pathManager
+from mint_rephelp import FQDN
 
 from mint_rephelp import FakeRequest
+from mint_test import resources
 
 class FixturedProjectTest(fixtures.FixturedUnitTest):
     def setUp(self):
@@ -59,7 +45,7 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
         self.sh.client = self.getClient('anonymous')
         self.sh.auth = users.Authorization(admin = False, authorized = False)
 
-        testFile = open(pathManager.getPath("MINT_ARCHIVE_PATH") + "/testChunkedFile")
+        testFile = open(resources.get_archive('testChunkedFile'))
         self.sh.req.read = testFile.read
 
         method = self.sh.handle({'cmd': 'uploadBuild'})
@@ -76,5 +62,3 @@ class FixturedProjectTest(fixtures.FixturedUnitTest):
     def testUploadHiddenBuild(self, db, data):
         self._testUploadBuild(db, data, hidden=True)
 
-if __name__ == "__main__":
-    testsuite.main()

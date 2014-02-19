@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 
 import os
 import re
@@ -42,5 +41,3 @@ class ModuleHooksTest(restbase.BaseRestTest):
         response = client.call('GET', uri, convert=False)[1]
         self.failUnlessEqual(len(response.moduleHooks), 2)
 
-if __name__ == "__main__":
-        testsetup.main()

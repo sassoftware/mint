@@ -3,10 +3,7 @@
 # Copyright (c) 2011 rPath, Inc.
 #
 
-import testsetup #pyflakes=ignore
-import testsuite
 import smtplib
-testsuite.setup()
 
 from mint_test.mint_rephelp import rephelp
 from mint.lib import maillib
@@ -56,6 +53,4 @@ class MaillibTest(rephelp.RepositoryHelper):
         self.failUnlessEqual(sio.getvalue(),
             'Unable to send email to to@example.com:\nemail body\n')
 
-if __name__ == "__main__":
-    testsuite.main()
 

@@ -6,8 +6,6 @@
 import tempfile
 import time
 import os, sys
-import testsuite
-testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from conary import dbstore
@@ -25,5 +23,3 @@ class UpgradePathTest(MintRepositoryHelper):
 
     # XXX need to test the migration script
 
-if __name__ == "__main__":
-    testsuite.main()

@@ -1,26 +1,19 @@
-#!/usr/bin/python
 #
-# Copyright (c) 2009 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
-# All Rights Reserved
-#
-
-import testsetup
 
 import os
-import time
 
 from conary import conaryclient
-from conary.lib import util
 
 import restbase
 from restlib import client as restClient
 ResponseError = restClient.ResponseError
 
-import rpath_capsule_indexer
 from capsule_indexertest import base
 
 from testutils import mock
+from testrunner import testcase
 
 class IndexerSetupMixIn(base.IndexerTestMixIn):
     LabelToPlatDefMap = {
@@ -332,7 +325,7 @@ class CapsuleRepositoryTest(restbase.mint_rephelp.MintRepositoryHelper,
     def NoReallyIgnoreThistestConaryProxyInjection(self):
         # This test fails in bamboo when running setUp, so I changed the name
         # to avoid it being executed ever
-        raise testsetup.testsuite.SkipTestException("Fails in bamboo")
+        raise testcase.SkipTestException("Fails in bamboo")
         mintClient = self.startMintServer(useProxy = True)
         rpmFile0 = os.path.join(self.sourceSearchDir,
             'with-config-special-0.2-1.noarch.rpm')
@@ -534,6 +527,4 @@ class MultiSourceCapsulesTest(BaseCapsulesTest):
             cfg.getProxyMap().items() ],
             [['foo.bar'], ['foo.baz']])
 
-if __name__ == "__main__":
-        testsetup.main()
 

@@ -7,20 +7,17 @@
 
 import os
 import re
-
-import testsetup
-import testsuite
+from testrunner import testcase
 
 from mint.rest import modellib
 from mint.rest.modellib import fields
 from mint.rest.modellib import converter
-from mint.rest.modellib import jsonconverter
 
 class _Controller(object):
     def url(slf, req, *components):
         return os.path.join(*components)
 
-class ModelLibTest(testsuite.TestCase):
+class ModelLibTest(testcase.TestCase):
 
     def toString(self, item):
         controller = _Controller()
@@ -127,5 +124,3 @@ class ModelLibTest(testsuite.TestCase):
         txt = self.toString(Model())
         self.assertEquals(txt, '{"model": {"url": "http://foo"}}')
 
-if __name__ == "__main__":
-    testsetup.main()

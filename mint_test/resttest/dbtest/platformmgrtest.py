@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import testsetup
 from testutils import mock
 
 from rpath_proddef import api1 as proddef
@@ -642,6 +641,4 @@ class PlatformManagerTest(restbase.BaseRestTest):
 """,
 )
 
-if __name__ == "__main__":
-        testsetup.main()
 

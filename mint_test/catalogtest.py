@@ -5,19 +5,13 @@
 # All Rights Reserved
 #
 
-import testsuite
-testsuite.setup()
 
 import boto
-import cPickle
-import os
-import urlparse
 
 from mint_test import mint_rephelp
+from testrunner import testhelp
 import ec2test
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
-from catalogService import handler, storage
 from catalogService.rest.database import RestDatabase
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
@@ -113,7 +107,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/catalog/clouds/ec2/instances/aws/images?_method=GET', ok_codes = [401])
 
     def testEnumerateNoImages(self):
-        raise testsuite.SkipTestException("This test case will really try to talk to EC2")
+        raise testhelp.SkipTestException("This test case will really try to talk to EC2")
         client, userId = self.quickMintUser('foouser', 'foopass')
         client.setEC2CredentialsForUser(userId, 'testAccountNumber',
                 'testPublicKey', 'testSecretAccessKey', True)
@@ -130,11 +124,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         page = self.webLogin('foouser', 'foopass')
 
-        raise testsuite.SkipTestException('We need a real cloud or a way to mock')
+        raise testhelp.SkipTestException('We need a real cloud or a way to mock')
         page = self.fetch('/catalog/clouds/vws/cloudid/images?_method=GET')
         self.assertEquals(page.headers['content-type'], 'application/xml')
         self.assertEquals(page.body, "<?xml version='1.0' encoding='UTF-8'?>\n<images/>\n")
 
 
-if __name__ == "__main__":
-    testsuite.main()

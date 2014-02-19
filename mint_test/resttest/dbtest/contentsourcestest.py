@@ -2,7 +2,6 @@
 #
 # Copyright (c) 2011 rPath, Inc.
 #
-import testsetup
 
 from conary.lib.http import proxy_map
 from mint.rest.db import contentsources
@@ -105,4 +104,3 @@ class ContentSourceTypeTest(mint_rephelp.MintDatabaseHelper):
             self.failUnlessEqual(_proxyMaps, [proxyMap] * 2)
 
 
-testsetup.main()

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import testsetup
 from mint.rest import errors
 
 from mint_test import mint_rephelp
@@ -75,4 +74,3 @@ def log(x):
     print '\n%s: %s' % (time.time(), x)
 
 
-testsetup.main()

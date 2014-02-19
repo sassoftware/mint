@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 
 import os
 import re
@@ -246,5 +245,3 @@ class ReposTest(restbase.BaseRestTest):
                     data = self.mintCfg.dataPath))
 
 
-if __name__ == "__main__":
-        testsetup.main()

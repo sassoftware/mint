@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import time
 
@@ -567,5 +565,3 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
                 client.server.updatePublishedRelease, pubRel.id, {'projectId': 42})
 
 
-if __name__ == "__main__":
-    testsuite.main()

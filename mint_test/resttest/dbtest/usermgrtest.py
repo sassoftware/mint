@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import os
-import testsetup
 
 from mint import buildtypes
 from mint import mint_error
@@ -57,4 +56,3 @@ class UserManagerTest(mint_rephelp.MintDatabaseHelper):
         adminId = db.getUser('admin').userId
 
 
-testsetup.main()

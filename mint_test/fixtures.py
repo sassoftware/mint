@@ -1,9 +1,7 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 import copy
-import inspect
 from testrunner import testhelp
 import tempfile
 import random
@@ -11,23 +9,19 @@ import string
 import subprocess
 import os
 import sys
-import time
-import pwd
 import StringIO
 
-from testrunner import testhelp
-from testrunner import pathManager
 from testutils import mock
 
 
-from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN, FQDN
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 from mint_rephelp import resetCache
+from mint_test import resources
 
 import mint.db.database
 from mint import shimclient
 from mint import config
 from mint import buildtypes
-from mint import helperfuncs
 from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -36,10 +30,10 @@ from mint.lib.data import RDT_STRING
 from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
-from conary.dbstore import sqlerrors
 from testutils import sqlharness
 
 from rpath_proddef import api1 as proddef
+from proddef_test import resources as proddef_resources
 
 
 def stockBuildFlavor(db, buildId, arch = "x86_64"):
@@ -227,10 +221,8 @@ class FixtureCache(object):
                 'ec2S3Bucket' : 'extracrispychicken',
                 'ec2LaunchUsers' : ["000000001111", "000000002222"],
                 'ec2LaunchGroups' : ["group1", "group2"],
-                'ec2Certificate': open(os.path.join( \
-                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.pem')).read(),
-                'ec2CertificateKey': open(os.path.join( \
-                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.key')).read()
+                'ec2Certificate': open(resources.get_archive('ec2.pem')).read(),
+                'ec2CertificateKey': open(resources.get_archive('ec2.key')).read(),
                 }
         adminClient = shimclient.ShimMintClient(cfg, ("admin", "adminpass"))
         adminClient.addTarget('ec2', 'aws', amiData)
@@ -391,10 +383,8 @@ class FixtureCache(object):
                 'ec2S3Bucket' : 'extracrispychicken',
                 'ec2LaunchUsers' : ["000000001111", "000000002222"],
                 'ec2LaunchGroups' : ["group1", "group2"],
-                'ec2CertificateFile': open(os.path.join( \
-                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.pem')).read(),
-                'ec2CertificateKeyFile': open(os.path.join( \
-                        pathManager.getPath('MINT_ARCHIVE_PATH'), 'ec2.key')).read()
+                'ec2CertificateFile': open(resources.get_archive('ec2.pem')).read(),
+                'ec2CertificateKeyFile': open(resources.get_archive('ec2.key')).read(),
                 }
         client.addTarget('ec2', 'aws', amiData)
         hostname = shortname = "testproject"
@@ -792,7 +782,7 @@ class FixturedUnitTest(testhelp.TestCase):
 
     def setUpProductDefinition(self):
         from rpath_proddef import api1 as proddef
-        schemaDir = os.path.join(os.environ['PRODUCT_DEFINITION_PATH'], 'xsd')
+        schemaDir = proddef_resources.get_xsd()
         schemaFile = "rpd-%s.xsd" % proddef.ProductDefinition.version
         if not os.path.exists(os.path.join(schemaDir, schemaFile)):
             # Not running from a checkout

@@ -5,16 +5,15 @@
 # All Rights Reserved
 #
 
-import testsuite
-testsuite.setup()
 from testutils import mock
+from testrunner.testcase import SkipTestException
+from testrunner.decorators import tests
 
 import os
 
 from conary.lib import util
 
 from mint_test import mint_rephelp
-from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN, MINT_DOMAIN
 from mint import helperfuncs
 
 class FakeUpdateServiceServerProxy:
@@ -110,7 +109,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir + '-mint', 'repos', 'rap.rpath.com')))
 
-    @testsuite.tests('RBL-2039')
+    @tests('RBL-2039')
     def testConfigureMirrorBackup(self):
         '''
         Check that an external mirrored project can be configured for
@@ -428,7 +427,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'externalPass': ''})
         self.failUnlessEqual(p.getLabel(), "conary.rpath.com@rpl:1-newlabel")
 
-    @testsuite.tests('RBL-3179')
+    @tests('RBL-3179')
     def testEditExternalProjectWithLabelTableBreakage(self):
         """
         This tests the case where the labelId of a project != the projectId
@@ -540,7 +539,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             import reportlab
             del reportlab #pyflakes=ignore
         except ImportError:
-            raise testsuite.SkipTestException("reportlab not installed")
+            raise SkipTestException("reportlab not installed")
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
@@ -727,5 +726,3 @@ class UpdateServiceWebTest(mint_rephelp.WebRepositoryHelper):
 
         self.failIf("Kill me with fire" in page.body)
 
-if __name__ == "__main__":
-    testsuite.main()

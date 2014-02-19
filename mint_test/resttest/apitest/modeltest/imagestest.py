@@ -5,7 +5,6 @@
 # All Rights Reserved
 #
 
-import testsetup
 from mint_test import mint_rephelp
 
 
@@ -97,5 +96,3 @@ imageList = """<?xml version='1.0' encoding='UTF-8'?>
 </images>
 """
 
-if __name__ == "__main__":
-        testsetup.main()

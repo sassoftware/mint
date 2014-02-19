@@ -3,8 +3,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 #
 
-import testsuite
-testsuite.setup()
 
 import fixtures
 from mint import mint_error, users
@@ -294,5 +292,3 @@ class UsersTest(fixtures.FixturedUnitTest):
             self.cfg.authUser.title(), "password", "Ronald Frobnitz",
             "ronald@frobnitz.com", "ronald at frobnitz dot com", "")
 
-if __name__ == "__main__":
-    testsuite.main()

@@ -4,9 +4,7 @@
 #
 import time
 
-import testsuite
 import unittest
-testsuite.setup()
 
 import fixtures
 
@@ -332,5 +330,3 @@ class BrowseTest(fixtures.FixturedUnitTest):
                                [2, 'bar', 'Bar', '', 1128540046.0, 2, 1128540046]], 2), x)
 
 
-if __name__ == "__main__":
-    testsuite.main()
