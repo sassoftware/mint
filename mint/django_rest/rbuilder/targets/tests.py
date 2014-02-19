@@ -2116,8 +2116,6 @@ ZcY7o9aU
   </dataFields>
 </descriptor>""")
 
-        self._mockSystemConfigurationDescriptor()
-
         # Grab an image
         tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
         imgName = "image 02"
@@ -2194,33 +2192,7 @@ ZcY7o9aU
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 200)
 
-    def _mockSystemConfigurationDescriptor(self):
-        from smartform import descriptor
-        def mockGetDescriptor(slf, trvTup):
-            return descriptor.SystemConfigurationDescriptor(fromStream="""\
-<descriptor>
-  <metadata>
-    <displayName>FooDescriptor</displayName>
-    <rootElement>blah</rootElement>
-    <descriptions><desc>Description</desc></descriptions>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>blargh</name>
-      <descriptions>
-        <desc>Blargh</desc>
-      </descriptions>
-      <type>str</type>
-      <required>true</required>
-    </field>
-  </dataFields>
-</descriptor>
-""")
-        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
-
     def testCreateLaunchProfile(self):
-        self._mockSystemConfigurationDescriptor()
         self.mgr.repeaterMgr.repeaterClient.setJobData("""\
 <descriptor>
   <metadata>

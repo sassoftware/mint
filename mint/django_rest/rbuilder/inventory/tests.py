@@ -23,9 +23,7 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
 from mint.django_rest.rbuilder.inventory import testsxml2
-from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.lib import x509
-from mint.rest.api import models as restmodels
 
 # Suppress all non critical msg's from output
 # still emits traceback for failed tests
@@ -76,40 +74,8 @@ class AuthTests(XMLTestCase):
 
         self.assertEquals(authClient.args, [('test-rce1341', password)])
 
-class ConfigDescriptorMixIn(object):
-    def _mockConfigDescriptorCache(self):
-        from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-        descr = self._getConfigDescriptor()
-        mockGetDescriptor = lambda x, y: descr
-        self.mock(ConfigDescriptorCache, 'getDescriptor', mockGetDescriptor)
-        return descr
 
-    def _getConfigDescriptor(self):
-
-        vhost = descriptor.ConfigurationDescriptor()
-        vhost.setId("apache-configuration/vhost")
-        vhost.setRootElement('vhost')
-        vhost.setDisplayName('Virtual Host Configuration')
-        vhost.addDescription('Virtual Host Configuration')
-        vhost.addDataField('serverName', type="str", required=True,
-            descriptions="Virtual Host Name")
-        vhost.addDataField('documentRoot', type="str", required=True,
-            descriptions="Virtual Host Document Root") 
-
-        descr = descriptor.ConfigurationDescriptor()
-        descr.setId("Some-ID")
-        descr.setDisplayName('Ignored')
-        descr.addDescription('Ignored')
-        descr.setRootElement('ignored')
-
-        descr.addDataField('vhosts', type=descr.ListType(vhost),
-            required=True, descriptions="Virtual Hosts",
-            constraints=[dict(constraintName='uniqueKey', value="serverName"),
-                dict(constraintName="minLength", value=1)])
-        return descr
-
-
-class SurveyTests(ConfigDescriptorMixIn, XMLTestCase):
+class SurveyTests(XMLTestCase):
     fixtures = ['targetusers']
 
     def setUp(self):
@@ -279,8 +245,6 @@ class SurveyTests(ConfigDescriptorMixIn, XMLTestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_survey_post(self):
-
-        self._mockConfigDescriptorCache()
         # make sure we can post a survey and it mostly looks
         # like the model saved version above -- much of the
         # data posted is not required for input (like hrefs)
@@ -1600,7 +1564,7 @@ class NetworksTestCase(XMLTestCase):
         net = self.mgr.sysMgr.extractNetworkToUse(self.system)
         self.failUnlessEqual(net.network_id, network3.network_id)
 
-class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
+class SystemsTestCase(XMLTestCase):
     fixtures = ['system_job', 'targetusers', 'targets']
 
     def setUp(self):
@@ -2540,18 +2504,8 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.configuration_put_xml)
 
-        # Now test with some real config
-        self._mockConfigDescriptorCache()
-
         self.mgr.sysMgr.setObservedTopLevelItems(system,
             set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
-
-        response = self._put(url,
-            data=testsxml.configuration_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 400)
-        self.assertXMLEquals(response.content,
-                '''<fault><code>400</code><message>["Missing field: 'vhosts'"]</message><traceback/></fault>''')
 
         # Now some good data
         configurationXml = """\
@@ -2573,8 +2527,7 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         system = system.__class__.objects.get(system_id=system.system_id)
-        configurationXmlFixed = configurationXml.replace('<vhosts>',
-            '<vhosts list="true">')
+        configurationXmlFixed = configurationXml
         self.assertXMLEquals(system.configuration, configurationXmlFixed)
 
         # now also test the configuration job
@@ -2598,8 +2551,6 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, '<configuration/>')
 
-        self._mockConfigDescriptorCache()
-
         self.mgr.sysMgr.setObservedTopLevelItems(system,
             set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
 
@@ -2609,12 +2560,6 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         descr = descriptor.ConfigurationDescriptor(fromStream=response.content)
-        self.assertEquals(
-            [ x.name for x in descr.getDataFields() ],
-            [ 'vhosts' ])
-        # Check the fields we unconditionally change on the way out
-        self.assertEquals(descr.getDisplayName(), 'Configuration Descriptor')
-        self.assertEquals(descr.getRootElement(), 'configuration')
 
     def testGetSystemLogAuth(self):
         """
@@ -2815,7 +2760,6 @@ class SystemsTestCase(ConfigDescriptorMixIn, XMLTestCase):
             ])
 
     def testDedupByEventUuidPUT(self):
-        self._mockConfigDescriptorCache()
         system, xml = self._setupDedupEventUuid()
         url = 'inventory/systems/%s' % system.system_id
         headers = { 'X-rBuilder-Event-UUID' :

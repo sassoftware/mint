@@ -175,7 +175,7 @@ class Jobs2TestCase(BaseJobsTest):
         self.failUnlessEqual([ x.status_text for x in jobs ],
             ["Initializing", "text 299"])
 
-class JobCreationTest(BaseJobsTest, RepeaterMixIn, invtests.ConfigDescriptorMixIn):
+class JobCreationTest(BaseJobsTest, RepeaterMixIn):
     def _mock(self):
         RepeaterMixIn.setUpRepeaterClient(self)
         from mint.django_rest.rbuilder.inventory.manager import repeatermgr
@@ -837,7 +837,6 @@ Some more errors here
         self.assertEquals(t_ver, trovetup.TroveTuple(new).version.freeze())
 
     def _makeSystemWithSystemModel(self):
-        self._mockConfigDescriptorCache()
         # Create new system
         system = self._makeSystem()
         # Add a survey with a system model
