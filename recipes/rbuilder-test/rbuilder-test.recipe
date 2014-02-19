@@ -41,6 +41,7 @@ class rBuilderTest(TestPackageRecipe):
         # testsuites
         'conary-test:python',
         'rpath-capsule-indexer-test:python',
+        'rpath-product-definition-test:python',
       ]
 
     codeDirs = {
