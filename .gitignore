@@ -1,4 +1,3 @@
-foo
 *~
 *.a
 *.ccs
@@ -20,10 +19,3 @@ bin/
 html/
 tmp/
 venv/
-
-NEWS.html
-conary/constants.py
-conary/pysqlite3/build
-conary/pysqlite3/embed
-conary/pysqlite3/sqlite-*/
-conary/sqlite3

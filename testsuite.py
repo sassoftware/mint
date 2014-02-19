@@ -69,7 +69,6 @@ def setup():
     pathManager.addExecPath('REPODATA_PATH')
     pathManager.addExecPath('RESTLIB_PATH')
     pathManager.addExecPath('REPEATER_PATH')
-    pathManager.addExecPath('RPATH_TOOLS_PATH')
     pathManager.addExecPath('CREST_PATH')
     pathManager.addExecPath('XOBJ_PATH')
     pathManager.addExecPath('XMLLIB_PATH')

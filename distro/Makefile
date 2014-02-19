@@ -6,7 +6,7 @@
 
 SUBDIRS = artwork postgresql stubs
 
-generated_files = custom.cfg rbuilder.conf
+generated_files = rbuilder.conf
 
 .PHONY: all install $(generated_files)
 
@@ -65,9 +65,6 @@ install: default-install
 	install -D -m0644 rbuilderstorage.py $(DESTDIR)/$(PYDIR)/amiconfig/plugins/
 
 clean: default-clean
-
-custom.cfg: custom.cfg.in
-	sed -e s,@VERSION@,$(SHORTVER), custom.cfg.in > custom.cfg
 
 rbuilder.conf: rbuilder.conf.in
 	sed -e 's,@VERSION@,$(VERSION),' -e 's,@LIBDIR@,$(LIBDIR),' rbuilder.conf.in >rbuilder.conf

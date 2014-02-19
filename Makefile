@@ -20,11 +20,11 @@ export PYTHON = /usr/bin/python
 export PYVER = $(shell $(PYTHON) -c 'import sys; print sys.version[0:3]')
 export PYDIR = $(LIBDIR)/python$(PYVER)/site-packages
 
-SUBDIRS = mint scripts rmake_plugins doc distro twisted ha puppet
+SUBDIRS = mint scripts rmake_plugins distro twisted ha puppet
 
 dist_files = Makefile Make.rules rbuilder.conf httpd.conf NEWS
 
-.PHONY: doc mint_test $(generated_files)
+.PHONY: mint_test $(generated_files)
 
 ## Standard rules
 all: $(generated_files) default-subdirs
@@ -32,9 +32,6 @@ all: $(generated_files) default-subdirs
 dist: dist-archive dist-tarball
 
 install: install-subdirs
-
-doc:
-	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
 
 clean: clean-subdirs default-clean
 

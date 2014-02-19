@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!ENTITY product "${raa.web.getConfigValue('product.productName')}">
-<!ENTITY title 'Appliance User Guide'>
-<!ENTITY revision '3.0'>
-<!ENTITY lang 'en'>

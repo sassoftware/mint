@@ -10,8 +10,6 @@ from conary import versions
 from conary.conaryclient import cmdline
 from conary.lib import sha1helper
 
-from rpath_tools.client.utils.config_descriptor_cache import ConfigDescriptorCache
-
 from restlib import response
 
 from mint.rest import errors
@@ -219,15 +217,4 @@ class RepositoryController(BaseReposController):
                         groups[(name, version, flavor)] = trv
                     troveList.append(trv)
         troveList = sorted(troveList, key = lambda x: x.timeStamp)
-
-        # Attach config descriptors to any groups.
-        descriptors = ConfigDescriptorCache(repos).getDescriptors(groups.keys())
-        for nvf, trv in groups.iteritems():
-            desc = descriptors.get(nvf)
-            if not desc:
-                continue
-            desc.setDisplayName('Configuration Descriptor')
-            desc.addDescription('Configuration Descriptor')
-            trv.configuration_descriptor = desc.toxml(validate=False)
-
         return models.TroveList(troveList)

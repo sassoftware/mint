@@ -1,0 +1,13 @@
+job-cleanup
+mint-admin
+mirror-inbound
+mirror-outbound
+pki-tool
+postgres-auto-update
+postgres-major-migrate
+process-system-events
+purge-surveys
+rbuilder-database
+repository-sync
+restore-preload-bundle
+target-systems-import
