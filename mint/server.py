@@ -1181,7 +1181,7 @@ class MintServer(object):
                 matches = searchTroves.get(item.getTroveTup(), ())
                 searchTup = self._resolveTrove(matches, flavorSet, architecture)
                 if searchTup:
-                    imageModel.append('search %s\n' %
+                    imageModel.append('#search %s\n' %
                             self._formatTupForModel(searchTup))
             for groupTup in groupTups:
                 imageModel.append('install %s\n' %
