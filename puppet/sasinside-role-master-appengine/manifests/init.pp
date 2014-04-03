@@ -44,6 +44,12 @@ class sasinside-role-master-appengine {
         upstream_url            => $appengine::upstream_url,
     }
 
+    rbuilder_platform { 'vapp.cny.sas.com@sas:vapp-3w-devel':
+        ensure                  => present,
+        display_name            => "vApp 3w Devel Workgroup Platform",
+        upstream_url            => $appengine::upstream_url,
+    }
+
     rbuilder_platform { 'vapp.cny.sas.com@sas:vapp-Mw-devel':
         ensure                  => present,
         display_name            => "vApp Mw CentOS Devel Workgroup Platform",
