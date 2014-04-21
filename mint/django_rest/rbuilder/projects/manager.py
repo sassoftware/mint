@@ -8,6 +8,7 @@ import os
 import exceptions
 import time
 
+from django.db import IntegrityError
 from conary.lib import util
 
 from mint import helperfuncs
@@ -284,6 +285,7 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def addProjectBranch(self, projectShortName, projectVersion, forUser):
+        projectVersion._prepareSave()
 
         if not projectVersion.namespace:
             projectVersion.namespace = projectVersion.project.namespace
@@ -318,12 +320,19 @@ class ProjectManager(basemanager.BaseManager):
                     ).get(label=platformLabel)
             cclient = self.mgr.getAdminClient(write=True)
             pd.rebase(cclient, platform.label, overwriteStages=True)
-        self.saveProductVersionDefinition(projectVersion, pd, forUser=forUser)
 
         tnow = time.time()
         projectVersion.created_date = tnow
         projectVersion.modified_date = tnow
-        projectVersion.save()
+        try:
+            projectVersion.save()
+        except IntegrityError, e:
+            if 'duplicate key' in e.message:
+                raise errors.Conflict(
+                        msg='Conflict with an existing project branch')
+            raise
+
+        self.saveProductVersionDefinition(projectVersion, pd, forUser=forUser)
 
         self.mgr.retagQuerySetsByType('project_branch_stage', forUser)
         return projectVersion

@@ -376,6 +376,11 @@ class ProjectsTestCase(RbacEngine):
             self.assertTrue(stage.created_date is not None)
             self.assertTrue(stage.modified_date is not None)
 
+        # Try again, should return a 400
+        response = self._post('projects/foo/project_branches/',
+            data=testsxml.project_version_post_with_project_xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 409)
 
     def testAddProjectVersionToProjectTwo(self):
         # add project as developer

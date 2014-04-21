@@ -261,7 +261,7 @@ class ProjectAllBranchesService(service.BaseService):
         return self.mgr.getAllProjectBranchesForProject(project_short_name)
 
     @rbac(ProjectCallbacks.can_write_project)
-    @requires('project_branch')
+    @requires('project_branch', save=False)
     @return_xml
     def rest_POST(self, request, project_short_name, project_branch):
         return self.mgr.addProjectBranch(project_short_name, project_branch, request._authUser)
@@ -278,7 +278,7 @@ class ProjectBranchService(service.BaseService):
         return self.mgr.getProjectBranch(project_short_name, project_branch_label)
 
     @rbac(ProjectCallbacks.can_write_project)
-    @requires("project_branch")
+    @requires("project_branch", save=False)
     @return_xml
     def rest_POST(self, request, project_short_name=None, project_branch=None):
         return self.mgr.addProjectBranch(project_short_name, project_branch)

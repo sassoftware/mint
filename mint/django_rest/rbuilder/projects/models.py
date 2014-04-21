@@ -337,11 +337,15 @@ class ProjectVersion(modellib.XObjIdModel):
                 % (self.project.short_name, self.name),
         )
 
-    def save(self, *args, **kwargs):
+    def _prepareSave(self):
         prodDef = self._getSanitizedProductDefinition()
         if self.label is None:
             self.label = prodDef.getProductDefinitionLabel()
         self.validate()
+        return self
+
+    def save(self, *args, **kwargs):
+        self._prepareSave()
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def _getSanitizedProductDefinition(self):
