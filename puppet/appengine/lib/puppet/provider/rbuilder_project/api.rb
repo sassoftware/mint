@@ -44,7 +44,7 @@ Puppet::Type.type(:rbuilder_project).provide(:api, :parent => Puppet::Provider::
     def destroy
         Puppet::Util::Execution.execute [
             '/usr/share/rbuilder/scripts/deleteproject',
-            '--force', resource[:short],
+            '--force', resource[:name],
             ]
     end
 
