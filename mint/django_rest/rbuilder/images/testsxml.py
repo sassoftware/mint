@@ -491,13 +491,13 @@ image_types_get_xml = \
     <image_type_id>6</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/7">
-    <description>KVM/Parallels/QEMU/Raw Hard Disk</description>
+    <description>KVM/QEMU/Raw Hard Disk</description>
     <name>HDD</name>
     <key>RAW_HD_IMAGE</key>
     <image_type_id>7</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/8">
-    <description>VMware(R) Workstation/Fusion Virtual Appliance</description>
+    <description>VMware(R) Workstation/Fusion / Parallels(R) Virtual Appliance</description>
     <name>VMware (R)</name>
     <key>VMWARE_IMAGE</key>
     <image_type_id>8</image_type_id>
