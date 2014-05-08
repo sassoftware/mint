@@ -484,7 +484,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>KVM/Parallels/QEMU/Raw Hard Disk</displayName>
+      <displayName>KVM/QEMU/Raw Hard Disk</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -498,7 +498,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>KVM/Parallels/QEMU/Raw Hard Disk</displayName>
+      <displayName>KVM/QEMU/Raw Hard Disk</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
@@ -540,7 +540,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware(R) Workstation/Fusion Virtual Appliance</displayName>
+      <displayName>VMware(R) Workstation/Fusion / Parallels(R) Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -576,7 +576,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>VMware</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/vmwareImage">
       <name>vmwareImage</name>
-      <displayName>VMware(R) Workstation/Fusion Virtual Appliance</displayName>
+      <displayName>VMware(R) Workstation/Fusion / Parallels(R) Virtual Appliance</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>
