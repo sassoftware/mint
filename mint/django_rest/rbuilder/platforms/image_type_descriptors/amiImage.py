@@ -52,6 +52,11 @@ XML = """\
       <help href="@Help_image_freespace@"/>
       <type>int</type>
       <default>256</default>
+      <constraints>
+        <range>
+          <min>16</min>
+        </range>
+      </constraints>
       <required>false</required>
     </field>
   </dataFields>

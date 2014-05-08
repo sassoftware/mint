@@ -174,6 +174,21 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
             self.assertEquals(response.status_code, 200)
             model = xobj.parse(response.content)
             self.failUnlessEqual(model.descriptor._xobj.tag, 'descriptor')
+            # Check for constraints
+            fields = dict((x.name, x) for x in model.descriptor.dataFields.field)
+            field = fields.get('options.freespace')
+            if field is not None:
+                self.assertEquals(field.constraints.range.min, '16')
+            field = fields.get('options.swapSize')
+            if field is not None:
+                self.assertEquals(field.constraints.range.min, '16')
+            field = fields.get('options.vmMemory')
+            if field is not None:
+                self.assertEquals(field.constraints.range.min, '256')
+            field = fields.get('options.vmCPUs')
+            if field is not None:
+                self.assertEquals(field.constraints.range.min, '1')
+                self.assertEquals(field.constraints.range.max, '32')
 
         # FIXME
         # we want to leave ITD's anonymous, but this is interesting... we're populating

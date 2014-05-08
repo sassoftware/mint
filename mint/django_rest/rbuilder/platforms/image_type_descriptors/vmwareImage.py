@@ -42,6 +42,11 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_freespace@"/>
             <type>int</type>
             <default>256</default>
+            <constraints>
+                <range>
+                    <min>16</min>
+                </range>
+            </constraints>
             <required>false</required>
         </field>
         <field>
@@ -52,6 +57,11 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_swapspace@"/>
             <type>int</type>
             <default>512</default>
+            <constraints>
+                <range>
+                    <min>16</min>
+                </range>
+            </constraints>
             <required>false</required>
         </field>
         <field>
@@ -78,6 +88,11 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <help href="@Help_image_ram@"/>
             <type>int</type>
             <default>512</default>
+            <constraints>
+                <range>
+                    <min>256</min>
+                </range>
+            </constraints>
             <required>false</required>
         </field>
         <field>
