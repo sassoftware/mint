@@ -1181,6 +1181,10 @@ class MintServer(object):
                 matches = searchTroves.get(item.getTroveTup(), ())
                 searchTup = self._resolveTrove(matches, flavorSet, architecture)
                 if searchTup:
+                    # Skip any searchPath elements that are source troves
+                    # (APPENG-2967)
+                    if searchTup[0].endswith(':source'):
+                        continue
                     imageModel.append('#search %s\n' %
                             self._formatTupForModel(searchTup))
             for groupTup in groupTups:
