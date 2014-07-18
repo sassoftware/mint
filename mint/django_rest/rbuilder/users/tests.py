@@ -608,3 +608,20 @@ class UsersTestCase(RbacEngine):
         # try getting user with new password
         response = self._get('users/%s' % user.pk, username='jphoo', password=new_password)
         self.assertEquals(response.status_code, 200)
+
+    def testAddExistingUserFails(self):
+        self.mockMint()
+        xml = testsxml.users_post_xml
+        response = self._post('users/',
+            data=xml,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 200)
+        response = self._post('users/',
+            data=xml,
+            username='admin', password='password'
+        )
+        self.failUnlessEqual(response.status_code, 409)
+        fault = self.toXObj(response.content)
+        self.assertEquals(fault.code, '409')
+        self.assertEquals(fault.message, "The specified user already exists")

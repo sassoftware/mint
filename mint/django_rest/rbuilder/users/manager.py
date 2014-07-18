@@ -20,6 +20,9 @@ exposed = basemanager.exposed
 class UserExceptions(object):
     class BaseException(errors.RbuilderError):
         pass
+    class UserAlreadyExists(BaseException):
+        "The specified user already exists"
+        status = 409
     class UserNotFoundException(BaseException):
         "The specified user does not exist"
         status = 404
@@ -77,6 +80,8 @@ class UsersManager(basemanager.BaseManager):
         try:
             s.users.registerNewUser(user.user_name, user.password, user.full_name,
                 user.email, user.display_email, user.blurb, active)
+        except mint_error.UserAlreadyExists:
+            raise self.exceptions.UserAlreadyExists()
         except (mint_error.PermissionDenied, mint_error.InvalidError), e:
             raise self.exceptions.MintException(e)
         dbuser = models.User.objects.get(user_name=user.user_name)
