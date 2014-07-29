@@ -738,6 +738,9 @@ class CallProxy(object):
             self._callList.append(self._callData(self._name, args, kwargs))
             return ret
 
+    def __init__(self):
+        self.reset()
+
     def __getattr__(self, name):
         return self._CallProxy(name, prefix=self.prefix)
 
