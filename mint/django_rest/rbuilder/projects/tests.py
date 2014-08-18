@@ -213,7 +213,13 @@ class ProjectsTestCase(RbacEngine):
             username="admin", password="password")
         self.assertEquals(response.status_code, 409)
 
-
+        # same short name, different name (APPENG-2999)
+        xml = testsxml.project_post_xml.replace("<name>test-project</name>",
+                "<name>another test project</name>")
+        response = self._post('projects',
+            data=xml,
+            username="admin", password="password")
+        self.assertEquals(response.status_code, 409)
 
     def testAddProjectNoHostname(self):
         response = self._post('projects',

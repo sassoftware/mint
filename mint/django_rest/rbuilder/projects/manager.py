@@ -62,6 +62,9 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def addProject(self, project, for_user):
+        if project.project_id is not None:
+            # No updates via addProject
+            raise errors.Conflict(msg='Project already exists')
         project.save()
 
         label = None
