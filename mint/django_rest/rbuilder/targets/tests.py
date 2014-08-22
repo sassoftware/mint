@@ -2251,7 +2251,7 @@ ZcY7o9aU
       <descriptions>
         <desc>Name</desc>
       </descriptions>
-      <name>__name</name>
+      <name>profile_name</name>
       <required>True</required>
       <type>str</type>
     </field>
@@ -2259,7 +2259,7 @@ ZcY7o9aU
       <descriptions>
         <desc>Description</desc>
       </descriptions>
-      <name>__description</name>
+      <name>profile_description</name>
       <required>True</required>
       <type>str</type>
     </field>
@@ -2359,7 +2359,7 @@ ZcY7o9aU
 </job>
 """
         jobXml = jobXmlTemplate % dict(jobType=jobType, descriptorId=descriptorId,
-        descriptorData="<__name>Acme Profile</__name><__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")
+        descriptorData="<profile_name>Acme Profile</profile_name><profile_description>Acme Profile</profile_description><device>__targetDefault</device><propulsion>coals</propulsion>")
 
         response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
             username='ExampleDeveloper', password='password')
@@ -2381,8 +2381,8 @@ ZcY7o9aU
   <description>Acme Profile</description>
   <descriptor_data>
     <descriptor_data>
-      <__description>Acme Profile</__description>
-      <__name>Acme Profile</__name>
+      <profile_description>Acme Profile</profile_description>
+      <profile_name>Acme Profile</profile_name>
       <device>__targetDefault</device>
       <propulsion>coals</propulsion>
     </descriptor_data>
@@ -2475,11 +2475,11 @@ ZcY7o9aU
 
         # RCE-1712: constraint violations should not result in a 500
         jobXml = jobXmlTemplate % dict(jobType=jobType, descriptorId=descriptorId,
-        descriptorData="<__description>Acme Profile</__description><device>__targetDefault</device><propulsion>coals</propulsion>")
+        descriptorData="<profile_description>Acme Profile</profile_description><device>__targetDefault</device><propulsion>coals</propulsion>")
 
         response = self._post('targets/%s/jobs' % tgt.target_id, jobXml,
             username='ExampleDeveloper', password='password')
         self.assertEquals(response.status_code, 400)
         doc = etree.fromstring(response.content)
-        self.assertEquals(doc.find('message').text, '''["Missing field: '__name'"]''')
+        self.assertEquals(doc.find('message').text, '''["Missing field: 'profile_name'"]''')
         self.assertEquals(doc.find('code').text, '400')

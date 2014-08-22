@@ -438,10 +438,10 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         rdescr.setRootElement('descriptor_data')
         rdescr.setDisplayName("Create launch profile")
         rdescr.addDescription("Create launch profile")
-        rdescr.addDataField("__name", descriptions="Name",
+        rdescr.addDataField("profile_name", descriptions="Name",
                 type="str",
                 required=True)
-        rdescr.addDataField("__description", descriptions="Description",
+        rdescr.addDataField("profile_description", descriptions="Description",
                 type="str", required=True)
         usefulFields = []
         ignoredFields = set(['imageId', 'instanceName', 'instanceDescription'])
@@ -951,8 +951,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
 
     @exposed
     def createTargetLaunchProfile(self, target, job, descriptorData):
-        name = descriptorData.getField('__name')
-        description = descriptorData.getField('__description') or name
+        name = descriptorData.getField('profile_name')
+        description = descriptorData.getField('profile_description') or name
         profile = models.TargetLaunchProfile.objects.create(target=target,
                 name=name,
                 description=description,
