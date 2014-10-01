@@ -295,7 +295,7 @@ class Image(modellib.XObjIdModel):
         # target types that can deploy images
         targetTypesWithDeployImage = set(
             modellib.Cache.get(tgtmodels.TargetType, name=x).target_type_id
-            for x in [ 'ec2', 'vmware', 'vcloud' ])
+            for x in [ 'ec2', 'vmware', 'vcloud', 'openstack' ])
         targetsWithDeployImage = set(x.target_id for x in targets
             if x.target_type_id in targetTypesWithDeployImage)
 
