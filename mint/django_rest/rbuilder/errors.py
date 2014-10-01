@@ -9,6 +9,7 @@ NOT_FOUND = 404
 INTERNAL_SERVER_ERROR = 500
 CONFLICT = 409
 TEMPORARY_REDIRECT = 307
+FORBIDDEN = 403
 
 class RbuilderError(Exception):
     "An unknown error has occured."
@@ -88,3 +89,7 @@ class InvalidData(RbuilderError):
 
 class TemporaryRedirect(RbuilderError):
     status = TEMPORARY_REDIRECT
+
+class Forbidden(RbuilderError):
+    "The resource is not allowing operations"
+    status = FORBIDDEN

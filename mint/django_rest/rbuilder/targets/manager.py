@@ -483,6 +483,8 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         if not job.status.final:
             raise Exception("Final state not reached")
         if job.status.failed:
+            if job.status.text.endswith("Permission Denied"):
+                raise errors.Forbidden(msg="The target credentials are no longer valid")
             raise errors.RbuilderError(msg=job.status.text,
                 traceback=job.status.detail)
         descrXml = job.data.getObject()

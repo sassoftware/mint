@@ -2477,3 +2477,28 @@ ZcY7o9aU
         doc = etree.fromstring(response.content)
         self.assertEquals(doc.find('message').text, '''["Missing field: 'profile_name'"]''')
         self.assertEquals(doc.find('code').text, '400')
+
+    def testGetDescriptorBadTargetCreds(self):
+        targets = self._setupImages()
+        self.mgr.targetsManager.recomputeTargetDeployableImages()
+
+        self.mgr.repeaterMgr.repeaterClient.setJobData(status=430,
+                text="Error in target call: Permission Denied",
+                failed=True,
+                detail="catalogService.errors.PermissionDenied: Permission Denied\netc")
+
+        # Grab an image
+        tgt = [ x for x in targets if x.target_type.name == 'vmware' ][0]
+        imgName = "image 02"
+        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
+        buildFileId = img.files.all()[0].file_id
+        response = self._get('targets/%d/descriptors/launch/file/%d' %
+            (tgt.target_id, buildFileId),
+            username='ExampleDeveloper', password='password')
+        self.assertEquals(response.status_code, 403)
+        self.assertXMLEquals(response.content, """
+<fault>
+    <message>The target credentials are no longer valid</message>
+    <code>403</code>
+    <traceback/>
+</fault>""")

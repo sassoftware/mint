@@ -766,11 +766,11 @@ class _StorageObject(object):
 class _SlotStorageObject(object):
     __slots__ = []
     def __init__(self, *args, **kwargs):
+        vals = {}
         for slotName, slotVal in zip(self.__slots__, args):
-            setattr(self, slotName, slotVal)
+            vals[slotName] = slotVal
         for slotName in self.__slots__:
-            if slotName in kwargs:
-                setattr(self, slotName, kwargs[slotName])
+            setattr(self, slotName, kwargs.get(slotName, vals.get(slotName)))
 
 class Targets(CallProxy):
     prefix = 'targets'
@@ -779,7 +779,9 @@ class Targets(CallProxy):
     class TargetUserCredentials(_SlotStorageObject):
         __slots__ = ['rbUser', 'rbUserId', 'isAdmin', 'credentials', ]
 
-class RepeaterClient(CallProxy):
+class RepeaterClient(_SlotStorageObject, CallProxy):
+    __slots__ = [ '_jobData', '_jobStatusCode', '_jobStatusText',
+        '_jobStatusDetail', '_jobStatusFinal', '_jobStatusFailed', ]
     class CimParams(_StorageObject):
         pass
     class WmiParams(CimParams):
@@ -792,16 +794,42 @@ class RepeaterClient(CallProxy):
 
     targets = Targets()
 
+    def __init__(self):
+        _SlotStorageObject.__init__(self)
+        CallProxy.__init__(self)
+
+    def reset(self):
+        # Restore all the slot values to None
+        _SlotStorageObject.__init__(self)
+        CallProxy.reset(self)
+
     def getJob(self, uuid):
-        job = RmakeJob(uuid, 200, "status text", "status detail", True)
+        statusCode = self._jobStatusCode or 200
+        statusText = self._jobStatusText or "status text"
+        statusDetail = self._jobStatusDetail or "status detail"
+        final = self._jobStatusFinal or True
+        failed = self._jobStatusFailed or False
+        job = RmakeJob(uuid, statusCode, statusText, statusDetail, final,
+                failed)
         # XXX FIXME: rpath-repeater has a problem serializing stuff, the
         # inner object is not freezable
         job.data = self._jobData
         return job
 
-    def setJobData(self, jobData):
-        self._jobData = types.FrozenObject.fromObject(jobData)
-
+    def setJobData(self, jobData=None, status=None, text=None, detail=None,
+            final=None, failed=None):
+        if jobData is not None:
+            self._jobData = types.FrozenObject.fromObject(jobData)
+        if status is not None:
+            self._jobStatusCode = status
+        if text is not None:
+            self._jobStatusText = text
+        if detail is not None:
+            self._jobStatusDetail = detail
+        if final is not None:
+            self._jobStatusFinal = final
+        if failed is not None:
+            self._jobStatusFailed = failed
 
 class RmakeJob(object):
     Status = namedtuple("Status", "code text detail final failed")
