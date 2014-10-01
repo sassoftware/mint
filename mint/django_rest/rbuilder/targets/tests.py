@@ -288,8 +288,13 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
         self.failUnlessEqual(
             [ x.name for x in obj.descriptor.dataFields.field ],
             [
-                'name', 'nova_port', 'alias', 'description',
-                'project_name', 'zone'
+                'name',
+                'nova_port',
+                'glance_server',
+                'glance_port',
+                'alias',
+                'description',
+                'zone',
         ])
         self.failUnlessEqual(
             [ (x.key, x.descriptions.desc)
@@ -305,9 +310,10 @@ class TargetsTestCase(BaseTargetsTest, RepeaterMixIn):
             [ helpTemplate % x for x in [
                 'novaServerName',
                 'novaPortNumber',
+                'glanceServerName',
+                'glancePortNumber',
                 'alias',
                 'description',
-                'project_name',
         ]])
         self.failUnlessEqual(
             getattr(obj.descriptor.dataFields.field[-1], 'help', None), None)
