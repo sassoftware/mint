@@ -37,7 +37,6 @@ class rBuilderProduct(CPackageRecipe):
     version = '8'
 
     buildRequires = [
-        'boto:python',
         'catalog-service:python',
         'conary-repository:python', 
         'conary-rest:python',
@@ -56,6 +55,7 @@ class rBuilderProduct(CPackageRecipe):
         'pcreator:python',
         'pyOpenSSL',
         'python-beaker',
+        'python-boto',
         'python-dateutil',
         'python-devel',
         'python-epdb:python',
