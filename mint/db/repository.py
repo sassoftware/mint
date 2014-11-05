@@ -518,7 +518,7 @@ class RepositoryHandle(object):
         cfg.memCacheUserAuth = True
 
         cfg.serverName = [fqdn]
-        cfg.contentsDir = ' '.join(self.contentsDirs)
+        cfg.configLine('contentsDir ' + ' '.join(self.contentsDirs))
         cfg.tmpDir = os.path.join(self._cfg.dataPath, 'tmp')
 
         action = ("%(executable)s -mconary.server.commitaction"
@@ -550,7 +550,7 @@ class RepositoryHandle(object):
     def getServer(self, serverClass, nscfg=None):
         if nscfg is None:
             nscfg = self.getNetServerConfig()
-        for path in nscfg.contentsDir.split():
+        for path in self.contentsDirs:
             if not os.access(path, os.R_OK | os.X_OK):
                 raise RepositoryDatabaseError("Unable to read repository "
                         "contents dir %r for project %r"
@@ -872,7 +872,7 @@ WHERE level >= 0
         # Set up some infrastructure that is independent of the db.
         nscfg = self.getNetServerConfig()
         util.mkdirChain(nscfg.tmpDir)
-        for contDir in nscfg.contentsDir.split():
+        for contDir in self.contentsDirs:
             util.mkdirChain(contDir)
 
         # Now do the driver-specfic bits and initialize the schema.
@@ -959,7 +959,7 @@ WHERE level >= 0
 
         self.drop()
 
-        for contDir in nscfg.contentsDir.split():
+        for contDir in self.contentsDirs:
             contDir = os.path.normpath(contDir)
             if os.path.isdir(contDir):
                 util.rmtree(contDir)
