@@ -228,6 +228,9 @@ class baseImageTrove(TroveOption):
     default = ''
     prompt = 'Base image trove'
 
+class dockerfile(StringOption):
+    default = ''
+    prompt = 'Dockerfile contents'
 
 ###
 # Templates
@@ -337,6 +340,11 @@ class WindowsWIMTemplate(Template):
 class ImagelessTemplate(Template):
     __slots__ = []
     id = buildtypes.IMAGELESS
+
+class DockerImageTemplate(Template):
+    __slots__ = [ 'dockerfile' ]
+    id = buildtypes.DOCKER_IMAGE
+
 
 ########################
 

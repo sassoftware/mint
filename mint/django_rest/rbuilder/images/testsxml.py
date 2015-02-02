@@ -447,7 +447,7 @@ build_file_url_get_xml = \
 
 image_types_get_xml = \
 """
-<image_types count="22" next_page="http://testserver/api/v1/image_types;start_index=10;limit=10" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/image_types" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/image_types;start_index=0;limit=10" start_index="0">
+<image_types count="23" next_page="http://testserver/api/v1/image_types;start_index=10;limit=10" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/image_types" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/image_types;start_index=0;limit=10" start_index="0">
   <image_type id="http://testserver/api/v1/image_types/0">
     <description></description>
     <name></name>
