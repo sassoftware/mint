@@ -15,7 +15,7 @@ XMLTestCase = test_utils.XMLTestCase
 from conary import deps, trovetup, versions
 
 from mint import jobstatus
-from mint.lib import uuid
+from mint.lib import uuid, data as mintlibdata
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
@@ -179,6 +179,15 @@ class ImagesTestCase(RbacEngine):
 
         response = self._get(url, username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
+
+        # APPENG-3364
+        from django.db import transaction
+        outputToken = str(uuid.uuid4())
+        image.image_data.create(name='outputToken', value=outputToken,
+                data_type=mintlibdata.RDT_STRING)
+        transaction.commit()
+        response = self._get(url, headers={'X-rBuilder-OutputToken': outputToken})
+        self.assertEquals(response.status_code, 200)
 
     def testGetImageBuildFiles(self):
         image = models.Image.objects.get(pk=1)
@@ -682,7 +691,7 @@ class ImagesTestCase(RbacEngine):
         self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
                 'getKeyValueMetadata', mockGetKeyValueMetadata)
 
-        xmlFilesTmpl = """<files>%s<attributes><installed_size>56245126</installed_size></attributes></files>"""
+        xmlFilesTmpl = """<files>%s<attributes><installed_size>56245126</installed_size><docker_image_id>decafbad</docker_image_id></attributes></files>"""
         xmlFileTmpl = """
   <file>
     <title>%(title)s</title>
@@ -715,6 +724,10 @@ class ImagesTestCase(RbacEngine):
             [ (x.value, x.data_type) for x in
                 img.image_data.filter(name='attributes.installed_size') ],
             [ ('56245126', 2), ])
+        self.assertEquals(
+            [ (x.value, x.data_type) for x in
+                img.image_data.filter(name='attributes.docker_image_id') ],
+            [ ('decafbad', 0), ])
 
         self.failUnlessEqual(createSourceTroveCallArgs, [])
 
