@@ -232,6 +232,10 @@ class dockerfile(StringOption):
     default = ''
     prompt = 'Dockerfile contents'
 
+class dockerBuildTree(StringOption):
+    default = ''
+    prompt = 'Docker build tree'
+
 ###
 # Templates
 # classes must end with 'Template' to be properly processed.
@@ -342,7 +346,7 @@ class ImagelessTemplate(Template):
     id = buildtypes.IMAGELESS
 
 class DockerImageTemplate(Template):
-    __slots__ = [ 'dockerfile' ]
+    __slots__ = [ 'dockerfile', 'dockerBuildTree']
     id = buildtypes.DOCKER_IMAGE
 
 

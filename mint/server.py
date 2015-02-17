@@ -1092,22 +1092,7 @@ class MintServer(object):
         # Read build definition from product definition.
         pd = self._getProductDefinitionForVersionObj(versionId)
 
-        # Look up the label for the stage name that was passed in.
-        try:
-            stageLabel = str(pd.getLabelForStage(stageName))
-        except proddef.StageNotFoundError:
-            raise mint_error.ProductDefinitionInvalidStage(
-                    "Stage %s was not found in the product definition" %
-                    stageName)
-        except proddef.MissingInformationError:
-            raise mint_error.ProductDefinitionError(
-                    "Cannot determine the product label as the product "
-                    "definition is incomplete")
-
-        # Filter builds by stage
-        buildList = pd.getBuildsForStage(stageName)
-        if not buildList:
-            raise mint_error.NoBuildsDefinedInBuildDefinition
+        stageLabel, buildList = self._getStageLabelAndBuilds(pd, stageName)
 
         # Create build data for each defined build so we can create the builds
         # later
@@ -1197,11 +1182,86 @@ class MintServer(object):
         if buildErrors and not force:
             raise mint_error.TroveNotFoundForBuildDefinition(buildErrors)
 
+        dockerBuildChains, filteredBuilds = self._filterDockerImages(
+                filteredBuilds, repos, pd, projectId, versionId, stageName,
+                stageLabel, buildList)
+
+        dockerBuilds = self._categorizeDockerBuilds(dockerBuildChains)
+
         # Create/start each build.
         buildIds = []
-        for buildDefinition, nvfList, imageModel in filteredBuilds:
-            buildImage = buildDefinition.getBuildImage()
+        for buildObj in filteredBuilds:
+            buildIds.append(self._newBuild(buildObj, start=True))
+        for buildObj in dockerBuilds:
+            if buildObj.withJobslave:
+                continue
+            buildIds.append(self._newBuild(buildObj, start=False))
+            # Serialize build so we generate the proper output tokens
+            buildObj.buildData = self.serializeBuild(buildObj.id)
+        #import epdb; epdb.serve()
+        for buildObj in dockerBuilds:
+            if not buildObj.withJobslave:
+                continue
+            buildIds.append(self._newBuild(buildObj, start=True,
+                buildTree=buildObj.tree))
+        return buildIds
 
+    def _newBuild(self, buildObj, start=False, buildTree=None):
+        nvf = buildObj.nvf
+        n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
+        if buildTree is not None:
+            buildObj.buildSettings['dockerBuildTree'] = json.dumps(
+                    buildTree.serialize())
+        buildId = self.newBuildWithOptions(buildObj.projectId, buildObj.buildName,
+                n, v, f,
+                buildObj.buildType, buildObj.buildSettings,
+                imageModel=buildObj.imageModel,
+                start=False,
+                productVersionId=buildObj.productVersionId,
+                stageName=buildObj.stageName,
+                _proddef=buildObj.proddef,
+                )
+        buildObj.id = buildId
+        if start:
+            self.startImageJob(buildId)
+        return buildId
+
+    def _categorizeDockerBuilds(self, dockerBuildChains):
+        # Grab the unique roots of the build chains
+        trees = dict((id(x[0]), x[0]) for x in dockerBuildChains).values()
+        for dockerBuild in trees:
+            node = dockerBuild
+            # Find the first node in this tree that needs to be built.
+            while 1:
+                if node.url is None:
+                    break
+                assert node.childrenMap
+                node = node.childrenMap.values()[0]
+            assert node.url is None
+            node.withJobslave = True
+            node.tree = dockerBuild
+        # Now find everything we need to build
+        buildsMap = dict()
+        stack = trees
+        while stack:
+            top = stack.pop()
+            stack.extend(top.childrenMap.values())
+            if top.url is None:
+                buildsMap[id(top)] = top
+        return buildsMap.values()
+
+    def _filterDockerImages(self, buildsL, repos, pd,
+            projectId, versionId, stageName, stageLabel, buildDefList):
+        # Find docker images, we may have to build extra images
+        dockerImages = []
+        rest = []
+        # XXX it is possible to have the same image point to the same group,
+        # with different dockerfiles. This map should take that into account.
+        nvfToBuildMap = {}
+        for buildDefinition, nvfList, imageModel in buildsL:
+            buildImage = buildDefinition.getBuildImage()
+            buildType = buildImage.containerFormat and \
+                    str(buildImage.containerFormat) or ''
             containerTemplate = pd.getContainerTemplate( \
                     buildDefinition.containerTemplateRef, None)
             if not containerTemplate:
@@ -1214,22 +1274,190 @@ class MintServer(object):
             for key, val in buildImage.fields.iteritems():
                 if val is not None and val != '':
                     buildSettings[key] = val
+            img = ImageBuild(buildType=buildType,
+                    buildName=buildDefinition.name,
+                    buildDefinition=buildDefinition,
+                    nvf=nvfList[0],
+                    proddef=pd,
+                    imageModel=imageModel,
+                    projectId = projectId,
+                    productVersionId=versionId,
+                    buildSettings=buildSettings,
+                    stageName=stageName)
+            if buildType != DockerImageBuild.TypeName:
+                rest.append(img)
+                continue
+            assert len(nvfList) == 1
+            dockerImg = nvfToBuildMap.get(img.nvf)
+            if dockerImg is None:
+                dockerImg = DockerImageBuild.fromObject(img)
+                nvfToBuildMap[img.nvf] = dockerImg
+            buildChain = self._findBuildChain(repos, dockerImg, nvfToBuildMap)
+            dockerImages.append(buildChain)
+
+        buildsMap = { versionId : (pd, {
+            stageName : (stageLabel, buildDefList) }) }
+
+        processed = set()
+
+        # For Docker builds without a build definition, try to find one
+        for buildChain in dockerImages:
+            for buildObj in buildChain:
+                if buildObj.nvf in processed:
+                    continue
+                processed.add(buildObj.nvf)
+                if buildObj.buildDefinition is not None:
+                    continue
+                # Try to find a stage
+                label = buildObj.nvf.version.trailingLabel()
+                prjInfo = self._getProjectInfoForLabelOnly(str(label))
+                if prjInfo is None:
+                    continue
+                buildObj.projectId = prjInfo[0]
+                buildObj.productVersionId = vId = prjInfo[1]
+                buildObj.stageName = stgName = prjInfo[2]
+
+                pd1, stagesToBuildList = buildsMap.get(vId, (None, {}))
+                if pd1 is None:
+                    pd1 = self._getProductDefinitionForVersionObj(vId)
+                    buildsMap[vId] = (pd1, stagesToBuildList)
+                stgLabel, blist = stagesToBuildList.get(stageName, (None, None))
+                if blist is None:
+                    stgLabel, blist = self._getStageLabelAndBuilds(pd1, stgName)
+                    stagesToBuildList[stageName] = (stgLabel, blist)
+
+                buildDef = self._findImageDefinition(blist, buildObj.nvf,
+                        DockerImageBuild.TypeName)
+                buildObj.proddef = pd1
+                buildObj.buildDefinition = buildDef
+                if buildDef:
+                    buildObj.buildName = buildDef.name
+
+        return dockerImages, rest
+
+    def _getStageLabelAndBuilds(self, pd, stageName):
+        # Look up the label for the stage name that was passed in.
+        try:
+            stageLabel = str(pd.getLabelForStage(stageName))
+        except proddef.StageNotFoundError:
+            raise mint_error.ProductDefinitionInvalidStage(
+                    "Stage %s was not found in the product definition" %
+                    stageName)
+        except proddef.MissingInformationError:
+            raise mint_error.ProductDefinitionError(
+                    "Cannot determine the product label as the product "
+                    "definition is incomplete")
+
+        # Filter builds by stage
+        buildList = pd.getBuildsForStage(stageName)
+        if not buildList:
+            raise mint_error.NoBuildsDefinedInBuildDefinition
+        return stageLabel, buildList
+
+    @classmethod
+    def _matchTroveSpec(cls, nvf, troveSpec):
+        # Returns True if troveSpec matches nvf
+        if nvf.name != troveSpec.name:
+            return False
+        if troveSpec.version is None:
+            if troveSpec.flavor is None:
+                return True
+            return troveSpec.flavor.satisfies(nvf.flavor)
+        # Is the version a fully specified version?
+        troveSpecLabel = troveSpecRevision = None
+        if troveSpec.version.startswith('/'):
+            trvSpecVersion = versions.VersionFromString(troveSpec.version)
+            troveSpecLabel = trvSpecVersion.trailingLabel()
+            if hasattr(trvSpecVersion, 'trailingRevision'):
+                troveSpecRevision = trvSpecVersion.trailingRevision()
+        else:
+            _l, _r = troveSpec.version.partition('/')
+            troveSpecLabel = versions.Label(_l)
+            if _r:
+                troveSpecRevision = versions.Revision(_r)
+        if troveSpecLabel != nvf.version.trailingLabel():
+            return False
+        if troveSpecRevision is not None and troveSpecRevision != nvf.version.trailingRevision():
+            return False
+        if troveSpec.flavor is None:
+            return True
+        return troveSpec.flavor.satisfies(nvf.flavor)
+
+    def _findImageDefinition(self, buildList, nvf, containerFormat):
+        for build in buildList:
+            buildImage = build.getBuildImage()
             buildType = buildImage.containerFormat and \
                     str(buildImage.containerFormat) or ''
+            if buildType != containerFormat:
+                continue
+            grpSpec = parseTroveSpec(build.getBuildImageGroup())
+            if self._matchTroveSpec(nvf, grpSpec):
+                return build
+        return None
 
-            nvf = nvfList[0]
-            n, v, f = str(nvf[0]), nvf[1].freeze(), nvf[2].freeze()
-            buildName = buildDefinition.name
-            buildId = self.newBuildWithOptions(projectId, buildName, n, v, f,
-                    buildType, buildSettings, imageModel=imageModel,
-                    start=False,
-                    productVersionId=versionId,
-                    stageName=stageName,
-                    _proddef=pd,
-                    )
-            buildIds.append(buildId)
-            self.startImageJob(buildId)
-        return buildIds
+    def _findImageByNvf(self, nvf, buildType):
+        cu = self.db.cursor()
+        cu.execute("""\
+                SELECT b.buildId, b.status, b.productVersionId, b.stageName
+                  FROM Builds b
+                 WHERE b.buildType = ?
+                   AND b.troveName = ?
+                   AND b.troveVersion = ?
+                   AND b.troveFlavor = ?
+                 ORDER BY timecreated DESC
+                   """, buildType,
+                   nvf.name, nvf.version.freeze(),
+                   nvf.flavor.freeze())
+        return cu.fetchone()
+
+    @classmethod
+    def _getTroveHierarchy(cls, repos, trvtup):
+        ret = []
+        while 1:
+            trv = repos.getTrove(*trvtup)
+            ret.append(trvtup)
+            parent = cls._getParentGroup(trv)
+            if parent is None:
+                break
+            trvtup = parent
+        ret.reverse()
+        return ret
+
+    def _findBuildChain(self, repos, img, nvfToBuildMap):
+        ret = [img]
+        while 1:
+            trv = repos.getTrove(*img.nvf)
+            parent = self._getParentGroup(trv)
+            if parent is None:
+                break
+            pimg = nvfToBuildMap.get(parent)
+            if pimg is None:
+                pimg = DockerImageBuild(nvf=parent)
+                nvfToBuildMap[parent] = pimg
+            pimg.childrenMap[img.nvf] = img
+            ret.append(pimg)
+            if pimg.url:
+                break
+            buildInfo = self._findImageByNvf(parent, buildtypes.DOCKER_IMAGE)
+            if buildInfo and buildInfo[1] == 300:
+                pimg.id = buildInfo[0]
+                pimg.productVersionId, pimg.stageName = buildInfo[2:]
+                bfn = self.getBuildFilenames(pimg.id)
+                pimg.url = bfn[0]['downloadUrl']
+                found, pimg.dockerImageId = self.buildData.getDataValue(pimg.id,
+                    'attributes.docker_image_id')[1]
+                assert found
+                break
+            img = pimg
+        ret.reverse()
+        return ret
+
+    @classmethod
+    def _getParentGroup(cls, trv):
+        for trvtup, byDefault, isStrong in trv.iterTroveListInfo():
+            if isStrong and not byDefault and trvtup.name.startswith("group-"):
+                return trvtup
+        return None
 
     @typeCheck(int)
     def getBuildBaseFileName(self, buildId):
@@ -1670,6 +1898,16 @@ class MintServer(object):
         for versionId, stageName in cu:
             return versionId, stageName
         return None, None
+
+    def _getProjectInfoForLabelOnly(self, label):
+        cu = self.db.cursor()
+        cu.execute('''
+            SELECT pb.projectid, pbs.project_branch_id, pbs.name
+              FROM project_branch_stage pbs
+              JOIN ProductVersions pb ON (pbs.project_branch_id = pb.productVersionId)
+             WHERE pbs.label = ?
+        ''', str(label))
+        return cu.fetchone()
 
     @typeCheck(int, str)
     @requiresAuth
@@ -3163,3 +3401,58 @@ class MintServer(object):
             hostname = self.cfg.siteHost
         return "http://%s%sdownloadImage?fileId=%%d" % (hostname, self.cfg.basePath)
 
+class _BaseImageBuild(object):
+    __slots__ = [ 'nvf', 'projectId', 'productVersionId', 'stageName',
+            'buildName', 'buildType', 'buildDefinition', 'buildSettings',
+            'proddef', 'imageModel', ]
+    def __init__(self, **kwargs):
+        kwargs.setdefault('buildSettings', {})
+        for s in self._getSlots():
+            setattr(self, s, kwargs.pop(s, None))
+        if kwargs:
+            raise TypeError("Unexpected keywords: %s" % ' '.join(kwargs))
+
+    @classmethod
+    def _getSlots(cls):
+        slots = set()
+        for kls in cls.__mro__:
+            slots.update(getattr(kls, '__slots__', []))
+        return slots
+
+    @classmethod
+    def fromObject(cls, otherObject):
+        attrs = {}
+        for slot in cls._getSlots():
+            val = getattr(otherObject, slot, None)
+            if val is not None:
+                attrs[slot] = val
+        obj = cls(**attrs)
+        return obj
+
+    def serialize(self):
+        ret = dict(id=self.id)
+        ret['nvf'] = self.nvf.asString(withTimestamp=True)
+        if self.url:
+            ret['url'] = self.url
+            assert self.dockerImageId is not None
+            ret['dockerImageId'] = self.dockerImageId
+        ret['children'] = [ x.serialize() for x in self.childrenMap.values() ]
+        return ret
+
+class ImageBuild(_BaseImageBuild):
+    __slots__ = []
+
+class DockerImageBuild(_BaseImageBuild):
+    __slots__ = [ 'id', 'url', 'childrenMap', 'withJobslave', 'tree', 'buildData',
+            'dockerImageId']
+    TypeName = buildtypes.imageTypeXmlTagNameMap[buildtypes.DOCKER_IMAGE]
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('childrenMap', {})
+        kwargs['buildType'] = self.__class__.TypeName
+        super(DockerImageBuild, self).__init__(*args, **kwargs)
+
+    def serialize(self):
+        ret = super(DockerImageBuild, self).serialize()
+        ret['buildData'] = self.buildData
+        return ret
