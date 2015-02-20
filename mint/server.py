@@ -1198,7 +1198,6 @@ class MintServer(object):
             buildIds.append(self._newBuild(buildObj, start=False))
             # Serialize build so we generate the proper output tokens
             buildObj.buildData = self.serializeBuild(buildObj.id)
-        #import epdb; epdb.serve()
         for buildObj in dockerBuilds:
             if not buildObj.withJobslave:
                 continue
@@ -1398,7 +1397,7 @@ class MintServer(object):
     def _findImageByNvf(self, nvf, buildType):
         cu = self.db.cursor()
         cu.execute("""\
-                SELECT b.buildId, b.status, b.productVersionId, b.stageName
+                SELECT b.buildId, b.status, b.name, b.productVersionId, b.stageName
                   FROM Builds b
                  WHERE b.buildType = ?
                    AND b.troveName = ?
@@ -1441,12 +1440,16 @@ class MintServer(object):
             buildInfo = self._findImageByNvf(parent, buildtypes.DOCKER_IMAGE)
             if buildInfo and buildInfo[1] == 300:
                 pimg.id = buildInfo[0]
-                pimg.productVersionId, pimg.stageName = buildInfo[2:]
+                buildName, pimg.productVersionId, pimg.stageName = buildInfo[2:]
                 bfn = self.getBuildFilenames(pimg.id)
                 pimg.url = bfn[0]['downloadUrl']
-                found, pimg.dockerImageId = self.buildData.getDataValue(pimg.id,
-                    'attributes.docker_image_id')[1]
-                assert found
+                bdDict = self.buildData.getDataDict(pimg.id)
+                # Remove the stuff that we don't care about
+                for k in ['dockerBuildTree', 'outputToken']:
+                    bdDict.pop(k, None)
+                pimg.dockerImageId = bdDict.get('attributes.docker_image_id')
+                pimg.buildData = dict(buildId=pimg.id, name=buildName,
+                        data=bdDict)
                 break
             img = pimg
         ret.reverse()
