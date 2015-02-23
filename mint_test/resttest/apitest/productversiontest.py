@@ -679,6 +679,34 @@ class ProductVersionTest(restbase.BaseRestTest):
     <options autoResolve="false" baseFileName="" freespace="1024" installLabelPath="" swapSize="512" vmMemory="256"/>
     <descriptor id="http://%(server)s:%(port)s/api/v1/platforms/image_type_definition_descriptors/xenOvaImage"/>
   </imageTypeDefinition>
+  <imageTypeDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageTypeDefinitions/fdd0b7a91e0f0e87d0b8602ba2ce766e">
+    <name>docker</name>
+    <displayName>Docker</displayName>
+    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/dockerImage">
+      <name>dockerImage</name>
+      <displayName>Docker Image</displayName>
+    </container>
+    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86">
+      <name>x86</name>
+      <displayName>x86 (32-bit)</displayName>
+    </architecture>
+    <options/>
+    <descriptor id="http://localhost:8000/api/v1/platforms/image_type_definition_descriptors/dockerImage"/>
+  </imageTypeDefinition>
+  <imageTypeDefinition id="http://localhost:8000/api/products/testproject/versions/1.0/imageTypeDefinitions/f64035ed21d386a181731702bbce88f5">
+    <name>docker</name>
+    <displayName>Docker</displayName>
+    <container id="http://localhost:8000/api/products/testproject/versions/1.0/containers/dockerImage">
+      <name>dockerImage</name>
+      <displayName>Docker Image</displayName>
+    </container>
+    <architecture id="http://localhost:8000/api/products/testproject/versions/1.0/architectures/x86_64">
+      <name>x86_64</name>
+      <displayName>x86 (64-bit)</displayName>
+    </architecture>
+    <options/>
+    <descriptor id="http://localhost:8000/api/v1/platforms/image_type_definition_descriptors/dockerImage"/>
+  </imageTypeDefinition>
 </imageTypeDefinitions>
 """
         self.assertXMLEquals(response,
