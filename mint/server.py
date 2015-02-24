@@ -3405,7 +3405,7 @@ class MintServer(object):
         return "http://%s%sdownloadImage?fileId=%%d" % (hostname, self.cfg.basePath)
 
 class _BaseImageBuild(object):
-    __slots__ = [ 'nvf', 'projectId', 'productVersionId', 'stageName',
+    __slots__ = [ 'id', 'nvf', 'projectId', 'productVersionId', 'stageName',
             'buildName', 'buildType', 'buildDefinition', 'buildSettings',
             'proddef', 'imageModel', ]
     def __init__(self, **kwargs):
@@ -3446,7 +3446,7 @@ class ImageBuild(_BaseImageBuild):
     __slots__ = []
 
 class DockerImageBuild(_BaseImageBuild):
-    __slots__ = [ 'id', 'url', 'childrenMap', 'withJobslave', 'tree', 'buildData',
+    __slots__ = [ 'url', 'childrenMap', 'withJobslave', 'tree', 'buildData',
             'dockerImageId']
     TypeName = buildtypes.imageTypeXmlTagNameMap[buildtypes.DOCKER_IMAGE]
 
