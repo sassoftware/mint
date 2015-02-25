@@ -222,10 +222,8 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
             trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
         )
 
-        def noop(*args, **kwargs):
-            return None
-            
         imagemodels.Image._computeMetadata = noop
+        self.mock(imagemodels.Image, '_computeMetadata', lambda *a, **k: None)
 
         for x in [ i1, i2, i3 ]:
             # keep app from making call to repos service
@@ -272,10 +270,7 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
 
         output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
 
-        def noop(*args, **kwargs):
-            return None
-            
-        imagemodels.Image._computeMetadata = noop
+        self.mock(imagemodels.Image, '_computeMetadata', lambda *a, **k: None)
 
         response = self._get('platforms/image_type_definition_descriptors/deferredImage')
         self.assertEqual(response.status_code, 200)
