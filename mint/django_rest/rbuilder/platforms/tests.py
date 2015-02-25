@@ -222,7 +222,6 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
             trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
         )
 
-        imagemodels.Image._computeMetadata = noop
         self.mock(imagemodels.Image, '_computeMetadata', lambda *a, **k: None)
 
         for x in [ i1, i2, i3 ]:
