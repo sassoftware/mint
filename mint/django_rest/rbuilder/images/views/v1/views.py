@@ -93,6 +93,7 @@ class ImagesService(service.BaseService):
     
 class ImageService(_JobOutputTokenAuthService):
 
+    @access.auth_token
     @rbac(can_read_image)
     @return_xml
     def rest_GET(self, request, image_id):

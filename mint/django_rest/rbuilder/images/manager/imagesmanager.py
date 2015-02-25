@@ -398,17 +398,16 @@ class ImagesManager(basemanager.BaseManager):
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
 
-        installedSizeAttrName =  'attributes.installed_size'
+        attrTypes = dict(installed_size=datatypes.RDT_INT)
         Etree = models.modellib.Etree
         if files.attributes is not None:
-            installedSize = Etree.findBasicChild(files.attributes, 'installed_size')
-        else:
-            installedSize = None
-        if installedSize is None:
-            self._deleteImageData(imageId, installedSizeAttrName)
-        else:
-            self._setImageDataValue(imageId, installedSizeAttrName,
-                    installedSize, dataType=datatypes.RDT_INT)
+            attributes = dict(
+                    ('attributes.' + x.tag, (x.text, attrTypes.get(x.tag,
+                        datatypes.RDT_STRING)))
+                    for x in files.attributes.iterchildren())
+            for attrName, (attrValue, attrType) in attributes.items():
+                self._setImageDataValue(imageId, attrName, attrValue,
+                        dataType=attrType)
 
         if files.metadata is not None:
             self._addImageToRepository(imageId, files.metadata)

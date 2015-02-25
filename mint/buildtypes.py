@@ -30,6 +30,7 @@ validBuildTypes = {
     'WINDOWS_ISO'       : 19,
     'WINDOWS_WIM'       : 20,
     'DEFERRED_IMAGE'    : 21,
+    'DOCKER_IMAGE'    : 22,
 }
 
 TYPES = validBuildTypes.values()
@@ -100,7 +101,8 @@ typeNames = {
     DEFERRED_IMAGE:     "Layered Image",
     WINDOWS_ISO:        "Windows Installable ISO",
     WINDOWS_WIM:        "Windows Imaging Format (WIM)",
-    IMAGELESS:          "Online Update"
+    IMAGELESS:          "Online Update",
+    DOCKER_IMAGE:       "Docker Image",
 }
 
 typeNamesShort = {
@@ -125,6 +127,7 @@ typeNamesShort = {
     WINDOWS_WIM:        "Windows WIM",
     IMAGELESS:          "Online Update",
     VMWARE_OVF_IMAGE:   "VMware (R) OVF",
+    DOCKER_IMAGE:       "Docker",
 }
 
 # To be used to map image types ids from XML tag names
@@ -143,6 +146,7 @@ xmlTagNameImageTypeMap = {
     'amiImage':            AMI,
     'applianceIsoImage':   APPLIANCE_ISO,
     'deferredImage':       DEFERRED_IMAGE,
+    'dockerImage':         DOCKER_IMAGE,
     'installableIsoImage': INSTALLABLE_ISO,
     'liveIsoImage':        LIVE_ISO,
     'netbootImage':        NETBOOT_IMAGE,
@@ -185,6 +189,7 @@ typeNamesMarketing = {
     WINDOWS_ISO:        "Installable CD/DVD (ISO)",
     WINDOWS_WIM:        "Windows Imaging Format (WIM)",
     IMAGELESS:          "Online Update",
+    DOCKER_IMAGE:       "Docker Image",
 
     # flavor flags here
     XEN_DOMU:           "DomU",
