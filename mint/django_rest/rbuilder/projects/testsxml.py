@@ -366,7 +366,8 @@ test_get_images_from_pbs_xml = \
       <description>Stub Image</description>
       <image_type_id>2</image_type_id>
       <key>STUB_IMAGE</key>
-      <name>Stub</name>
+      <short_name>Stub</short_name>
+      <name/>
     </image_type>
     <project_branch/>
     <updated_by></updated_by>
