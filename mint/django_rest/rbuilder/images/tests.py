@@ -482,6 +482,32 @@ class ImagesTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         content = xobj.parse(response.content)
         self.assertEquals([ x.name for x in content.image_types.image_type ],
+            [
+                '',
+                'installableIsoImage',
+                '',
+                'rawFsImage',
+                'netbootImage',
+                'tarballImage',
+                'liveIsoImage',
+                'rawHdImage',
+                'vmwareImage',
+                'vmwareEsxImage',
+                'vhdImage',
+                'xenOvaImage',
+                'virtualIronImage',
+                '',
+                'amiImage',
+                'updateIsoImage',
+                'applianceIsoImage',
+                'imageless',
+                'vmwareOvfImage',
+                'windowsIsoImage',
+                'wimImage',
+                'deferredImage',
+                'dockerImage',
+            ])
+        self.assertEquals([ x.short_name for x in content.image_types.image_type ],
             ['', 'Inst CD/DVD', 'Stub', 'Raw FS', 'Netboot', 'Tar', 'Demo CD/DVD', 'HDD', 'VMware (R)', 'VMware (R) ESX', 'Microsoft (R) Hyper-V', 'Citrix XenServer (TM)', 'Virtual Iron', 'Parallels', 'AMI', 'Update CD/DVD', 'Appliance Inst', 'Online Update', 'VMware (R) OVF', 'Windows Inst', 'Windows WIM', 'Layered', 'Docker',])
         self.assertEquals([ x.key for x in content.image_types.image_type ],
             ['BOOTABLE_IMAGE', 'INSTALLABLE_ISO', 'STUB_IMAGE', 'RAW_FS_IMAGE', 'NETBOOT_IMAGE', 'TARBALL', 'LIVE_ISO', 'RAW_HD_IMAGE', 'VMWARE_IMAGE', 'VMWARE_ESX_IMAGE', 'VIRTUAL_PC_IMAGE', 'XEN_OVA', 'VIRTUAL_IRON', 'PARALLELS', 'AMI', 'UPDATE_ISO', 'APPLIANCE_ISO', 'IMAGELESS', 'VMWARE_OVF_IMAGE', 'WINDOWS_ISO', 'WINDOWS_WIM', 'DEFERRED_IMAGE', 'DOCKER_IMAGE', ])
