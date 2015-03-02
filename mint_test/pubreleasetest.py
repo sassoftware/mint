@@ -15,8 +15,10 @@ from mint.mint_error import *
 from conary import versions
 from conary.conaryclient import ConaryClient
 
+from testrunner.decorators import context
+
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
-    @testsuite.context("quick")
+    @context("quick")
     @fixtures.fixture("Full")
     def testPublishedReleaseCreation(self, db, data):
 

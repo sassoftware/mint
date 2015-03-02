@@ -522,7 +522,8 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 200)
         image = imagesmodels.Image.objects.get(pk=image.pk)
         self.assertEquals(image.image_type.image_type_id, 10)
-        self.assertEquals(image.image_type.name, 'Microsoft (R) Hyper-V')
+        self.assertEquals(image.image_type.short_name, 'Microsoft (R) Hyper-V')
+        self.assertEquals(image.image_type.name, 'vhdImage')
         self.assertEquals(image.image_type.description, 'VHD for Microsoft(R) Hyper-V(R)')
 
         response = self._get('projects/%s/images/' % prj.short_name,

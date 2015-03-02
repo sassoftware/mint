@@ -47,6 +47,15 @@ class ImageTypes(modellib.Collection):
 
     list_fields = ['image_type']
 
+class ImageTypeDescriptor(modellib.XObjIdModel):
+    class Meta:
+        abstract = True
+    _xobj = xobj.XObjMetadata(attributes=dict(id=str))
+    view_name = 'ImageTypeDefinitionDescriptor'
+    id = D(models.CharField(), "Descriptor ID")
+    def get_url_key(self, *args, **kwargs):
+        return [ self.id ]
+
 class ImageType(modellib.XObjIdModel):
     class Meta:
         abstract = True
@@ -56,19 +65,27 @@ class ImageType(modellib.XObjIdModel):
     objects = models_manager.ImageTypeManager()
     image_type_id = D(models.IntegerField(), 'The id of the image type')
     key = D(models.CharField(), 'Key to image type')
+    short_name = D(models.CharField(), 'Image type name (short)')
     name = D(models.CharField(), 'Image type name')
     description = D(models.CharField(), 'Description')
+    descriptor = modellib.SyntheticField()
 
     ImageTypeKeys = dict((y, x) for (x, y) in buildtypes.validBuildTypes.items())
 
     @classmethod
     def fromImageTypeId(cls, imageTypeId):
         # if imageTypeId is not known, we return an empty object
-        return cls(
+        name = buildtypes.imageTypeXmlTagNameMap.get(imageTypeId)
+        ret = cls(
             image_type_id = imageTypeId,
             key = cls.ImageTypeKeys.get(imageTypeId),
-            name = buildtypes.typeNamesShort.get(imageTypeId),
-            description = buildtypes.typeNamesMarketing.get(imageTypeId))
+            short_name = buildtypes.typeNamesShort.get(imageTypeId),
+            name = name,
+            description = buildtypes.typeNamesMarketing.get(imageTypeId),
+            )
+        if name:
+            ret.descriptor = ImageTypeDescriptor(id=name)
+        return ret
 
     @classmethod
     def fromXobjModel(cls, xobjModel):
