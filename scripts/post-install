@@ -8,3 +8,5 @@ chkconfig memcached on
 chkconfig pgbouncer on
 chkconfig postgresql-rbuilder on
 chkconfig jabberd on
+
+chkconfig kdump off

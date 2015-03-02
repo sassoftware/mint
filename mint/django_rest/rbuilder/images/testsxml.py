@@ -28,10 +28,12 @@ images_get_xml = """
     <trailing_version>1-0-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
+      <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+      <name>vhdImage</name>
       <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
-      <name>Microsoft (R) Hyper-V</name>
+      <short_name>Microsoft (R) Hyper-V</short_name>
     </image_type>
     <build_log id="http://testserver/api/v1/images/1/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
@@ -88,10 +90,12 @@ images_get_xml = """
     <trailing_version>1-1-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
+      <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+      <name>vhdImage</name>
       <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
-      <name>Microsoft (R) Hyper-V</name>
+      <short_name>Microsoft (R) Hyper-V</short_name>
     </image_type>
     <build_log id="http://testserver/api/v1/images/2/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
@@ -148,10 +152,12 @@ images_get_xml = """
     <trailing_version>1-2-1</trailing_version>
     <num_image_files>2</num_image_files>
     <image_type id="http://testserver/api/v1/image_types/10">
+      <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+      <name>vhdImage</name>
       <description>VHD for Microsoft(R) Hyper-V(R)</description>
       <image_type_id>10</image_type_id>
       <key>VIRTUAL_PC_IMAGE</key>
-      <name>Microsoft (R) Hyper-V</name>
+      <short_name>Microsoft (R) Hyper-V</short_name>
     </image_type>
     <build_log id="http://testserver/api/v1/images/3/build_log"/>
     <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
@@ -222,10 +228,12 @@ image_get_xml = """
   <trailing_version>1-0-1</trailing_version>
   <num_image_files>2</num_image_files>
   <image_type id="http://testserver/api/v1/image_types/10">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+    <name>vhdImage</name>
     <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
-    <name>Microsoft (R) Hyper-V</name>
+    <short_name>Microsoft (R) Hyper-V</short_name>
   </image_type>
   <build_log id="http://testserver/api/v1/images/1/build_log"/>
   <trove_flavor>1#x86:i486:i586:i686|5#use:~!xen</trove_flavor>
@@ -289,10 +297,12 @@ image_post_xml = """
   <description>image-20</description>
   <time_created></time_created>
   <image_type id="http://testserver/api/v1/image_types/10">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+    <name>vhdImage</name>
     <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
-    <name>Microsoft (R) Hyper-V</name>
+    <short_name>Microsoft (R) Hyper-V</short_name>
   </image_type>
   <time_updated></time_updated>
   <name>image-20</name>
@@ -324,10 +334,12 @@ image_put_xml = """
   <description>image-20</description>
   <time_created></time_created>
   <image_type id="http://testserver/api/v1/image_types/10">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+    <name>vhdImage</name>
     <description>VHD for Microsoft(R) Hyper-V(R)</description>
     <image_type_id>10</image_type_id>
     <key>VIRTUAL_PC_IMAGE</key>
-    <name>Microsoft (R) Hyper-V</name>
+    <short_name>Microsoft (R) Hyper-V</short_name>
   </image_type>
   <time_updated></time_updated>
   <name>image-20</name>
@@ -361,10 +373,12 @@ build_file_post_xml = \
       <description>image-20</description>
       <time_created></time_created>
       <image_type id="http://testserver/api/v1/image_types/10">
+        <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vhdImage"/>
+        <name>vhdImage</name>
         <description>VHD for Microsoft(R) Hyper-V(R)</description>
         <image_type_id>10</image_type_id>
         <key>VIRTUAL_PC_IMAGE</key>
-        <name>Microsoft (R) Hyper-V</name>
+        <short_name>Microsoft (R) Hyper-V</short_name>
       </image_type>
       <time_updated></time_updated>
       <name>image-20</name>
@@ -450,61 +464,79 @@ image_types_get_xml = \
 <image_types count="23" next_page="http://testserver/api/v1/image_types;start_index=10;limit=10" num_pages="3" previous_page="" full_collection="http://testserver/api/v1/image_types" end_index="9" limit="10" order_by="" per_page="10" filter_by="" id="http://testserver/api/v1/image_types;start_index=0;limit=10" start_index="0">
   <image_type id="http://testserver/api/v1/image_types/0">
     <description></description>
-    <name></name>
+    <name/>
     <key>BOOTABLE_IMAGE</key>
     <image_type_id>0</image_type_id>
+    <short_name/>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/1">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/installableIsoImage"/>
     <description>Legacy Installable CD/DVD</description>
-    <name>Inst CD/DVD</name>
+    <short_name>Inst CD/DVD</short_name>
     <key>INSTALLABLE_ISO</key>
     <image_type_id>1</image_type_id>
+    <name>installableIsoImage</name>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/2">
     <description>Stub Image</description>
-    <name>Stub</name>
+    <name/>
+    <short_name>Stub</short_name>
     <key>STUB_IMAGE</key>
     <image_type_id>2</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/3">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/rawFsImage"/>
     <description>Eucalyptus/Mountable Filesystem</description>
-    <name>Raw FS</name>
+    <name>rawFsImage</name>
+    <short_name>Raw FS</short_name>
     <key>RAW_FS_IMAGE</key>
     <image_type_id>3</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/4">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/netbootImage"/> 
     <description>Netboot Image</description>
-    <name>Netboot</name>
+    <name>netbootImage</name>
+    <short_name>Netboot</short_name>
     <key>NETBOOT_IMAGE</key>
     <image_type_id>4</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/5">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/tarballImage"/>
     <description>TAR File</description>
-    <name>Tar</name>
+    <name>tarballImage</name>
+    <short_name>Tar</short_name>
     <key>TARBALL</key>
     <image_type_id>5</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/6">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/liveIsoImage"/>
     <description>Demo CD/DVD (Live CD/DVD)</description>
-    <name>Demo CD/DVD</name>
+    <name>liveIsoImage</name>
+    <short_name>Demo CD/DVD</short_name>
     <key>LIVE_ISO</key>
     <image_type_id>6</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/7">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/rawHdImage"/>
     <description>KVM/QEMU/Raw Hard Disk</description>
-    <name>HDD</name>
+    <name>rawHdImage</name>
+    <short_name>HDD</short_name>
     <key>RAW_HD_IMAGE</key>
     <image_type_id>7</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/8">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vmwareImage"/>
     <description>VMware(R) Workstation/Fusion / Parallels(R) Virtual Appliance</description>
-    <name>VMware (R)</name>
+    <name>vmwareImage</name>
+    <short_name>VMware (R)</short_name>
     <key>VMWARE_IMAGE</key>
     <image_type_id>8</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/9">
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/vmwareEsxImage"/>
+    <name>vmwareEsxImage</name>
     <description>VMware(R) ESX/VCD / Oracle(R) VirtualBox Virtual Appliance</description>
-    <name>VMware (R) ESX</name>
+    <short_name>VMware (R) ESX</short_name>
     <key>VMWARE_ESX_IMAGE</key>
     <image_type_id>9</image_type_id>
   </image_type>
@@ -515,8 +547,10 @@ image_type_get_xml = \
 """
 <?xml version='1.0' encoding='UTF-8'?>
 <image_type id="http://testserver/api/v1/image_types/1">
+  <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/installableIsoImage"/>
+  <name>installableIsoImage</name>
   <description>Legacy Installable CD/DVD</description>
-  <name>Inst CD/DVD</name>
+  <short_name>Inst CD/DVD</short_name>
   <key>INSTALLABLE_ISO</key>
   <image_type_id>1</image_type_id>
 </image_type>
