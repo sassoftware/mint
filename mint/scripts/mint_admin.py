@@ -216,10 +216,11 @@ class PlatformList(Command):
             item = dict(
                     platform_name=platform.platformName,
                     label=platform.label,
-                    upstream_url=platform.upstream_url,
                     abstract=platform.abstract.lower() == 'true',
                     enabled=platform.enabled.lower() == 'true',
                     )
+            if hasattr(platform, 'upstream_url'):
+                item['upstream_url'] = platform.upstream_url
             ret.append(item)
         json.dump(ret, sys.stdout)
         print
@@ -324,3 +325,6 @@ class RmakeUserCreate(_RmakeUser):
             print >> f, "reposUrl https://localhost/repos/%s/" % fqdn
         print '[]'
 Script.commandList.append(RmakeUserCreate)
+
+if __name__ == '__main__':
+    sys.exit(Script().run())
