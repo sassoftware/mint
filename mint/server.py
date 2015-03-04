@@ -1239,6 +1239,13 @@ class MintServer(object):
             assert node.url is None
             node.withJobslave = True
             node.tree = dockerBuild
+            # XXX we use swapSize even though there's no swap in docker
+            # images. This is so we can artificially enlarge the LVM volume
+            # created by the jobmaster for the jobslave to accommodate all the
+            # layers, compressed and uncompressed, that we need at the same
+            # time.
+            node.buildSettings['swapSize'] = 3 * int(
+                    self._jobslaveSize(node) / 1024 / 1024)
         # Now find everything we need to build
         buildsMap = dict()
         stack = trees
@@ -1248,6 +1255,10 @@ class MintServer(object):
             if top.url is None:
                 buildsMap[id(top)] = top
         return buildsMap.values()
+
+    @classmethod
+    def _jobslaveSize(cls, img):
+        return img.groupSize + sum(cls._jobslaveSize(x) for x in img.childrenMap.values())
 
     def _filterDockerImages(self, buildsL, repos, pd,
             projectId, versionId, stageName, stageLabel, buildDefList):
@@ -1426,6 +1437,7 @@ class MintServer(object):
         ret = [img]
         while 1:
             trv = repos.getTrove(*img.nvf)
+            img.groupSize = trv.troveInfo.size()
             parent = self._getParentGroup(trv)
             if parent is None:
                 break
@@ -3447,7 +3459,7 @@ class ImageBuild(_BaseImageBuild):
 
 class DockerImageBuild(_BaseImageBuild):
     __slots__ = [ 'url', 'childrenMap', 'withJobslave', 'tree', 'buildData',
-            'dockerImageId']
+            'dockerImageId', 'groupSize', ]
     TypeName = buildtypes.imageTypeXmlTagNameMap[buildtypes.DOCKER_IMAGE]
 
     def __init__(self, *args, **kwargs):
