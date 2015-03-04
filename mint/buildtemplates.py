@@ -350,7 +350,10 @@ class ImagelessTemplate(Template):
     id = buildtypes.IMAGELESS
 
 class DockerImageTemplate(Template):
-    __slots__ = [ 'dockerfile', 'dockerBuildTree', 'dockerRepositoryName' ]
+    __slots__ = [ 'dockerfile', 'dockerBuildTree', 'dockerRepositoryName',
+        'swapSize', ]
+    # XXX swapSize only used so we can tell the jobmaster how big the LVM
+    # volume should be
     id = buildtypes.DOCKER_IMAGE
 
 
