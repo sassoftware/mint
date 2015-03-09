@@ -1,6 +1,5 @@
 #
-# Copyright (c) 2005-2008 rPath, Inc.
-# All rights reserved
+# Copyright (c) SAS Institute Inc.
 #
 
 """
@@ -23,18 +22,18 @@ log = logging.getLogger(__name__)
 
 
 def logWebErrorAndEmail(req, cfg, e_type, e_value, e_tb,
-  location='web interface', doEmail=True):
+        location='web interface', doEmail=True):
     log.error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
     try:
         logErrorAndEmail(cfg, e_type, e_value, e_tb, location, req.environ,
-           smallStream=sys.stderr, doEmail=doEmail)
+                doEmail=doEmail)
     except MailError, error:
         log.error("Failed to send e-mail to %s, reason: %s" %
             (cfg.bugsEmail, str(error)))
 
 
 def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
-  prefix='mint-error-', smallStream=sys.stderr, doEmail=True):
+  prefix='mint-error-', smallStream=None, doEmail=True):
     timeStamp = time.ctime(time.time())
     realHostName = socket.getfqdn()
 
@@ -120,8 +119,7 @@ def logErrorAndEmail(cfg, e_type, e_value, e_tb, location, info_dict,
         print >> small, "Sentry event ID: ", sentry_id[0]
 
     small.seek(0)
-    conary_util.copyfileobj(small, smallStream)
-    smallStream.flush()
+    log.error(small.read())
 
     # send email
     if cfg and doEmail:

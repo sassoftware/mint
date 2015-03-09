@@ -58,7 +58,8 @@ class application(object):
 
     def __init__(self, environ, start_response):
         coveragehook.install()
-        mintutils.setupLogging(consoleLevel=logging.INFO, consoleFormat='apache')
+        mintutils.setupLogging(consoleLevel=logging.INFO,
+                consoleFormat='gunicorn', consoleStream=environ['wsgi.errors'])
         # gunicorn likes to umask(0) when daemonizing, so put back something
         # reasonable if that's the case.
         oldUmask = os.umask(022)

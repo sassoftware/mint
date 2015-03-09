@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2011 rPath, Inc.
+# Copyright (c) SAS Institute Inc.
 #
 
 """
@@ -10,6 +10,7 @@ import logging
 import inspect
 import itertools
 import re
+import sys
 import time
 
 from conary.lib import digestlib
@@ -19,7 +20,7 @@ from conary.repository.netrepos import cache
 
 def setupLogging(logPath=None, consoleLevel=logging.WARNING,
         consoleFormat='console', fileLevel=logging.INFO, fileFormat='file',
-        logger=''):
+        logger='', consoleStream=None):
 
     logger = logging.getLogger(logger)
     logger.handlers = []
@@ -28,8 +29,10 @@ def setupLogging(logPath=None, consoleLevel=logging.WARNING,
 
     # Console handler
     if consoleLevel is not None:
+        if consoleStream is None:
+            consoleStream = sys.stderr
         consoleFormatter = _getFormatter(consoleFormat)
-        consoleHandler = logging.StreamHandler()
+        consoleHandler = logging.StreamHandler(consoleStream)
         consoleHandler.setFormatter(consoleFormatter)
         consoleHandler.setLevel(consoleLevel)
         logger.addHandler(consoleHandler)
@@ -73,6 +76,8 @@ FORMATS = {
             '[%(asctime)s] [%(levelname)s] (%(name)s) %(message)s'),
         'file': ISOFormatter(
             '%(asctime)s %(levelname)s %(name)s : %(message)s'),
+        'gunicorn': ("%(asctime)s [%(process)d] [%(levelname)s] %(message)s",
+            "[%Y-%m-%d %H:%M:%S %z]"),
         }
 
 
