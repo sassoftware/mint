@@ -32,7 +32,6 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             </descriptions>
             <help href="@Help_dockerfile@"/>
             <type>str</type>
-            <default>false</default>
             <constraints>
                 <descriptions>
                     <desc>Field must contain between 0 and 16384 characters</desc>
