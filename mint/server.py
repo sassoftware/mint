@@ -1204,10 +1204,9 @@ class MintServer(object):
             systemModelItems = build.systemModelItem
             imageModel = []
             for groupTup in groupTups:
-                pdv = grp2pd.get(groupTup)
-                if not pdv:
+                pdobj = grp2pd.get(groupTup)
+                if not pdobj:
                     continue
-                pdobj = pdefs[pdv]
                 for item in pdobj.getSearchPaths():
                     matches = searchTroves.get(item.getTroveTup(), ())
                     searchTup = self._resolveTrove(matches, flavorSet, architecture)
