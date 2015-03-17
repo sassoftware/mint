@@ -1107,17 +1107,30 @@ class MintServer(object):
             groupTroves = repos.findTroves(None, parsedGroupSpecs,
                     allowMissing=True)
         else:
-            groupNames = [ str(x.getBuildImageGroup()) for x in buildList ]
             if not versionSpec:
                 versionSpec = stageLabel
+            grps = set([(str(x.getBuildImageGroup()), versionSpec, None)
+                for x in buildList])
+            # Add system model items from the build into the list of groups
+            # we're looking up
+            for build in buildList:
+                if buildNames and build.name not in buildNames:
+                    continue
+                for item in (build.systemModelItem or []):
+                    for trv in item.trove:
+                        trv = trovetup.TroveSpec(str(trv))
+                        v = trv.version or versionSpec
+                        grps.add((trv.name, v, None))
 
-            groupTroves = repos.findTroves(None,
-                    [(x, versionSpec, None)
-                        for x in groupNames ], allowMissing = True)
+            groupTroves = repos.findTroves(None, grps, allowMissing=True)
 
-        searchTroves = repos.findTroves(None,
-                [x.getTroveTup() for x in pd.getSearchPaths()],
-                allowMissing=True)
+        pdefs = dict()
+        # Add version of the current proddef, so we don't look for it again
+        pdefs[trovetup.TroveSpec(pd.getLoadedTrove()).version] = pd
+
+        imgGroupTups = set()
+
+        filteredBuilds1 = []
 
         for build in buildList:
             if buildNames and build.name not in buildNames:
@@ -1157,24 +1170,76 @@ class MintServer(object):
                         (buildGroup, buildFlavor))))
                     break
                 groupTups.append(groupTup)
+                if not groupSpecs:
+                    imgGroupTups.add(groupTup)
             if len(groupTups) != len(candidateGroupLists):
                 # One of the groups was not found; give up
                 continue
+            filteredBuilds1.append((build, groupTups, flavorSet, architecture))
 
+        # Initialize the group-to-proddef with the current proddef, in case
+        # one is not found in the group's troveinfo
+        grp2pd = dict((x, pd) for x in imgGroupTups)
+        # Find potential extra product definition references
+        if imgGroupTups:
+            groupTrvs = repos.getTroves(imgGroupTups, withFiles=False)
+            for groupTrv in groupTrvs:
+                pdv = groupTrv.getProductDefinitionVersion()
+                if not pdv or pdv in pdefs:
+                    continue
+                sourceTrove = "product-definition:source=%s" % pdv
+                newpd = proddef.ProductDefinition()
+                newpd.setBaseLabel(str(pdv.trailingLabel()))
+                newpd.loadFromRepository(client, sourceTrove=sourceTrove)
+                pdefs[pdv] = newpd
+                grp2pd[groupTrv.getNameVersionFlavor()] = pdv
+
+        searchTroves = set()
+        for pdobj in pdefs.values():
+            searchTroves.update(x.getTroveTup()
+                    for x in pdobj.getSearchPaths())
+        searchTroves = repos.findTroves(None, searchTroves, allowMissing=True)
+
+        for build, groupTups, flavorSet, architecture in filteredBuilds1:
+            systemModelItems = build.systemModelItem
             imageModel = []
-            for item in pd.getSearchPaths():
-                matches = searchTroves.get(item.getTroveTup(), ())
-                searchTup = self._resolveTrove(matches, flavorSet, architecture)
-                if searchTup:
-                    # Skip any searchPath elements that are source troves
-                    # (APPENG-2967)
-                    if searchTup[0].endswith(':source'):
-                        continue
-                    imageModel.append('#search %s\n' %
-                            self._formatTupForModel(searchTup))
             for groupTup in groupTups:
-                imageModel.append('install %s\n' %
-                        self._formatTupForModel(groupTup))
+                pdv = grp2pd.get(groupTup)
+                if not pdv:
+                    continue
+                pdobj = pdefs[pdv]
+                for item in pdobj.getSearchPaths():
+                    matches = searchTroves.get(item.getTroveTup(), ())
+                    searchTup = self._resolveTrove(matches, flavorSet, architecture)
+                    if not searchTup or searchTup[0].endswith(':source'):
+                        # Skip any searchPath elements that are source troves
+                        # (APPENG-2967)
+                        continue
+                    imageModelLine = 'search {trv}\n'.format(
+                            trv=self._formatTupForModel(searchTup))
+                    if not build.systemModelItem:
+                        # For now, comment out the line, unless a multi-trove
+                        # system model
+                        imageModelLine = '#' + imageModelLine
+                    imageModel.append(imageModelLine)
+            if systemModelItems:
+                for item in systemModelItems:
+                    trvs = []
+                    for trvSpec in item.trove:
+                        ptrvSpec = trovetup.TroveSpec(str(trvSpec))
+                        v = ptrvSpec.version or versionSpec
+                        matches = groupTroves.get((ptrvSpec.name, v, None), [])
+                        trvTup = self._resolveTrove(matches, flavorSet, architecture)
+                        if trvTup:
+                            trvs.append(self._formatTupForModel(trvTup))
+                        else:
+                            trvs.append(ptrvSpec.asString())
+                    imageModel.append('{op} {data}\n'.format(
+                        op=item.operation, data=' '.join(trvs)))
+            else:
+                for groupTup in groupTups:
+                    imageModel.append('install %s\n' %
+                            self._formatTupForModel(groupTup))
             # Store a build with options for the best match for each build
             # results are sorted best to worst
             filteredBuilds.append((build, groupTups, imageModel))
