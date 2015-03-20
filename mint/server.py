@@ -1382,6 +1382,11 @@ class MintServer(object):
                 processed.add(buildObj.nvf)
                 if buildObj.buildDefinition is not None:
                     continue
+                # Choose a somewhat sensible default for this build: the group
+                # name minus the group- part (APPENG-3467)
+                # This will get overwritten with a real name if a build
+                # definition is found
+                buildObj.buildName = buildObj.nvf.name[6:]
                 # Try to find a stage
                 label = buildObj.nvf.version.trailingLabel()
                 prjInfo = self._getProjectInfoForLabelOnly(str(label))
