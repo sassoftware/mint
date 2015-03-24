@@ -1192,7 +1192,7 @@ class MintServer(object):
                 newpd.setBaseLabel(str(pdv.trailingLabel()))
                 newpd.loadFromRepository(client, sourceTrove=sourceTrove)
                 pdefs[pdv] = newpd
-                grp2pd[groupTrv.getNameVersionFlavor()] = pdv
+                grp2pd[groupTrv.getNameVersionFlavor()] = newpd
 
         searchTroves = set()
         for pdobj in pdefs.values():
