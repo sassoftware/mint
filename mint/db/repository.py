@@ -115,23 +115,21 @@ class RepomanMixin(object):
         Get a generic XMLRPC server proxy for C{fqdn}, optionally using
         C{url}, C{user}, and C{entitlement}.
         """
-        repMap = conarycfg.RepoMap()
+        cfg = conarycfg.ConaryConfiguration(False)
+        cfg.proxyMap = self.cfg.getProxyMap()
         if url:
-            repMap.append(('*', url))
+            cfg.repositoryMap.append(('*', url))
 
-        userMap = conarycfg.UserInformation()
         if user:
-            userMap.addServerGlob('*', user)
+            cfg.user.addServerGlob('*', user)
 
-        entitlements = conarycfg.EntitlementList()
         if entitlement:
-            entitlements.addEntitlement(fqdn, entitlement)
+            cfg.entitlement.addEntitlement(fqdn, entitlement)
         else:
             for entClass, key in self.cfg.entitlement.find(fqdn):
-                entitlements.addEntitlement(fqdn, key, entClass)
+                cfg.entitlement.addEntitlement(fqdn, key, entClass)
 
-        cache = netclient.ServerCache(repMap, userMap,
-                entitlements=entitlements, proxyMap=self.cfg.getProxyMap())
+        cache = netclient.ServerCache(cfg=cfg)
         return cache[fqdn]
 
     def getRepos(self, userId=None):
@@ -1395,13 +1393,10 @@ class MultiShimServerCache(object):
 
 class MultiShimNetClient(shimclient.ShimNetClient):
     def __init__(self, manager, userId=None):
-        repMap = conarycfg.RepoMap()
-        userMap = conarycfg.UserInformation()
-        proxyMap = manager.cfg.getProxyMap()
-        netclient.NetworkRepositoryClient.__init__(self, repMap, userMap,
-                proxyMap=proxyMap)
-
-        self.c = MultiShimServerCache(manager, userId, proxyMap=proxyMap)
+        cfg = conarycfg.ConaryConfiguration(False)
+        cfg.proxyMap = manager.cfg.getProxyMap()
+        netclient.NetworkRepositoryClient.__init__(self, cfg=cfg)
+        self.c = MultiShimServerCache(manager, userId, proxyMap=cfg.proxyMap)
 
 
 def _encode(val):
