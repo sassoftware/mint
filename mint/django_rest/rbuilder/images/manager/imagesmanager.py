@@ -398,7 +398,8 @@ class ImagesManager(basemanager.BaseManager):
                 url=filePath)
             models.BuildFilesUrlsMap.objects.create(file=fobj, url=url)
 
-        attrTypes = dict(installed_size=datatypes.RDT_INT)
+        attrTypes = dict(installed_size=datatypes.RDT_INT,
+                uncompressed_size=datatypes.RDT_INT)
         Etree = models.modellib.Etree
         if files.attributes is not None:
             attributes = dict(
