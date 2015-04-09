@@ -22,7 +22,6 @@ from webob import exc as web_exc
 
 from mint import urltypes
 from mint import mint_error
-from mint import maintenance
 from mint import shimclient
 from mint.lib.unixutils import AtomicFile
 
@@ -100,14 +99,11 @@ class SiteHandler(WebHandler):
             client = shimclient.ShimMintClient(self.cfg, authToken, self.db)
             auth = client.checkAuth()
 
-            maintenance.enforceMaintenanceMode(self.cfg, auth)
-
             if not auth.authorized:
                 raise mint_error.InvalidLogin
             else:
                 self.session['authToken'] = (authToken[0], '')
                 self.session['firstPage'] = unquote(to)
-                client.updateAccessedTime(auth.userId)
                 self.session.save()
 
                 self._redirectHttp()
@@ -173,31 +169,10 @@ class SiteHandler(WebHandler):
                 project = self.client.getProject(build.projectId) 
                 redirectUrl = "/images/%s/%d/%s" % (project.hostname, build.id,
                         os.path.basename(filename))
-
-        # record the hit
-        urlId = urlIdMap.get(redirectUrl, urlIdMap.get(filename, None))
-        if urlId:
-            self.client.addDownloadHit(urlId, self.remoteIp)
-
         if redirectUrl:
             self._redirect(redirectUrl)
         else:
             raise web_exc.HTTPNotFound()
-
-    def maintenance(self, auth, *args, **kwargs):
-        mode = maintenance.getMaintenanceMode(self.cfg)
-        if mode == maintenance.NORMAL_MODE:
-            # Maintenance is over, redirect to the homepage
-            self._redirectHttp()
-        elif mode == maintenance.EXPIRED_MODE:
-            # rBuilder is disabled due to expired entitlement
-            return self._write("maintenance", reason="expired")
-        elif auth.admin:
-            # Admins are bounced to the admin page
-            self._redirectHttp("administer")
-        else:
-            # Everyone else gets the maintenance notice
-            return self._write("maintenance", reason="maintenance")
 
     @intFields(userId = None)
     @strFields(operation = None)

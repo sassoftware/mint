@@ -19,35 +19,6 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 IMAGE_TYPE_DESCRIPTORS="mint.django_rest.rbuilder.platforms.image_type_descriptors"
 exposed = basemanager.exposed
 
-class SourceTypeManager(basemanager.BaseManager):
-    @exposed
-    def getSourceType(self, source_type):
-        ContentSourceTypes = platform_models.ContentSourceTypes()
-        cst = platform_models.ContentSourceType.objects.all().filter(content_source_type=source_type)
-        ContentSourceTypes.content_source_type = cst
-        return ContentSourceTypes
-        
-    @exposed
-    def getSourceTypes(self):
-        ContentSourceTypes = platform_models.ContentSourceTypes()
-        ContentSourceTypes.content_source_type = platform_models.ContentSourceType.objects.all()
-        return ContentSourceTypes
-    
-    @exposed
-    def getSourceTypeById(self, content_source_type_id):
-        ContentSourceType = platform_models.ContentSourceType.objects.get(pk=content_source_type_id)
-        return ContentSourceType
-    
-    @exposed
-    def createSourceType(self, content_source_type):
-        content_source_type.save()
-        return content_source_type
-        
-    @exposed
-    def updateSourceType(self, content_source_type):
-        content_source_type.save()
-        return content_source_type
-
 
 class PlatformManager(basemanager.BaseManager):
     @exposed
@@ -152,95 +123,11 @@ class PlatformManager(basemanager.BaseManager):
         result = sio.getvalue()
         return result
 
-class SourceManager(basemanager.BaseManager):
-    @exposed
-    def getSourceByShortName(self, short_name):
-        return platform_models.ContentSource.objects.get(short_name=short_name)
-        
-    @exposed
-    def getSources(self):
-        ContentSources = platform_models.ContentSources()
-        ContentSources.content_source = platform_models.ContentSource.objects.all()
-        return ContentSources
-    
-    @exposed
-    def getSourcesByType(self, source_type):
-        ContentSources = platform_models.ContentSources()
-        ContentSources.content_source = platform_models.ContentSource.objects.all().filter(content_source_type=source_type)
-        return ContentSources
-        
-    @exposed
-    def updateSource(self, short_name, source):
-        source.save()
-        return source
-        
-    @exposed
-    def createSource(self, source):
-        source.save()
-        return source
-    
-    @exposed    
-    def deleteSource(self, short_name):
-        source = platform_models.ContentSource.objects.get(short_name=short_name)
-        source.delete()
-        
-
-class PlatformSourceManager(basemanager.BaseManager):
-    @exposed
-    def getSourcesByPlatform(self, platform_id):
-        ContentSources = platform_models.ContentSources()
-        platform = platform_models.Platform.objects.get(platform_id=platform_id)
-        ContentSources.content_source = platform.content_sources.objects.all()
-        return ContentSources
-
-
-class SourceTypeDescriptorManager(basemanager.BaseManager):
-    @exposed
-    def getSourceTypeDescriptor(self, source_type):
-        pass
-
-
-class SourceTypeStatusTestManager(basemanager.BaseManager):
-    @exposed
-    def getSourceStatus(self, source):
-        return source.content_source_status
-
-
-class PlatformLoadStatusManager(basemanager.BaseManager):
-    @exposed
-    def getPlatformLoadStatus(self, platform_id, job_id):
-        platform_loads = platform_models.PlatformLoad.objects.all().filter(
-            platform_id=platform_id, job_id=job_id)
-        Statuses = platform_models.PlatformLoadStatuses()
-        Statuses.platform_load_status = [p.platform_load_status for p in platform_loads]
-        return Statuses
-
-    @exposed
-    def getPlatformStatusTest(self, platform):
-        pass
-
-
-class PlatformSourceTypeManager(basemanager.BaseManager):
-    @exposed
-    def getSourceTypesByPlatform(self, platform_id):
-        ContentSourceTypes = platform_models.ContentSourceTypes()
-        platform = platform_models.Platform.objects.get(platform_id=platform_id)
-        ContentSourceTypes.content_source_type = platform.content_source_types
-        return ContentSourceTypes
-        
         
 class PlatformImageTypeManager(basemanager.BaseManager):
     @exposed
     def getPlatformImageTypeDefs(self, request, platform_id):
         pass
-        
-
-class PlatformLoadManager(basemanager.BaseManager):
-        
-    @exposed
-    def loadPlatform(self, platform_id, platform_load):
-        platform_load.save()
-        return platform_load
         
 
 class PlatformVersionManager(basemanager.BaseManager):
@@ -254,34 +141,3 @@ class PlatformVersionManager(basemanager.BaseManager):
         PlatformVersions.platform_version = \
             platform_models.PlatformVersion.objects.all().filter(platform_id=platform_id)
         return PlatformVersions
-
-
-class SourceStatusManager(basemanager.BaseManager):
-    @exposed
-    def getSourceStatusByName(self, source_type, short_name):
-        status = \
-            platform_models.SourceStatus.objects.all().filter(
-                content_source_type=source_type, short_name=short_name)
-        return status
-
-
-class SourceErrorsManager(basemanager.BaseManager):
-    @exposed
-    def getPlatformContentError(self, source_type, short_name, error_id):
-        platformContentError = \
-            platform_models.PlatformContentError.objects.all().filter(
-                content_source_type=source_type, short_name=short_name, error_id=error_id)
-        return platformContentError
-
-    @exposed
-    def getPlatformContentErrors(self, source_type, short_name):
-        PlatformContentErrors = platform_models.PlatformContentErrors()
-        PlatformContentErrors.platform_content_error = \
-            platform_models.PlatformContentError.objects.all().filter(
-                content_source_type=source_type, short_name=short_name)
-        return PlatformContentErrors
-
-    @exposed
-    def updatePlatformContentError(self, source_type, short_name, error_id, resource_error):
-        pass
-

@@ -9,7 +9,6 @@ import re
 import json
 import stat
 import sys
-import tempfile
 import time
 import StringIO
 
@@ -20,20 +19,16 @@ from mint import users
 from mint.lib import data
 from mint.lib import database
 from mint.lib import profile
-from mint.lib import siteauth
 from mint.lib.mintutils import ArgFiller
 from mint import builds
 from mint import helperfuncs
 from mint import jobstatus
-from mint import maintenance
 from mint import mint_error
 from mint import buildtemplates
 from mint import projects
 from mint import userlevels
 from mint import urltypes
 from mint.db import repository
-from mint.image_gen.wig import client as wig_client
-from mint import packagecreator
 from mint.rest import errors as rest_errors
 from mint.scripts import repository_sync
 
@@ -44,17 +39,13 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.deps import deps
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.repository.errors import TroveNotFound, UserNotFound
-from conary.repository import netclient
+from conary.repository.errors import TroveNotFound
 from conary.repository.netrepos.reposlog import RepositoryCallLogger as CallLogger
 from conary import errors as conary_errors
 
 from mcp import client as mcp_client
 from mcp import mcp_error
-from rmake.lib import procutil
-from rmake3 import client as rmk_client
 from rpath_proddef import api1 as proddef
-from pcreator import errors as pcreator_errors
 
 
 import gettext
@@ -253,13 +244,6 @@ class MintServer(object):
                 self.restDb = rest_database.Database(self.cfg, self.db,
                                                              dbOnly=True)
                 self._setAuth(authToken)
-                self.siteAuth.refresh()
-                try:
-                    maintenance.enforceMaintenanceMode(self.cfg, self.auth)
-                except mint_error.MaintenanceMode:
-                    # supress exceptions for certain critical methods.
-                    if methodName not in self.maintenanceMethods:
-                        raise
 
                 # let inner private-only calls pass
                 self._allowPrivate = True
@@ -281,7 +265,7 @@ class MintServer(object):
                     self.callLog.log(self.remoteIp,
                         list(authToken) + [None, None], methodName, str_args)
 
-            except (mint_error.MintError, pcreator_errors.PackageCreatorError), e:
+            except mint_error.MintError as e:
                 e_type, e_value, e_tb = sys.exc_info()
                 self._handleError(e, authToken, methodName, args)
                 frozen = (e.__class__.__name__, e.freeze())
@@ -337,21 +321,6 @@ class MintServer(object):
                     continue
                 ccfg.repositoryMap.append((repos.fqdn, repos.getURL()))
 
-    def _getProjectConaryConfig(self, project, repoToken=None):
-        """
-        Creates a conary configuration object, suitable for internal or external
-        rBuilder use.
-        @param project: Project to create a Conary configuration for.
-        @type project: C{mint.project.Project} object
-        @param internal: True if configuration object is to be used by a
-           NetClient/ShimNetClient internal to rBuilder; False otherwise.
-        @type internal: C{bool}
-        """
-        ccfg = conarycfg.ConaryConfiguration(False)
-        ccfg.conaryProxy = self.cfg.getInternalProxies()
-        self._addInternalConaryConfig(ccfg, repoMaps=True, repoToken=repoToken)
-        return ccfg
-
     def _getProductDefinition(self, project, version):
         cclient = self.reposMgr.getAdminClient(write=False)
         pd = proddef.ProductDefinition()
@@ -368,10 +337,6 @@ class MintServer(object):
         version = projects.ProductVersions(self, versionId)
         project = projects.Project(self, version.projectId)
         return self._getProductDefinition(project, version)
-
-    def _getProductVersionLabel(self, project, versionId):
-        version = projects.ProductVersions(self, versionId)
-        return version.label
 
     # unfortunately this function can't be a proper decorator because we
     # can't always know which param is the projectId.
@@ -434,19 +399,6 @@ class MintServer(object):
         except mint_error.ItemNotFound:
             return False
 
-    def _getProxies(self):
-        useInternalConaryProxy = self.cfg.useInternalConaryProxy
-        if useInternalConaryProxy:
-            httpProxies = {}
-            useInternalConaryProxy = self.cfg.getInternalProxies()
-        else:
-            httpProxies = self.cfg.proxy or {}
-        return [ useInternalConaryProxy, httpProxies ]
-
-    def _getRmakeClient(self):
-        """Return an instance of a rMake 3 client."""
-        return rmk_client.RmakeClient('http://localhost:9998')
-
     def checkVersion(self):
         if self.clientVer < SERVER_VERSIONS[0]:
             raise mint_error.InvalidClientVersion(
@@ -455,64 +407,10 @@ class MintServer(object):
                     ', '.join(str(x) for x in SERVER_VERSIONS)))
         return SERVER_VERSIONS
 
-    @typeCheck(str, str, str, str, str, str, str, str, str, str, str, bool,
-               str)
-    @requiresCfgAdmin('adminNewProjects')
-    @private
-    def newProject(self, projectName, hostname, domainname, projecturl, desc, 
-                   appliance, shortname, namespace, prodtype, version, 
-                   commitEmail, isPrivate, platformLabel):
-        maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = "Repositories are currently offline.")
-
-        # make sure the shortname, version, and prodtype are valid, and
-        # validate the hostname also in case it ever splits from being
-        # the same as the short name
-        projects._validateShortname(shortname, domainname, reservedHosts)
-        projects._validateHostname(hostname, domainname, reservedHosts)
-        projects._validateProductVersion(version)
-        if namespace:
-            projects._validateNamespace(namespace)
-        else:
-            #If none was set use the default namespace set in config
-            namespace = self.cfg.namespace
-        if not prodtype or (prodtype != 'Appliance' and prodtype != 'Component' and prodtype != 'Platform' and prodtype != 'Repository' and prodtype != 'PlatformFoundation'):
-            raise mint_error.InvalidProdType
-
-        if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
-            projecturl = "http://" + projecturl
-
-        isPrivate = isPrivate or self.cfg.hideNewProjects
-        projectId = self.restDb.productMgr.createProduct(name=projectName,
-                                  description=desc,
-                                  hostname=hostname,
-                                  domainname=domainname,
-                                  namespace=namespace,
-                                  projecturl=projecturl,
-                                  shortname=shortname, 
-                                  prodtype=prodtype,
-                                  version=version, 
-                                  commitEmail=commitEmail,
-                                  isPrivate=isPrivate)
-        return projectId
-
-    @typeCheck(int, str, str)
-    @requiresAdmin
-    @private
-    def addProjectRepositoryUser(self, projectId, username, password):
-        project = projects.Project(self, projectId)
-        self.restDb.productMgr.reposMgr.addUser(project.getFQDN(),
-                                                username, password,
-                                                userlevels.OWNER)
-        return username
-
     @typeCheck(str, str, str, str, str, bool)
     @requiresAdmin
     @private
     def newExternalProject(self, name, hostname, domainname, label, url, mirrored):
-        maintenance.enforceMaintenanceMode( \
-            self.cfg, auth = None, msg = "Repositories are currently offline.")
-
         now = time.time()
 
         # make sure the hostname is valid
@@ -606,87 +504,6 @@ class MintServer(object):
         filter = (self.auth.userId != userId) and (not self.auth.admin)
         return self.projects.getProjectDataByMember(userId, filter)
 
-    @typeCheck(int, ((int, type(None)),), ((str, type(None)),), int)
-    @requiresAuth
-    @private
-    def addMember(self, projectId, userId, username, level):
-        self._filterProjectAccess(projectId)
-        assert(level in userlevels.LEVELS)
-        if username and not userId:
-            cu = self.db.cursor()
-            cu.execute("""SELECT userId FROM Users
-                              WHERE username=? AND active=1""", username)
-            r = cu.fetchone()
-            if not r:
-                raise mint_error.ItemNotFound(username)
-            else:
-                userId = r[0]
-        else:
-            cu = self.db.cursor()
-            cu.execute("""SELECT userId FROM Users
-                          WHERE userId=? AND active=1""", userId)
-            r = cu.fetchone()
-            if not r:
-                raise mint_error.ItemNotFound(userId)
-        self.restDb.productMgr.setMemberLevel(projectId, userId, level)
-        return True
-
-    @private
-    def projectAdmin(self, projectId, userName):
-        """Check for admin ACL in a given project repo."""
-        # XXX: rewrite me, i suck
-        if not userName:
-            return False
-        if self.auth.admin:
-            return True
-        self._filterProjectAccess(projectId)
-
-        handle = self.reposMgr.getRepositoryFromProjectId(projectId)
-        if handle.isExternal:
-            return False
-
-        db = handle.getReposDB()
-        cu = db.cursor()
-        # aggregate with MAX in case user is member of multiple groups
-        cu.execute("""SELECT MAX(admin) FROM Users
-                      JOIN UserGroupMembers ON
-                          Users.userId = UserGroupMembers.userId
-                      JOIN UserGroups ON
-                          UserGroups.userGroupId = UserGroupMembers.userGroupId
-                      WHERE Users.username=?""", userName)
-        res = cu.fetchone()
-        # acl in question can be non-existent
-        return res and res[0] or False
-
-    @typeCheck(int, int, bool)
-    @requiresAuth
-    def delMember(self, projectId, userId, notify=True):
-        self._filterProjectAccess(projectId)
-        #XXX Make this atomic
-        try:
-            self.getUserLevel(userId, projectId)
-        except mint_error.ItemNotFound:
-            raise netclient.UserNotFound()
-
-        try:
-            project = projects.Project(self, projectId)
-            self.db.transaction()
-
-            user = self.getUser(userId)
-
-            self.projectUsers.delete(projectId, userId, commit=False)
-
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-
-        if not project.external:
-            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
-                                                       user['username'])
-        return True
-
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
@@ -698,65 +515,11 @@ class MintServer(object):
         return self.projects.update(projectId, projecturl=projecturl,
                                     description = desc, name = name)
 
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setProjectCommitEmail(self, projectId, commitEmail):
-        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
-            raise mint_error.PermissionDenied
-
-        return self.projects.update(projectId, commitEmail = commitEmail)
-
-    def hideProject(self, projectId):
-        project = projects.Project(self, projectId)
-
-        try:
-            self.restDb.productMgr.reposMgr.deleteUser(project.getFQDN(),
-                                                   'anonymous')
-        except UserNotFound:
-            pass
-        # Hide the project
-        self.projects.hide(projectId)
-        return True
-
-    @typeCheck(int, bool)
-    @requiresAdmin
-    @private
-    def setBackupExternal(self, projectId, backupExternal):
-        return self.projects.update(projectId,
-                backupExternal=bool(backupExternal))
-
     # user methods
     @typeCheck(int)
     @private
     def getUser(self, id):
         return self.users.get(id)
-
-    @typeCheck(int, int)
-    @private
-    def getUserLevel(self, userId, projectId):
-        self._filterProjectAccess(projectId)
-        cu = self.db.cursor()
-        cu.execute("""SELECT level FROM ProjectUsers
-                          WHERE userId=? and projectId=?""",
-                   userId, projectId)
-
-        r = cu.fetchone()
-        if not r:
-            raise mint_error.ItemNotFound("membership")
-        else:
-            return r[0]
-
-    @typeCheck(str, str, str, str, str, str, bool)
-    @private
-    def registerNewUser(self, username, password, fullName, email,
-                        displayEmail, blurb, active):
-        if not ((list(self.authToken) == \
-                [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
-                 or not self.cfg.adminNewUsers):
-            raise mint_error.PermissionDenied
-        return self.users.registerNewUser(username, password, fullName, email,
-                                          displayEmail, blurb, active)
 
     @typeCheck()
     @private
@@ -773,70 +536,6 @@ class MintServer(object):
     def pwCheck(self, user, password):
         return self.users.checkAuth((user, password), useToken=True
                 )['authorized']
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def updateAccessedTime(self, userId):
-        return self.users.update(userId, timeAccessed = time.time())
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setUserEmail(self, userId, email):
-        return self.users.update(userId, email = email)
-
-    @typeCheck(int, str, str)
-    @requiresAuth
-    @private
-    def addUserKey(self, projectId, username, keydata):
-        self._filterProjectAccess(projectId)
-        client = self.reposMgr.getAdminClient(write=True)
-        project = projects.Project(self, projectId)
-        client.repos.addNewAsciiPGPKey(
-                versions.Label(project.getFQDN() + '@rpl:2'),
-                username, keydata)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setUserFullName(self, userId, fullName):
-        return self.users.update(userId, fullName = fullName)
-
-    @typeCheck(int)
-    @requiresAuth
-    @private
-    def removeUserAccount(self, userId):
-        """Removes the user account from the authrepo and mint databases.
-        Also removes the user from each project listed in projects.
-        """
-        if not self.auth.admin and userId != self.auth.userId:
-            raise mint_error.PermissionDenied
-        user = self.users.get(userId)
-        if user['username'] == self.cfg.authUser:
-            raise mint_error.PermissionDenied
-
-        self.setEC2CredentialsForUser(userId, '', '', '', True)
-
-        #Handle projects
-        projectList = self.getProjectIdsByMember(userId)
-        for (projectId, level) in projectList:
-            self.delMember(projectId, userId, False)
-
-        cu = self.db.transaction()
-        try:
-            cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
-                       userId)
-            cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-            cu.execute("DELETE FROM Users WHERE userId=?", userId)
-            cu.execute("DELETE FROM UserData where userId=?", userId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-        return True
 
     @typeCheck(str)
     @private
@@ -869,56 +568,6 @@ class MintServer(object):
         else:
             raise mint_error.PermissionDenied
 
-
-    @typeCheck(str, int, int)
-    @requiresAuth
-    @private
-    def searchUsers(self, terms, limit, offset):
-        """
-        Collect the results as requested by the search terms.
-        NOTE: admins can see everything including unconfirmed users.
-        @param terms: Search terms
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @return:       dictionary of Items requested
-        """
-        if self.auth and self.auth.admin:
-            includeInactive = True
-        else:
-            includeInactive = False
-        return self.users.search(terms, limit, offset, includeInactive)
-
-    @typeCheck(str, int, int, int, bool, bool)
-    @private
-    def searchProjects(self, terms, modified, limit, offset, byPopularity, filterNoDownloads):
-        """
-        Collect the results as requested by the search terms.
-        NOTE: admins can see everything including hidden and fledgling
-        projects regardless of the value of self.cfg.hideFledgling.
-        @param terms: Search terms
-        @param modified: Code for the lastModified filter
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @param byPopularity: if True, order items by popularity metric
-        @return:       dictionary of Items requested
-        """
-        if self.auth and self.auth.admin:
-            includeInactive = True
-        else:
-            includeInactive = False
-        return self.projects.search(terms, modified, limit, offset, includeInactive, byPopularity, filterNoDownloads)
-
-    @typeCheck(str, int, int)
-    def searchPackages(self, terms, limit, offset):
-        """
-        Collect the results as requested by the search terms
-        @param terms: Search terms
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @return:       dictionary of Items requested
-        """
-        return self.pkgIndex.search(terms, limit, offset)
-
     @typeCheck()
     @requiresAdmin
     @private
@@ -927,23 +576,6 @@ class MintServer(object):
         Collect a list of all projects suitable for creating a select box
         """
         return self.projects.getProjectsList()
-
-    @typeCheck(int, int, int)
-    @requiresAdmin
-    @private
-    def getUsers(self, sortOrder, limit, offset):
-        """
-        Collect a list of users.
-        NOTE: admins can see everything including unconfirmed users.
-        @param sortOrder: Order the users by this criteria
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        """
-        # includeInactive *must* be set to false for non-admins if user browse
-        # is ever opened up to non-admins
-        includeInactive = True
-        return self.users.getUsers(sortOrder, limit, offset, includeInactive),\
-               self.users.getNumUsers(includeInactive)
 
     #
     # LABEL STUFF
@@ -955,13 +587,6 @@ class MintServer(object):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
         self._filterProjectAccess(projectId)
         return self.labels.getLabelsForProject(projectId, overrideAuth, newUser, newPass)
-
-    @typeCheck(bool, ((str, type(None)),), ((str, type(None)),))
-    @private
-    @requiresAuth
-    def getAllLabelsForProjects(self, overrideAuth, newUser, newPass):
-        """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
-        return self.labels.getAllLabelsForProjects(overrideAuth, newUser, newPass)
 
     @typeCheck(int, str, str, str, str, str, str)
     @requiresAuth
@@ -997,11 +622,6 @@ class MintServer(object):
     #
     # BUILD STUFF
     #
-    @typeCheck(int)
-    @private
-    def getBuildsForProject(self, projectId):
-        self._filterProjectAccess(projectId)
-        return [x for x in self.builds.iterBuildsForProject(projectId)]
 
     @typeCheck(str, str, str, str)
     @private
@@ -1020,12 +640,6 @@ class MintServer(object):
         return True
 
     @typeCheck(int)
-    @private
-    def getCommitsForProject(self, projectId):
-        self._filterProjectAccess(projectId)
-        return self.commits.getCommitsByProject(projectId)
-
-    @typeCheck(int)
     def getBuild(self, buildId):
         if not self.builds.buildExists(buildId):
             raise mint_error.ItemNotFound
@@ -1033,18 +647,6 @@ class MintServer(object):
         build = self.builds.get(buildId)
 
         return build
-
-    def newBuild(self, projectId, productName):
-        self._filterProjectAccess(projectId)
-        buildId = self.builds.new(projectId = projectId,
-                      name = productName,
-                      timeCreated = time.time(),
-                      buildCount = 0,
-                      createdBy = self.auth.userId,
-                      status = jobstatus.WAITING,
-                      statusMessage = jobstatus.statusNames[jobstatus.WAITING])
-
-        return buildId
 
     @staticmethod
     def _formatTupForModel(tup):
@@ -1918,29 +1520,6 @@ class MintServer(object):
 
         #Set up the http/https proxy
         r['proxy'] = dict(self.cfg.proxy)
-
-        # CA certificates for rpath-tools.
-        hg_ca, lg_ca = self.restDb.getCACertificates()
-        r['pki'] = {
-                'hg_ca': hg_ca or '',
-                'lg_ca': lg_ca or '',
-                }
-        if not hg_ca:
-            log.warning("High-grade CA certificate is missing. Images will "
-                    "not be registerable.")
-        if not lg_ca:
-            log.warning("Low-grade CA certificate is missing. Images will "
-                    "not be remote-registerable.")
-
-        # Send our IP to jobslave for rpath-tools configuration. This is mainly
-        # here for demoability, because images booted in a different management
-        # zone will fail to contact the rBuilder. Eventually SLP will work out
-        # of the box and this won't be necessary.
-        rbuilder_ip = procutil.getNetName()
-        if rbuilder_ip == 'localhost':
-            rbuilder_ip = self.cfg.siteHost
-        r['inventory_node'] = rbuilder_ip + ':8443'
-        r['outputUrl'] = 'http://%s%s' % (rbuilder_ip, self.cfg.basePath)
         r['outputToken'] = sha1helper.sha1ToString(file('/dev/urandom').read(20))
         self.buildData.setDataValue(buildId, 'outputToken',
             r['outputToken'], data.RDT_STRING)
@@ -1958,8 +1537,6 @@ class MintServer(object):
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
         r = self.builds.setTrove(buildId, troveName, troveVersion, troveFlavor)
-        troveLabel = helperfuncs.parseVersion(troveVersion).trailingLabel()
-        projectId = self.builds.get(buildId)['projectId']
         # clear out all "important flavors"
         for x in buildtypes.flavorFlags.keys():
             self.buildData.removeDataValue(buildId, x)
@@ -1993,37 +1570,6 @@ class MintServer(object):
         ''', str(label))
         return cu.fetchone()
 
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setBuildDesc(self, buildId, desc):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-        self.builds.update(buildId, description = desc)
-        return True
-
-    @typeCheck(int, str)
-    @requiresAuth
-    @private
-    def setBuildName(self, buildId, name):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-        self.builds.update(buildId, name = name)
-        return True
-
-    @typeCheck(int)
-    @private
-    def getBuildType(self, buildId):
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-        cu = self.db.cursor()
-        cu.execute("SELECT buildType FROM Builds WHERE buildId = ?",
-                buildId)
-        return cu.fetchone()[0]
-
     @typeCheck(int, int)
     @requiresAuth
     @private
@@ -2037,52 +1583,21 @@ class MintServer(object):
         self.db.commit()
         return True
 
-    @typeCheck(int)
-    @requiresAuth
     def startImageJob(self, buildId):
         self._filterBuildAccess(buildId)
         if not self.builds.buildExists(buildId):
             raise mint_error.BuildMissing()
 
-        buildDict = self.builds.get(buildId)
-        buildType = buildDict['buildType']
-
         # Clear any previously-existing files.
         self._setBuildFilenames(buildId, [])
-
-        if buildType == buildtypes.IMAGELESS:
-            # image-less builds (i.e. group trove builds) don't actually get
-            # built, they just get stuffed into the DB
-            self.db.builds.update(buildId, status=jobstatus.FINISHED,
-                    statusMessage="Job Finished")
-            return '0' * 32
-        else:
-            try:
-                jobData = self.serializeBuild(buildId)
-                if buildType in buildtypes.windowsBuildTypes:
-                    return self.startWindowsImageJob(buildId, jobData)
-                elif buildType == buildtypes.DEFERRED_IMAGE:
-                    return self.startDeferredImageJob(buildId, jobData)
-
-                # Check the product definition to see if this is based on a
-                # Windows platform.
-                if buildDict['productVersionId']:
-                    pd = self._getProductDefinitionForVersionObj(
-                            buildDict['productVersionId'])
-                    platInfo = pd.getPlatformInformation()
-                    tags = []
-                    if (platInfo and hasattr(platInfo, 'platformClassifier')
-                        and hasattr(platInfo.platformClassifier, 'tags')):
-                        tags = platInfo.platformClassifier.tags.split()
-                    if 'windows' in tags:
-                        return self.startWindowsImageJob(buildId, jobData)
-
-                return self.startMcpImageJob(buildId, jobData)
-            except:
-                log.exception("Failed to start image job:")
-                self.db.builds.update(buildId, status=jobstatus.FAILED,
-                        statusMessage="Failed to start image job - check logs")
-                raise
+        try:
+            jobData = self.serializeBuild(buildId)
+            return self.startMcpImageJob(buildId, jobData)
+        except:
+            log.exception("Failed to start image job:")
+            self.db.builds.update(buildId, status=jobstatus.FAILED,
+                    statusMessage="Failed to start image job - check logs")
+            raise
 
     def _addRepoToken(self, buildId, jobData):
         repoToken = jobData['project']['repoToken']
@@ -2096,87 +1611,6 @@ class MintServer(object):
         self.buildData.setDataValue(buildId, 'uuid', uuid, data.RDT_STRING)
         return uuid
 
-    def startWindowsImageJob(self, buildId, jobData):
-        """Direct Windows image builds to rMake 3."""
-        self._addRepoToken(buildId, jobData)
-        jsonData = json.dumps(jobData)
-        cli = wig_client.WigClient(self._getRmakeClient())
-        job_uuid, job = cli.createJob(jsonData, subscribe=False)
-        log.info("Created Windows image job, UUID %s", job_uuid)
-        self.builds.update(buildId, job_uuid=str(job_uuid))
-        return str(job_uuid)
-
-    def startDeferredImageJob(self, buildId, jobData):
-        """Create a deferred image record in the database."""
-        baseTrove = jobData['data'].get('baseImageTrove', '')
-        try:
-            baseId = self.db.builds.getIdByColumn('output_trove',
-                    baseTrove)
-        except database.ItemNotFound:
-            self.db.builds.update(buildId, status=jobstatus.FAILED,
-                    statusMessage="Base image %r not found" % (baseTrove,))
-            return -1
-        self.db.builds.update(buildId,
-                base_image=baseId,
-                status=jobstatus.FINISHED,
-                statusMessage="Deferred image has been recorded")
-        self.db.commit()
-
-        from mint.django_rest.rbuilder.manager import rbuildermanager
-        from mint.django_rest.rbuilder.images import models as image_models
-        mgr = rbuildermanager.RbuilderManager()
-        try:
-            mgr.enterTransactionManagement()
-            image = image_models.Image.objects.get(pk=buildId)
-            mgr.addToMyQuerySet(image, image.created_by)
-            mgr.retagQuerySetsByType('image')
-            mgr.commit()
-        except:
-            mgr.rollback()
-            raise
-        finally:
-            mgr.leaveTransactionManagement()
-
-        return 1
-
-    @typeCheck(int, str, list)
-    def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
-        """
-        This call validates the outputToken against one stored in the
-        build data for buildId, and allows those filenames to be
-        rewritten without any other access. This is so the job slave
-        doesn't have to have any knowledge of the authuser or authpass,
-        just the output hash given to it in the serialized job.
-        """
-        if outputToken != \
-                self.buildData.getDataValue(buildId, 'outputToken')[1]:
-            raise mint_error.PermissionDenied
-
-        ret = self._setBuildFilenames(buildId, filenames, normalize=True)
-        self.buildData.removeDataValue(buildId, 'outputToken')
-
-        return ret
-
-    @typeCheck(int, list)
-    @requiresAuth
-    @private
-    def setBuildFilenames(self, buildId, filenames):
-        """
-        This call expects a buildId and a 2- or 4-tuple of filename
-        objects. The 2-tuple form is deprecated and is only here for 
-        backwards compatibility.
-
-        4-tuple form: (filename, title, size, sha1)
-        2-tuple form: (filename, title)
-
-        Returns True if it worked, False otherwise.
-        """
-        self._filterBuildAccess(buildId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-
-        return self._setBuildFilenames(buildId, filenames)
-
     def _setBuildFilenames(self, buildId, filenames, normalize=False):
         from mint.shimclient import ShimMintClient
         authclient = ShimMintClient(self.cfg,
@@ -2184,9 +1618,6 @@ class MintServer(object):
 
         build = authclient.getBuild(buildId)
         project = authclient.getProject(build.projectId)
-        username = self.users.get(build.createdBy)['username']
-        buildName = build.name
-        buildType = buildtypes.typeNamesMarketing.get(build.buildType, None)
 
         cu = self.db.transaction()
         try:
@@ -2224,61 +1655,6 @@ class MintServer(object):
                 urlId = cu.lastrowid
                 cu.execute("""INSERT INTO BuildFilesUrlsMap (fileId, urlId)
                         VALUES(?, ?)""", fileId, urlId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-        return True
-
-    @typeCheck(int, int, int, str)
-    @requiresAuth
-    @private
-    def addFileUrl(self, buildId, fileId, urlType, url):
-        self._filterBuildFileAccess(fileId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-
-        cu = self.db.transaction()
-        try:
-            # sanity check to make sure the fileId referenced exists
-            cu.execute("SELECT fileId FROM BuildFiles where fileId = ?",
-                    fileId)
-            if not len(cu.fetchall()):
-                raise mint_error.BuildFileMissing()
-
-            cu.execute("INSERT INTO FilesUrls VALUES(NULL, ?, ?)",
-                    urlType, url)
-            urlId = cu.lastrowid
-            cu.execute("INSERT INTO BuildFilesUrlsMap VALUES(?, ?)",
-                    fileId, urlId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
-        return True
-
-    @typeCheck(int, int, int)
-    @requiresAuth
-    @private
-    def removeFileUrl(self, buildId, fileId, urlId):
-        self._filterBuildFileAccess(fileId)
-        if not self.builds.buildExists(buildId):
-            raise mint_error.BuildMissing()
-        cu = self.db.transaction()
-        try:
-            cu.execute("SELECT urlId FROM FilesUrls WHERE urlId = ?",
-                    urlId)
-            r = cu.fetchall()
-            if not len(r):
-                raise mint_error.BuildFileUrlMissing()
-
-            # sqlite doesn't support cascading delete
-            if self.db.driver == 'sqlite':
-                cu.execute("DELETE FROM BuildFilesUrlsMap WHERE urlId = ?",
-                        urlId)
-            cu.execute("DELETE FROM FilesUrls WHERE urlId = ?", urlId)
         except:
             self.db.rollback()
             raise
@@ -2335,12 +1711,6 @@ class MintServer(object):
             buildFilesList.append(lastDict)
 
         return buildFilesList
-
-    @typeCheck(int, str)
-    @private
-    def addDownloadHit(self, urlId, ip):
-        self.urlDownloads.add(urlId, ip)
-        return True
 
     @typeCheck(int)
     @private
@@ -2487,62 +1857,6 @@ class MintServer(object):
         self.inboundMirrors.delete(inboundMirrorId)
         self._normalizeOrder("InboundMirrors", "inboundMirrorId")
         return True
-
-    @typeCheck(int)
-    @requiresAdmin
-    @private
-    def getBackgroundMirror(self, projectId):
-        """
-        Return proxy-mode project IDs that have the same FQDN as the given
-        mirror-mode project
-        """
-        cu = self.db.cursor()
-        cu.execute("""
-            SELECT b.projectId
-            FROM Projects a
-            JOIN Projects b ON a.fqdn = b.fqdn
-            LEFT JOIN InboundMirrors am ON am.targetProjectId = a.projectId
-            LEFT JOIN InboundMirrors bm ON bm.targetProjectId = b.projectId
-            WHERE a.projectId = ? AND a.external AND a.hidden
-            AND am.targetProjectId IS NOT NULL
-            AND b.projectId != a.projectId AND b.external AND NOT b.hidden
-            AND bm.targetProjectId IS NULL
-            """, projectId)
-        return set(x[0] for x in cu)
-
-    @typeCheck(int, bool)
-    @requiresAdmin
-    @private
-    def setBackgroundMirror(self, projectId, backgroundMirror):
-        mirror = self.getInboundMirror(projectId)
-        if not mirror:
-            return False
-        projectIds = self.getBackgroundMirror(projectId)
-        if backgroundMirror and not projectIds:
-            project = self.projects.get(projectId)
-            self.hideProject(projectId)
-            proxyId = self.newExternalProject(
-                    name=project['name'] + '-proxy',
-                    hostname=project['hostname'] + '-proxy',
-                    domainname=project['domainname'],
-                    label=project['fqdn'] + '@proxy:proxy',
-                    url=mirror['sourceUrl'],
-                    mirrored=False,
-                    )
-            proxyLabelId = self.labels.getLabelsForProject(proxyId)[0].values()[0]
-            proxyLabelInfo = self.getLabel(proxyLabelId)
-            self.editLabel(proxyLabelId,
-                    label=proxyLabelInfo['label'],
-                    url=mirror['sourceUrl'],
-                    authType=mirror['sourceAuthType'],
-                    username=mirror['sourceUsername'],
-                    password=mirror['sourcePassword'],
-                    entitlement=mirror['sourceEntitlement'],
-                    )
-        elif not backgroundMirror:
-            self.projects.unhide(projectId)
-            for projectId in projectIds:
-                self.deleteProject(projectId)
 
     @private
     @typeCheck(int, (list, str), bool, bool, bool, int)
@@ -2763,52 +2077,6 @@ class MintServer(object):
         else:
             return None
 
-    @private
-    @typeCheck(str, str, (list, str))
-    def getTroveReferences(self, troveName, troveVersion, troveFlavors):
-        references = []
-        client = self.reposMgr.getUserClient(self.auth)
-        if not troveFlavors:
-            v = versions.VersionFromString(troveVersion)
-            flavors = client.repos.getAllTroveFlavors({troveName: [v]})
-            troveFlavors = [x.freeze() for x in flavors[troveName][v]]
-
-        q = []
-        for flavor in troveFlavors:
-            q.append((troveName, versions.VersionFromString(troveVersion), deps.ThawFlavor(flavor)))
-
-        for projectId, fqdn in self._iterVisibleRepositories():
-            refs = client.repos.getTroveReferences(fqdn, q)
-
-            results = set()
-            for ref in refs:
-                if ref:
-                    results.update([(x[0], str(x[1]), x[2].freeze()) for x in ref])
-
-            if results:
-                references.append((projectId, list(results)))
-
-        return references
-
-    @private
-    @typeCheck(str, str, str)
-    def getTroveDescendants(self, troveName, troveBranch, troveFlavor):
-        descendants = []
-        client = self.reposMgr.getUserClient(self.auth)
-        for projectId, fqdn in self._iterVisibleRepositories():
-            q = (troveName, versions.VersionFromString(troveBranch), deps.ThawFlavor(troveFlavor))
-            refs = client.repos.getTroveDescendants(fqdn, [q])
-
-            results = set()
-            for ref in refs:
-                if ref:
-                    results.update([(str(x[0]), x[1].freeze()) for x in ref])
-
-            if results:
-                descendants.append((projectId, list(results)))
-
-        return descendants
-
     def _getMcpClient(self):
         try:
             return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
@@ -2841,510 +2109,6 @@ class MintServer(object):
     def getProductVersionListForProduct(self, projectId):
         return self.productVersions.getProductVersionListForProduct(projectId)
 
-    @requiresAuth
-    def createPackageTmpDir(self):
-        '''
-        Creates a directory for use by the package creator UI and Service.
-        This directory is the receiving target for uploads, and the cache
-        location for pc service operations.
-
-        @rtype: String
-        @return: A X{uploadDirectoryHandle} to be used with subsequent calls to
-        file upload methods
-        '''
-        path = tempfile.mkdtemp('', packagecreator.PCREATOR_TMPDIR_PREFIX,
-            dir = os.path.join(self.cfg.dataPath, 'tmp'))
-        return os.path.basename(path).replace(packagecreator.PCREATOR_TMPDIR_PREFIX, '')
-
-    def _getMinCfg(self, project):
-        repoToken = os.urandom(16).encode('hex')
-        self.db.auth_tokens.addToken(repoToken, self.auth.userId)
-        self.db.commit()
-        cfg = self._getProjectConaryConfig(project, repoToken=repoToken)
-        cfg['name'] = self.auth.username
-        cfg['contact'] = ''
-        localhost = 'localhost'
-        if ':' in self.cfg.siteHost:
-            # Copy the port from secureHost (for the testsuite)
-            localhost += self.cfg.siteHost[self.cfg.siteHost.index(':'):]
-        cfg.configLine('conaryProxy http http://%s/conary/' % localhost)
-        cfg.configLine('conaryProxy https http://%s/conary/' % localhost)
-
-        #package creator service should get the searchpath from the product definition
-        rmakeUser = (self.authToken[0], repoToken)
-        mincfg = packagecreator.MinimalConaryConfiguration(cfg, rmakeUser)
-        return mincfg
-
-    @typeCheck(int, ((str,unicode),), int, ((str,unicode),), ((str,unicode),), ((str,unicode),))
-    @requiresAuth
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url, label):
-        '''
-            Given a file represented by L{uploadDirectoryHandle}, query the PC Service for
-            possible factories to handle it.
-
-            @param projectId: The id for the project being worked on
-            @type projectId: int
-            @param uploadDirectoryHandle: Unique key generated by the call to
-            L{createPackageTmpDir}
-            @type uploadDirectoryHandle: string
-            @param versionId: A product version ID
-            @type versionId: int
-            @param sessionHandle: A sessionHandle.  If empty, one will be created
-            @type sessionHandle: string
-            @param upload_url: Not used (yet)
-            @type upload_url: string
-            @param label: stage label
-            @type label: str
-
-            @return: L{sessionHandle} and A list of the candidate build factories and the data scanned
-            from the uploaded file
-            @rtype: list of 3-tuples.  The 3-tuple consists of the
-            factory name (i.e. X{factoryHandle}, the factory definition XML and a
-            dictionary of key-value pairs representing the scanned data.
-
-            @raise PackageCreatorError: If the file provided is not supported by
-            the package creator service, or if the L{uploadDirectoryHandle} does not
-            contain a valid manifest file as generated by the upload CGI script.
-        '''
-        from mint.lib.fileupload import fileuploader
-
-        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
-        fileuploader = fileuploader(path, 'uploadfile')
-        try:
-            info = fileuploader.parseManifest()
-        except IOError, e:
-            log.exception("Error parsing pcreator manifest:")
-            raise mint_error.PackageCreatorError("unable to download the file and/or parse the uploaded file's manifest: %s" % str(e))
-
-        if info.get('error'):
-            raise mint_error.PackageCreatorError('File download failed with '
-                'the following error: %s' % info.get('error'))
-
-        #TODO: Check for a URL
-        #Now go ahead and start the Package Creator Service
-
-        #Register the file
-        pc = self.getPackageCreatorClient()
-        project = projects.Project(self, projectId)
-
-        if not sessionHandle:
-            mincfg = self._getMinCfg(project)
-            #Get the version object
-            version = self.getProductVersion(versionId)
-            #Start the PC Session
-            sesH = pc.startSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, label=label)
-        else:
-            sesH = sessionHandle
-
-        # "upload" the data
-        pc.uploadData(sesH, info['filename'], info['tempfile'], None)
-        fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
-
-        return sesH, fact, data
-
-    @requiresAuth
-    def getPackageCreatorPackages(self, projectId):
-        """
-            Return a list of all of the packages that are available for maintenance by the package creator UI.  This is done via a conary API call to retrieve all source troves with the PackageCreator troveInfo.
-            @param projectId: Project ID of the project for which to request the list
-            @type projectId: int
-
-            @rtype: dict(dict(dict(data)))
-            @return: The available packages: outer dict uses the version string
-            as the key, inner uses the namespace, third uses the trove name as
-            keys.  Data is a dict containing the c{productDefinition} dict and
-            the C{stageLabel}.
-        """
-        # Get the conary repository client
-        project = projects.Project(self, projectId)
-        client = self.reposMgr.getUserClient(self.auth)
-
-        troves = client.repos.getPackageCreatorTroves(project.getFQDN())
-        #Set up a dictionary structure
-        ret = dict()
-
-        for (n, v, f), sjdata in troves:
-            data = json.loads(sjdata)
-            # First version
-            # We expect data to look like {'productDefinition':
-            # dict(hostname='repo.example.com', shortname='repo',
-            # namespace='rbo', version='2.0'), 'stageLabel':
-            # 'repo.example.com@rbo:repo-2.0-devel'}
-
-            # Do a backwards compatability check if it is an older trove
-            stageLabel = str((('stageLabel' in data and data['stageLabel']) or data['develStageLabel']))
-
-            #Filter out labels that don't match the stageLabel
-            label = str(v.trailingLabel())
-            if label == stageLabel:
-                pDefDict = data['productDefinition']
-                manip = ret.setdefault(pDefDict['version'], dict())
-                manipns = manip.setdefault(pDefDict['namespace'], dict())
-                manipns[n] = data
-                
-            if v.trailingRevision():
-                data['stageLabel'] += '/%s' % v.trailingRevision()
-                
-        return ret
-
-    @requiresAuth
-    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
-        project = projects.Project(self, projectId)
-
-        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
-
-        return sesH
-
-    def _startPackageCreatorSession(self, project, prodVer, namespace, troveName, label):
-        pc = self.getPackageCreatorClient()
-        mincfg = self._getMinCfg(project)
-        try:
-            sesH = pc.startSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=namespace,
-                version=prodVer), mincfg, "%s=%s" % (troveName, label))
-        except packagecreator.errors.PackageCreatorError, err:
-            raise mint_error.PackageCreatorError( \
-                    "Error starting the package creator service session: %s", str(err))
-        return sesH, pc
-
-    @requiresAuth
-    @typeCheck(((str, unicode),))
-    def getPackageCreatorRecipe(self, sesH):
-        """
-        Return a tuple of (isDefault, recipeData)
-
-        isDefault is True if the user has not modified the recipe
-        """
-        pc = self.getPackageCreatorClient()
-        return pc.getRecipe(sesH)
-
-    @requiresAuth
-    @typeCheck(((str, unicode),), str)
-    def savePackageCreatorRecipe(self, sesH, recipeData):
-        """
-        Store a package creator recipe. using an empty string for recipeData
-        will return recipe to default.
-        """
-        pc = self.getPackageCreatorClient()
-
-        # Strip off CRLFs and replace them with LFs
-        sanitizedRecipeData = recipeData.replace('\r\n', '\n')
-        pc.saveRecipe(sesH, sanitizedRecipeData)
-
-        return False
-
-    @requiresAuth
-    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
-        """
-            Get the list of factories, but instead of using an uploaded file,
-            it uses the archive that is stored in the :source trove referred to
-            by C{troveSpec}.
-
-            @param projectId: Project ID
-            @type projectId: int
-            @param troveSpec:
-        """
-        project = projects.Project(self, projectId)
-        #start the session
-        sesH, pc = self._startPackageCreatorSession(project, prodVer, namespace, troveName, label)
-        fact, data = packagecreator.getPackageCreatorFactories(pc, sesH)
-
-        return sesH, fact, data
-
-    @typeCheck(((str,unicode),), ((str,unicode),), dict, bool, ((str,unicode),))
-    @requiresAuth
-    def savePackage(self, sessionHandle, factoryHandle, data, build, recipeContents=''):
-        """
-        Save the package to the devel repository and optionally start building it
-
-        @param sessionHandle: Unique key generated by the call to
-        L{createPackageTmpDir}
-        @type sessionHandle: string
-        @param factoryHandle: The handle to the chosen factory as returned by
-        L{getPackageFactories}
-        @type factoryHandle: string
-        @param data: The data requested by the factory definition referred to
-        by the L{factoryHandle}
-        @type data: dictionary
-        @param build: Build the package after it's been saved?
-        @type build: boolean
-        @param recipeContents: The contents of the recipe to use
-        @type recipeContents: string
-
-        @return: a troveSpec pointing to the created source trove
-        @rtype: str
-        """
-        if recipeContents:
-            self.savePackageCreatorRecipe(sessionHandle, recipeContents)
-
-        pc = self.getPackageCreatorClient()
-
-        try:
-            datastream = packagecreator.getFactoryDataFromDataDict(pc, sessionHandle, factoryHandle, data)
-            srcHandle = pc.makeSourceTrove(sessionHandle, factoryHandle, datastream.getvalue())
-        except packagecreator.errors.ConstraintsValidationError, err:
-            raise mint_error.PackageCreatorValidationError(*err.args)
-        except packagecreator.errors.PackageCreatorError, err:
-            raise mint_error.PackageCreatorError( \
-                    "Error attempting to create source trove: %s", str(err))
-        if build:
-            try:
-                pc.build(sessionHandle, commit=True)
-            except packagecreator.errors.PackageCreatorError, err:
-                raise mint_error.PackageCreatorError( \
-                        "Error attempting to build package: %s", str(err))
-        return srcHandle
-
-    @typeCheck(((str,unicode),))
-    @requiresAuth
-    def getPackageBuildStatus(self, sessionHandle):
-        """
-        Retrieve the build status of the package referred to by L{sessionHandle}, if any.
-
-        @param sessionHandle: Unique key generated by the call to
-        L{createPackageTmpDir}
-        @type sessionHandle: string
-
-        @return: a list of four items: whether or not the build is complete, a
-        build status code (as returned by rmake), a message, and the list of
-        built packages if any.
-        @rtype: list(bool, int, string, list of three-tuples)
-        """
-        pc = self.getPackageCreatorClient()
-        try:
-            return pc.isBuildFinished(sessionHandle, commit=True)
-        except packagecreator.errors.PackageCreatorError, e:
-            # TODO: Get a real error status code
-            return [True, -1, str(e), []]
-
-    @typeCheck(((str,unicode),))
-    @requiresAuth
-    def getPackageBuildLogs(self, sessionHandle):
-        """
-        Get the build logs for the package creator build, if a build has been performed.
-
-        @param sessionHandle: Unique key generated by the call to
-        L{createPackageTmpDir}
-        @type sessionHandle: string
-
-        @return: The entire rmake build log
-        @rtype: string
-        @raise PackageCreatorError: If no build has been attempted, or an error
-        occurs talking to the build process.
-        """
-        pc = self.getPackageCreatorClient()
-        try:
-            return pc.getBuildLogs(sessionHandle)
-        except packagecreator.errors.PackageCreatorError, e:
-            raise mint_error.PackageCreatorError("Error retrieving build logs: %s" % str(e))
-
-    @typeCheck(((str,unicode),), ((str,unicode),))
-    @requiresAuth
-    def pollUploadStatus(self, uploadDirectoryHandle, fieldname):
-        """
-        Check the status of the upload to the CGI script by reading the status
-        file.  Return some measurements useful for displaying progress.
-
-        @param uploadDirectoryHandle: Unique key generated by the call to
-        L{createPackageTmpDir}
-        @type uploadDirectoryHandle: string
-        @param fieldname: The name of the upload field (default in package
-        creator is B{fileupload}).  This is used if more than one fileupload is
-        to happen on the same form as a sort of namespace.
-        @type fieldname: string
-
-        @return: See L{mint.web.whizzyupload.pollStatus}.  Contains the
-        metadata, the current status, and the current time for calculating
-        upload speed, and estimated time remaining.
-        @rtype: dictionary
-
-        @raise mint_error.PermissionDenied: If the L{uploadDirectoryHandle} doesn't exist, or is
-        invalid.
-        """
-        from mint.lib.fileupload import fileuploader
-        fieldname = str(fieldname)
-        ## Connect up to the tmpdir
-        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
-
-        if os.path.isdir(path):
-            #Look for the status and metadata files
-            return fileuploader(path, fieldname).pollStatus()
-        else:
-            raise mint_error.PermissionDenied("You are not allowed to check status on this file")
-
-    @typeCheck(((str,unicode),), (list, ((str,unicode),)))
-    @requiresAuth
-    def cancelUploadProcess(self, uploadDirectoryHandle, fieldnames):
-        """
-        If an upload is in progress to the cgi script, kill the processId being
-        used to handle it
-
-        @param uploadDirectoryHandle: Unique key generated by the call to
-        L{createPackageTmpDir}
-        @type uploadDirectoryHandle: string
-        @param fieldnames: The name(s) of the upload fields (default in package
-        creator is B{fileupload}).  This is used if more than one fileupload is
-        to happen on the same form as a sort of namespace.
-        @type fieldname: list of strings
-
-        @return: True if the uploadDirectoryHandle is a valid session, False otherwise.
-        @rtype: boolean
-        """
-        from mint.lib.fileupload import fileuploader
-        str_fieldnames = [str(x) for x in fieldnames]
-        path = packagecreator.getUploadDir(self.cfg, uploadDirectoryHandle)
-        if os.path.isdir(path):
-            for fieldname in str_fieldnames:
-                fileuploader(path, fieldname).cancelUpload()
-            return True
-        else:
-            return False
-
-    @requiresAuth
-    def startApplianceCreatorSession(self, projectId, versionId, rebuild, stageLabel = None):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pc = self.getApplianceCreatorClient()
-        mincfg = self._getMinCfg(project)
-        try:
-            sesH, otherInfo = pc.startApplianceSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, rebuild, stageLabel)
-        except packagecreator.errors.NoFlavorsToCook, err:
-            raise mint_error.NoImagesDefined( \
-                    "Error starting the appliance creator service session: %s",
-                    str(err))
-        except packagecreator.errors.ApplianceFactoryNotFound, err:
-            raise mint_error.OldProductDefinition( \
-                    "Error starting the appliance creator service session: %s",
-                    str(err))
-
-        except packagecreator.errors.PackageCreatorError, err:
-            log.exception("Error starting appliance creator session:")
-            raise mint_error.PackageCreatorError( \
-                    "Error starting the appliance creator service session: %s", str(err))
-        return sesH, otherInfo
-
-    @requiresAuth
-    def makeApplianceTrove(self, sessionHandle, buildStandardGroup = False):
-        pc = self.getApplianceCreatorClient()
-        # If we ever allow jumping past the editApplianceGroup page, this will
-        # have to filter out the :source troves added through package creator
-        return pc.makeApplianceTrove(sessionHandle, buildStandardGroup)
-
-    @requiresAuth
-    def addApplianceTrove(self, sessionHandle, troveSpec):
-        pc = self.getApplianceCreatorClient()
-        # hard code the explicit flag to True for this codepath
-        return pc.addTrove(sessionHandle, troveSpec, True)
-
-    @requiresAuth
-    def addApplianceTroves(self, sessionHandle, troveList):
-        pc = self.getApplianceCreatorClient()
-        # abstract out the implicit troves
-        troveDict = pc.listTroves(sessionHandle)
-        explicit = set(troveDict.get('explicitTroves', []))
-        explicit.update(set(troveList))
-        return pc.setTroves(sessionHandle, list(explicit),
-                troveDict.get('implicitTroves', []))
-
-    @requiresAuth
-    def setApplianceTroves(self, sessionHandle, troveList):
-        pc = self.getApplianceCreatorClient()
-        # abstract out the implicit troves
-        troveDict = pc.listTroves(sessionHandle)
-        return pc.setTroves(sessionHandle, troveList,
-                troveDict.get('implicitTroves', []))
-
-    @requiresAuth
-    def addApplianceSearchPaths(self, sessionHandle, searchPaths):
-        pc = self.getApplianceCreatorClient()
-        try:
-            return pc.addSearchPaths(sessionHandle, searchPaths)
-        except packagecreator.errors.PackageCreatorError, e:
-            raise mint_error.SearchPathError(str(e))
-
-    @requiresAuth
-    def listApplianceSearchPaths(self, sessionHandle):
-        pc = self.getApplianceCreatorClient()
-        return pc.listSearchPaths(sessionHandle)
-
-    @requiresAuth
-    def removeApplianceSearchPaths(self, sessionHandle, searchPaths):
-        pc = self.getApplianceCreatorClient()
-        return pc.removeSearchPaths(sessionHandle, searchPaths)
-
-    @requiresAuth
-    def listApplianceTroves(self, projectId, sessionHandle):
-        pc = self.getApplianceCreatorClient()
-        client = self.reposMgr.getUserClient(self.auth)
-        pkgs = []
-        # we only care about explicit troves here
-        for x in pc.listTroves(sessionHandle).get('explicitTroves', []):
-            if ':source' in x:
-                src = (x.replace(":source", '') + '-1').encode('utf-8') #Have to assume the build count
-                ts = parseTroveSpec(src)
-                try:
-                    # Later on we can use this to get a specific version, now
-                    # we just care that it doesn't raise a TroveNotFound
-                    # exception
-                    client.repos.findTrove(None, ts)
-                except TroveNotFound:
-                    #Don't add it to our final list, no binary got built
-                    pass
-                else:
-                    pkgs.append(ts[0])
-            else:
-                pkgs.append(x)
-        return pkgs
-
-    @requiresAuth
-    def getProductVersionSourcePackages(self, projectId, versionId):
-        pd = self._getProductDefinitionForVersionObj(versionId)
-        label = versions.Label(pd.getDefaultLabel())
-        client = self.reposMgr.getUserClient(self.auth)
-        ret = []
-        trvlist = client.repos.findTroves(label, [(None, None, None)],
-                allowMissing=True)
-        for k,v in trvlist.iteritems():
-            for n, v, f in v:
-                if n.endswith(':source'):
-                    ret.append((n, v.freeze()))
-        return ret
-
-    @typeCheck(int, int, ((str,unicode),), ((str,unicode),))
-    @requiresAuth
-    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
-        project = projects.Project(self, projectId)
-        version = self.getProductVersion(versionId)
-        pc = self.getPackageCreatorClient()
-        mincfg = self._getMinCfg(project)
-        try:
-            sesH = pc.startPackagingSession(dict(hostname=project.getFQDN(),
-                shortname=project.shortname, namespace=version['namespace'],
-                version=version['name']), mincfg, "%s=%s" % (troveName, troveVersion))
-        except packagecreator.errors.PackageCreatorError, err:
-            raise mint_error.PackageCreatorError( \
-                    "Error starting the package creator service session: %s", str(err))
-        try:
-            pc.build(sesH, commit=True)
-        except packagecreator.errors.PackageCreatorError, err:
-            raise mint_error.PackageCreatorError( \
-                    "Error attempting to build package: %s", str(err))
-        return sesH
-
-    @requiresAuth
-    def getAvailablePackages(self, sessionHandle, refresh = False):
-        pc = self.getPackageCreatorClient()
-        return pc.getAvailablePackagesFrozen(sessionHandle, refresh)
-
-    @requiresAuth
-    def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
-        pc = self.getPackageCreatorClient()
-        return pc.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
-
     @typeCheck(str)
     @requiresAuth
     def getAllBuildsByType(self, buildType):
@@ -3354,7 +2118,6 @@ class MintServer(object):
         for buildData in res:
             # we want to drop the hostname. it was collected by the builds
             # module call for speed reasons
-            hostname = buildData.pop('hostname')
             buildId = buildData['buildId']
             buildData['baseFileName'] = self.getBuildBaseFileName(buildId)
 
@@ -3393,7 +2156,6 @@ class MintServer(object):
         self.db = mint_database.Database(cfg, db=db)
         self.restDb = None
         self.reposMgr = repository.RepositoryManager(cfg, self.db._db)
-        self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
 
         global callLog
         if self.cfg.xmlrpcLogFile:
@@ -3412,9 +2174,6 @@ class MintServer(object):
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
-
-        self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
-                                   'deleteSession')
 
     @typeCheck(int)
     @requiresAdmin
@@ -3464,19 +2223,6 @@ class MintServer(object):
                         imagesDir, exc_info=True)
         
         return True
-
-    def getPackageCreatorClient(self):
-        return self._getPackageCreatorClient()
-
-    def getApplianceCreatorClient(self):
-        return self._getPackageCreatorClient()
-
-    def _getPackageCreatorClient(self):
-        def _getManager():
-            from mint.django_rest.rbuilder.manager import rbuildermanager
-            return rbuildermanager.RbuilderManager()
-        return packagecreator.getPackageCreatorClient(self.cfg, self.authToken,
-            djangoManagerCallback=_getManager)
 
     def getDownloadUrlTemplate(self, useRequest=True):
         if self.req and useRequest:

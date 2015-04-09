@@ -56,37 +56,6 @@ class PlatformsTestCase(XMLTestCase):
             [ x.platform_name for x in platforms_gotten.platform ],
             [ x.platform_name for x in platforms ])
 
-    def testGetContentSourceTypes(self):
-        cSourceTypes = platform_models.ContentSourceType.objects.all()
-        cSourceTypes_gotten = self.xobjResponse('platforms/content_source_types/')
-        self.assertEquals(len(list(cSourceTypes)), len(cSourceTypes_gotten.content_source_type))
-    
-    def testGetContentSourceType(self):
-        cSourceType = platform_models.ContentSourceType.objects.get(pk=1)
-        cSourceType_gotten = self.xobjResponse('platforms/content_source_types/ContentSourceType')
-        self.assertEquals(cSourceType.content_source_type, cSourceType_gotten.content_source_type.content_source_type)
-    
-    def testGetContentSources(self):
-        contentSources = platform_models.ContentSource.objects.all()
-        contentSources_gotten = self.xobjResponse('platforms/content_sources/')
-        self.assertEquals(len(contentSources), len(contentSources_gotten.content_source))
-    
-    def testGetContentSource(self):
-        contentSource = platform_models.ContentSource.objects.get(pk=1)
-        contentSource_gotten = self.xobjResponse('platforms/content_sources/RHN')
-        self.assertEquals(contentSource.name, contentSource_gotten.content_source.name)
-        self.assertEquals(contentSource.short_name, contentSource_gotten.content_source.short_name)
-        self.assertEquals(contentSource.default_source, int(contentSource_gotten.content_source.default_source))
-        self.assertEquals(contentSource.order_index, int(contentSource_gotten.content_source.order_index))
-        self.assertEquals(contentSource.content_source_type, contentSource_gotten.content_source.content_source_type)
-    
-    def testGetSourcesByPlatform(self):  #ignore
-        pass
-    
-    def testGetSourceTypesByPlatform(self): #ignore
-        pass
-
-
 
 class NewPlatformTest(XMLTestCase, SmartformMixIn):
     def setUp(self):
@@ -113,25 +82,7 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
             ['Platform', 'Platform1', 'Platform2', 'Hidden Platform', 'Platform5'])
         platform = platform_models.Platform.objects.get(platform_name="Platform")
         self.assertEquals(platform.label, "Platform")
-    
-    def testCreateContentSource(self):
-        response = self._post('platforms/content_sources/',
-            data=testsxml.contentSourcePOSTXml,
-            username="admin", password="password")
-        self.assertEquals(200, response.status_code)
-        # 3 sources were already in the fixture
-        self.assertEquals(3, len(platform_models.ContentSource.objects.all()))
-        content = platform_models.ContentSource.objects.get(name="PlatformContentSourceTestPost")
-        self.assertEquals("PlatformContentSourceTestPostShortName", content.short_name)
-        self.assertEquals(1, int(content.order_index))
 
-    def testCreateContentSourceType(self):
-        response = self._post('platforms/content_source_types/',
-            data=testsxml.contentSourceTypePOSTXml,
-            username="admin", password="password")
-        self.assertEquals(200, response.status_code)
-        self.assertEquals(4, len(list(platform_models.ContentSourceType.objects.all())))
-    
     def testUpdatePlatform(self):
         r = self._put('platforms/1',
             data=testsxml.platformPUTXml,
@@ -141,24 +92,6 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
         self.assertEquals('PlatformChanged', updatedPlat.label)
         self.assertEquals('Platform Name Changed', updatedPlat.platform_name)
         self.assertEquals('auto', updatedPlat.mode)
-    
-    def testUpdateContentSource(self):
-        r = self._put('platforms/content_sources/RHN/cs_shortname1',
-            data=testsxml.contentSourcePUTXml,
-            username='admin', password='password')
-        self.assertEquals(r.status_code, 200)
-        updatedContent = platform_models.ContentSource.objects.get(short_name='cs_shortnameChanged')
-        self.assertEquals('Content Source Changed', updatedContent.name)
-        self.assertEquals('cs_shortnameChanged', updatedContent.short_name)
-        self.assertEquals(1, updatedContent.default_source)
-    
-    def testUpdateContentSourceType(self):
-        r = self._put('platforms/content_source_types/RHN/1',
-            data=testsxml.contentSourceTypePUTXml,
-            username='admin', password='password')
-        self.assertEquals(r.status_code, 200)
-        updatedContent = platform_models.ContentSourceType.objects.get(pk=1)
-        self.assertEquals('ContentSourceType New', updatedContent.content_source_type)
 
     def testCanGetImageTypeDefinitionDescriptor(self):
 

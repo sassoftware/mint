@@ -4,7 +4,6 @@
 # Copyright (c) 2005-2008 rPath, Inc.
 # All Rights Reserved
 #
-from mint import maintenance
 from mint import helperfuncs
 from mint.web.templatesupport import projectText
 
@@ -51,11 +50,6 @@ onload = "javascript:;"
                         <img py:if="not cfg.rBuilderOnline" src="${cfg.staticPath}/apps/mint/images/prodlogo.png" alt="rBuilder Logo" />
                     </a>
                 </div>
-            </div>
-            <div py:if="maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE" id="maintmode">
-                <p>${cfg.productName} is currently in maintenance mode.
-                <a py:if="auth.admin" href="${cfg.basePath}admin/maintenance">Click here to enter the site administration menu.</a>
-                </p>
             </div>
             <?python
                 if 'errors' in locals():

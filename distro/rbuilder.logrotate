@@ -6,7 +6,6 @@
 /var/log/rbuilder/package-index.log
 /var/log/rbuilder/profiling
 /var/log/rbuilder/system_events.log
-/var/log/rbuilder/target_systems_import.log
 /var/log/rbuilder/scripts.log {
     missingok
     notifempty

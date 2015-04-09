@@ -4,4 +4,3 @@
 
 */5     *   *   *   *       root    /usr/share/rbuilder/scripts/job-cleanup -q
 *       *   *   *   *       root    /usr/share/rbuilder/scripts/process-system-events -q >& /dev/null
-0       0   *   *   *       root    /usr/share/rbuilder/scripts/purge-surveys -q >& /dev/null

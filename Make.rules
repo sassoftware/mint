@@ -45,17 +45,6 @@ kid-build:
 	$(PYTHON) /usr/bin/kidc $(kid_files) 2>.kiderror || ( cat .kiderror; exit 1 )
 	rm .kiderror
 
-raaplugins-install:
-	mkdir -p $(DESTDIR)$(STATICDEST)
-ifdef python_files
-	cp $(python_files) $(DESTDIR)$(STATICDEST)/
-	$(PYTHON) -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
-	$(PYTHON) -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(STATICDEST)/', ddir='$(STATICDEST)/', quiet=1)"
-endif
-ifdef kid_files
-	cp $(kid_files) $(kid_files:%.kid=%.pyc) $(DESTDIR)$(STATICDEST)/
-endif
-
 pyfiles-install:
 ifdef python_files
 	mkdir -p $(DESTDIR)$(PYDIR)/$(PYDEST)

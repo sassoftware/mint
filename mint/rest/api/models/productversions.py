@@ -70,29 +70,3 @@ class Stage(Model):
 
 class Stages(Model):
     stages = fields.ListField(Stage, displayName='stage')
-
-class GroupPromoteJob(Model):
-    uri = fields.CharField()
-    jobId = fields.IntegerField()
-    hostname = fields.CharField()
-    version = fields.CharField()
-    stage  = fields.CharField()
-    group = fields.CharField()
-    job = fields.UrlField('products.versions.stages.jobs', 
-                         ['hostname', 'version', 'stage', 'jobId'])
-
-class GroupPromoteJobStatus(Model):
-    code = fields.IntegerField()
-    message = fields.CharField()
-    isFinal = fields.BooleanField()
-
-    def set_status(self, code=None, message=None):
-        if code is not None:
-            self.code = code
-        if message is not None:
-            self.message = message
-        elif code is not None:
-            # Use a default message if the code changed but no message was
-            # provided.
-            self.message = jobstatus.statusNames[self.code]
-        self.isFinal = self.code in jobstatus.terminalStatuses

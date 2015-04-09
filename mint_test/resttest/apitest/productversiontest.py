@@ -726,7 +726,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>Development</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-devel</label>
-    <isPromotable>true</isPromotable>
+    <isPromotable>false</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-devel"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/Development/images"/>
   </stage>
@@ -735,7 +735,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <version>1.0</version>
     <name>QA</name>
     <label>testproject.rpath.local2@yournamespace:testproject-1.0-qa</label>
-    <isPromotable>true</isPromotable>
+    <isPromotable>false</isPromotable>
     <groups href="http://%(server)s:%(port)s/api/products/testproject/repos/search?type=group&amp;label=testproject.rpath.local2@yournamespace:testproject-1.0-qa"/>
     <images href="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/stages/QA/images"/>
   </stage>
@@ -752,25 +752,6 @@ class ProductVersionTest(restbase.BaseRestTest):
 """
         self.failUnlessEqual(response,
             exp % dict(server = client.server, port = client.port))
-
-    def testPutProductVersionStages(self):
-        uriTemplate = 'products/%s/versions/%s/stages/QA'
-        uri = uriTemplate % (self.productShortName, self.productVersion)
-        self.createUser('foouser')
-        client = self.getRestClient(username='foouser')
-        req, response = client.call('PUT', uri, body=promoteGroup % dict(
-                name = self.productShortName,
-                ),
-                convert=False)
-        exp = """\
-"""
-        #self.failUnlessEqual(response,
-        #    exp % dict(server = client.server, port = client.port))
-
-        uriTemplate = 'products/%s/versions/%s/stages/QA/jobs/%s'
-        uri = uriTemplate % (self.productShortName, self.productVersion
-                             ,response.jobId)
-        req, response = client.call('GET', uri, convert=True)
 
     def testSetProductVersionPlatform(self):
         self.setupPlatforms()

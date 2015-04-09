@@ -40,8 +40,6 @@ class CrestAuthenticationCallback(auth.AuthenticationCallback):
         request.authToken = self.authToken
         return ret
 
-    def processMethod(self, request, viewMethod, args, kw):
-        return self.checkDisablement(request, viewMethod)
 
 class CrestRepositoryCallback(crest.webhooks.ReposCallback):
     def __init__(self, db):

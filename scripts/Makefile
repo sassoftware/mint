@@ -35,11 +35,8 @@ generic_scripts = \
 	postgres-auto-update		\
 	postgres-major-migrate		\
 	process-system-events		\
-	purge-surveys			\
 	rbuilder-database		\
 	repository-sync			\
-	restore-preload-bundle		\
-	target-systems-import		\
 
 
 override STATICDEST = /usr/share/rbuilder/scripts

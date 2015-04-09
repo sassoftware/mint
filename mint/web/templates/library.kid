@@ -4,7 +4,6 @@ from mint import constants
 from mint import searcher
 from urllib import quote
 from mint import userlevels
-from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
 
 from mint.web.templatesupport import injectVersion, dictToJS, projectText
@@ -84,21 +83,12 @@ from mint.web.templatesupport import injectVersion, dictToJS, projectText
                 if cfg.SSL:
                     secureProtocol = "https"
             ?>
-        <div class="userLogin" py:if="maintenance.getMaintenanceMode(cfg) == maintenance.NORMAL_MODE">
+        <div class="userLogin">
           <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
           <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
           <div class="userBoxHeader">
               <div class="userBoxHeaderText">
                   <span class="userBoxBracket">[</span> sign in <span class="userBoxBracket">]</span>
-              </div>
-          </div>
-        </div>
-        <div class="adminLogin" py:if="maintenance.getMaintenanceMode(cfg) != maintenance.NORMAL_MODE">
-          <img class="left" src="${cfg.staticPath}apps/mint/images/header_user_left.png" alt="" />
-          <img class="right" src="${cfg.staticPath}apps/mint/images/header_user_right.png" alt="" />
-          <div class="userBoxHeader">
-              <div class="userBoxHeaderText">
-                  <span class="userBoxBracket">[</span> admin sign in <span class="userBoxBracket">]</span>
               </div>
           </div>
         </div>

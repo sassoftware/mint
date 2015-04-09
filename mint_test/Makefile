@@ -23,7 +23,6 @@ python_files = \
                jobserverharness.py \
                joinrequesttest.py \
                labelstest.py \
-               maintenancetest.py \
                marketingtest.py	\
                mint_rephelp.py \
                mirrortest.py \

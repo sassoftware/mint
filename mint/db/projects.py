@@ -433,10 +433,6 @@ class LabelsTable(database.KeyedTable):
             overrideAuth = False, newUser = '', newPass = ''):
         return self._getAllLabelsForProjects(projectId, overrideAuth, newUser, newPass)
 
-    def getAllLabelsForProjects(self,
-            overrideAuth = False, newUser = '', newPass = ''):
-        return self._getAllLabelsForProjects(overrideAuth=overrideAuth, newUser=newUser, newPass=newPass)
-
     def getLabel(self, labelId):
         cu = self.db.cursor()
         cu.execute("""SELECT label, shortname, url, authType, username, password,

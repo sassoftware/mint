@@ -3,7 +3,6 @@
 #
 
 import time
-import StringIO
 import xmlrpclib
 
 from mint import builds
@@ -11,10 +10,7 @@ from mint import mint_error
 from mint.rest import errors as rest_error
 from mint import projects
 from mint import users
-from mint import packagecreator
 from mint.mint_error import *
-
-from rpath_proddef import api1 as proddef
 
 # server.py has a history of XMLRPC API changes
 CLIENT_VERSIONS = [6, 7, 8]
@@ -37,35 +33,6 @@ class MintClient:
                  ", ".join(str(x) for x in CLIENT_VERSIONS)))
 
         self.server._protocolVersion = max(intersection)
-
-    def newProject(self, name, hostname, domainname, projecturl = "", desc = "",
-                   appliance = "unknown", shortname="", namespace="", 
-                   prodtype="",  version="", commitEmail="", isPrivate=False,
-                   projectLabel=""):
-        """
-        Create a new project.
-        @param name: name of new project
-        @param hostname: hostname for new project
-        @param domainname: domain name for new project
-        @param projecturl: project url for home page of new project
-        @param desc: description of new project
-        @param appliance: whether or not this project represents a
-               a software appliance ('yes', 'no', 'unknown')
-        @param shortname: the shortname of the product being created
-        @param namespace: for rBuilder Online, the namespace to use in the
-               first Product Version, not relevant for rBA
-        @param prodtype: the type of product being created.
-        @param version:  the initial product version.
-        @param commitEmail: email address to which commit messages are sent.
-        @param isPrivate: whether or not this should be a private product
-        @param platformLabel: label of the platform to which this product
-               is going to be derived from.
-        @return: primary key of newly created project.
-        """
-        return self.server.newProject(name, hostname, domainname, projecturl, 
-                                      desc, appliance, shortname, namespace, 
-                                      prodtype, version, commitEmail, isPrivate,
-                                      projectLabel)
 
     def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
@@ -111,9 +78,6 @@ class MintClient:
     def pwCheck(self, user, password):
         return self.server.pwCheck(user, password)
 
-    def updateAccessedTime(self, userId):
-        return self.server.updateAccessedTime(userId)
-
     def getProjectByFQDN(self, fqdn):
         """
         Retrieve a Project by its fully qualified domain name.
@@ -151,23 +115,6 @@ class MintClient:
         """
         return users.User(self.server, userId)
 
-    def getMembership(self, userId, projectId):
-        """
-        Returns the membership level of a user for a project, if any.
-        @param userId: database id of the requested user
-        @param projectId: database id of the requested project
-        @rtype: one of L{mint.userlevels.LEVELS}
-        """
-        level = self.server.getUserLevel(userId, projectId)
-        return (self.getUser(userId), level)
-
-    def removeUserAccount(self, userId):
-        """
-        Remove a user account without prejudigous.
-        @param userId: User account id
-        """
-        return self.server.removeUserAccount(userId)
-
     def getUserIdByName(self, username):
         """
         Fetch user id by username
@@ -175,52 +122,6 @@ class MintClient:
         @return: database id of requested user
         """
         return self.server.getUserIdByName(username)
-
-    def getUserSearchResults(self, terms, limit = 10, offset = 0):
-        """
-        Collect the results from a users search as requested by the search
-        terms
-        @param terms: Search terms
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @return:       dictionary of Items requested
-        """
-        return self.server.searchUsers(terms, limit, offset)
-
-    def addProjectRepositoryUser(self, projectId, username, password):
-        """
-        Add a user to a project's conary repository.
-        @param projectId: project Id.
-        @type projectId: C{int}
-        @param username: Username to add.
-        @type username: C{string}
-        @param password: Password for username.
-        @type password: C{string}
-        """
-        return self.server.addProjectRepositoryUser(projectId, username, password)
-
-    def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0, byPopularity = True, filterNoDownloads = False):
-        """
-        Collect the results as requested by the search terms
-        @param terms: Search terms
-        @param modified: int, see searcher.py for a list of values
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @param byPopularity: if True, order items by popularity metric
-        @return:       dictionary of Items requested
-        """
-        return self.server.searchProjects(terms, modified, limit, offset, byPopularity, filterNoDownloads)
-
-    def getPackageSearchResults(self, terms, limit = 10, offset = 0):
-        """
-        Collect the results from a package search as requested by the search
-        terms
-        @param terms: Search terms
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @return:       dictionary of Items requested
-        """
-        return self.server.searchPackages(terms, limit, offset)
 
     def getProjectsList(self):
         """
@@ -240,27 +141,6 @@ class MintClient:
         return self.server.getLabelsForProject(projectId,
             overrideAuth, newUser, newPass)
 
-    def getAllLabelsForProjects(self,
-            overrideAuth = False, newUser = '', newPass = ''):
-        """
-        Return label information and authorization information for a single project.
-        @param overrideAuth:  Should we use a specific user/pass combo to access this?
-        @param newUser: userid to use if overrideAuth is set to True
-        @param newpass: password to use if overrideAuth is set to True
-        """
-        return self.server.getAllLabelsForProjects(overrideAuth,
-                newUser, newPass)
-
-    def getUsers(self, sortOrder, limit, offset):
-        """
-        Return a list of users unfiltered in any way
-        @param sortOrder: Order in which to sort the results
-        @param limit:     Number of items to return
-        @param offset:    Begin listing at this offset
-        @return a list of user ids and a count of the total number of users
-        """
-        return self.server.getUsers(sortOrder, limit, offset)
-
     def getBuild(self, buildId):
         """
         Retrieve a L{builds.Build} object by build id.
@@ -270,128 +150,6 @@ class MintClient:
         @rtype: L{builds.Build}
         """
         return builds.Build(self.server, buildId)
-
-    def newBuild(self, projectId, buildName):
-        """
-        Create a new build.
-        @param projectId: the project to be associated with the new build.
-        @param buildName: name of the new build
-        @returns: an object representing the new build
-        @rtype: L{mint.builds.Build}
-        """
-        buildId = self.server.newBuild(projectId, buildName)
-        return self.getBuild(buildId)
-
-    def _filterFactories(self, factories):
-        """
-            Converts the return value from the server (which passes an xmlblob)
-            to an object tree
-        """
-        from pcreator import factorydata
-        #Factories comes across as an xml file, need to parse that to something useable
-        return [(x[0], factorydata.FactoryDefinition(fromStream=StringIO.StringIO(x[1])), x[2]) for x in factories]
-
-    def getPackageFactories(self, projectId, uploadDirectoryHandle, versionId, sessionHandle='', upload_url='', label=''):
-        """
-        Upload the file referred to by id, or upload_url and pass it to the package creator service with the context from the product definition stored for C{versionId}.
-        @param projectId: Project ID
-        @type projectId: int
-        @param id: ID returned from L{createPackageTmpDir}
-        @type id: str
-        @param versionId: ID of the version chosen
-        @type versionId: int
-        @param sessionHandle: A sessionHandle.  If empty, one will be created (and returned)
-        @type sessionHandle: string
-        @param upload_url: URL of a package or ''.  Not currently used
-        @type upload_url: str
-        @param label: Stage label
-        @type label: str
-        @returns: L{sessionHandle} plus a tuple containing a tuple of possible factories; see the package creator service API documentation for the format, and the filehandle to use in subsequent package creator operations
-        @rtype: tuple(tuple, str, dict)
-        """
-        sesH, factories, data = self.server.getPackageFactories(projectId, uploadDirectoryHandle, versionId, sessionHandle, upload_url, label)
-
-        #Parse the factory data xml
-        prevChoices = packagecreator.getFactoryDataFromXML(data)
-
-        return sesH, self._filterFactories(factories), prevChoices
-
-    def startPackageCreatorSession(self, projectId, prodVer, namespace, troveName, label):
-        """See L{mint.server.startPackageCreatorSession}"""
-        return self.server.startPackageCreatorSession(projectId, prodVer, namespace, troveName, label)
-
-    def getPackageCreatorRecipe(self, sesH):
-        """
-        This method returns a tuple of (isDefault, recipeData)
-
-        isDefault is True if the recipe was not modified by the user
-        """
-        return self.server.getPackageCreatorRecipe(sesH)
-
-    def savePackageCreatorRecipe(self, sesH, recipeData):
-        """
-        Save an override recipe. storing a blank string returns the recipe
-        to its default state.
-        """
-        self.server.savePackageCreatorRecipe(sesH, recipeData)
-
-    def getPackageFactoriesFromRepoArchive(self, projectId, prodVer, namespace, troveName, label):
-        "See getPackageFactories, this method is used when you merely want to edit the interview data"
-        sesH, factories, data = self.server.getPackageFactoriesFromRepoArchive(projectId, prodVer, namespace, troveName, label)
-
-        #Parse the factory data xml
-        prevChoices = packagecreator.getFactoryDataFromXML(data)
-
-        return sesH, self._filterFactories(factories), prevChoices
-
-    def savePackage(self, sessionHandle, factoryHandle, data, build=True, recipeContents=''):
-        "See L{mint.server.MintServer.savePackage}"
-        return self.server.savePackage(sessionHandle, factoryHandle, data, build, recipeContents)
-
-    def getPackageBuildLogs(self, sessionHandle):
-        '''See L{mint.server.MintServer.getPackageBuildLogs}'''
-        return self.server.getPackageBuildLogs(sessionHandle)
-
-    def getPackageCreatorPackages(self, projectId):
-        '''See L{mint.server.MintServer.getPackageCreatorPackages}'''
-        return self.server.getPackageCreatorPackages(projectId)
-
-    def getProductVersionSourcePackages(self, projectId, versionId):
-        """See L{mint.server.getProductVersionSourcePackages}"""
-        return self.server.getProductVersionSourcePackages(projectId, versionId)
-
-    def buildSourcePackage(self, projectId, versionId, troveName, troveVersion):
-        """See L{mint.server.buildSourcePackage}"""
-        return self.server.buildSourcePackage(projectId, versionId, troveName, troveVersion)
-
-    def startApplianceCreatorSession(self, projectId, versionId,
-            rebuild, stageLabel = None):
-        """See L{mint.server.startApplianceCreatorSession}"""
-        return self.server.startApplianceCreatorSession(projectId, versionId, rebuild, stageLabel)
-
-    def makeApplianceTrove(self, sessionHandle, buildStandardGroup = False):
-        return self.server.makeApplianceTrove(sessionHandle, buildStandardGroup)
-
-    def addApplianceTrove(self, sessionHandle, troveSpec):
-        return self.server.addApplianceTrove(sessionHandle, troveSpec)
-
-    def addApplianceTroves(self, sessionHandle, troveList):
-        return self.server.addApplianceTroves(sessionHandle, troveList)
-
-    def setApplianceTroves(self, sessionHandle, troveList):
-        return self.server.setApplianceTroves(sessionHandle, troveList)
-
-    def listApplianceTroves(self, projectId, sessionHandle):
-        return self.server.listApplianceTroves(projectId, sessionHandle)
-
-    def addApplianceSearchPaths(self, sessionHandle, searchPaths):
-        return self.server.addApplianceSearchPaths(sessionHandle, searchPaths)
-
-    def listApplianceSearchPaths(self, sessionHandle):
-        return self.server.listApplianceSearchPaths(sessionHandle)
-
-    def removeApplianceSearchPaths(self, sessionHandle, searchPaths):
-        return self.server.removeApplianceSearchPaths(sessionHandle, searchPaths)
 
     def getBuildFilenames(self, buildId):
         """
@@ -408,18 +166,6 @@ class MintClient:
 
     def setrAPAPassword(self, host, user, password, role):
         return self.server.setrAPAPassword(host, user, password, role)
-
-    def startImageJob(self, buildId):
-        """
-        Start a new image generation job.
-        @param buildId: the build id which describes the image to be created.
-        @return: the unique identifier of the job
-        @rtype: C{str}
-        """
-        return self.server.startImageJob(buildId)
-
-    def addDownloadHit(self, urlId, ip):
-        return self.server.addDownloadHit(urlId, ip)
 
     def getFileInfo(self, fileId):
         return self.server.getFileInfo(fileId)
@@ -451,12 +197,6 @@ class MintClient:
         return self.server.addInboundMirror(targetProjectId, sourceLabels,
                 sourceUrl, sourceAuthType, sourceUsername, sourcePassword,
                 sourceEntitlement, allLabels)
-
-    def getBackgroundMirror(self, projectId):
-        return self.server.getBackgroundMirror(projectId)
-
-    def setBackgroundMirror(self, projectId, backgroundMirror):
-        return self.server.setBackgroundMirror(projectId, backgroundMirror)
 
     def addOutboundMirror(self, sourceProjectId, targetLabels,
             allLabels = False, recurse = False, useReleases = False, id = -1):
@@ -530,21 +270,8 @@ class MintClient:
     def isLocalMirror(self, projectId):
         return self.server.isLocalMirror(projectId)
 
-    def getTroveReferences(self, troveName, troveVersion, troveFlavors = []):
-        return dict(self.server.getTroveReferences(troveName, troveVersion, troveFlavors))
-
-    def getTroveDescendants(self, troveName, troveLabel, troveFlavor):
-        return dict(self.server.getTroveDescendants(troveName, troveLabel, troveFlavor))
-
     def getAllProjectLabels(self, projectId):
         return self.server.getAllProjectLabels(projectId)
-
-    def setBuildFilenamesSafe(self, buildId, outputToken, filenames):
-        for f in filenames:
-            if len(f) == 4:
-                f[2] = str(f[2])
-        return self.server.setBuildFilenamesSafe(buildId, outputToken,
-                filenames)
 
     def getProductVersion(self, versionId):
         return self.server.getProductVersion(versionId)
@@ -565,20 +292,6 @@ class MintClient:
 
     def getAllBuildsByType(self, buildType):
         return self.server.getAllBuildsByType(buildType)
-
-    def getAvailablePackages(self, sessionHandle, refresh = False):
-        from conary import versions as conaryver
-        from conary.deps import deps as conarydeps
-        pkgs = self.server.getAvailablePackages(sessionHandle, refresh)
-        ret = []
-        for label in pkgs:
-            ret.append([(x[0],
-                conaryver.ThawVersion(str(x[1])),
-                conarydeps.ThawFlavor(str(x[2]))) for x in label])
-        return ret
-        
-    def getAvailablePackagesFiltered(self, sessionHandle, refresh = False, ignoreComponents = True):
-        return self.server.getAvailablePackagesFiltered(sessionHandle, refresh, ignoreComponents)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

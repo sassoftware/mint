@@ -52,13 +52,7 @@ class TableCache(object):
         self.updateServices = mirror.UpdateServicesTable(db, cfg)
         self.outboundMirrorsUpdateServices = mirror.OutboundMirrorsUpdateServicesTable(db)
         self.productVersions = projects.ProductVersionsTable(db, cfg)
-
         self.platforms = platforms.PlatformsTable(db, cfg)
-        self.platformSources = platforms.PlatformSourcesTable(db, cfg)
-        self.platformSourceData = platforms.PlatformSourceDataTable(db)
-        self.platformsPlatformSources = platforms.PlatformsPlatformSourcesTable(db)
-        self.platformsContentSourceTypes = platforms.PlatformsContentSourceTypesTable(db)
-
         self.projects.reposDB.cfg = cfg
 
 class Database(object):
@@ -95,10 +89,6 @@ class Database(object):
         self.outboundMirrorsUpdateServices = tables.outboundMirrorsUpdateServices
         self.productVersions = tables.productVersions
         self.platforms = tables.platforms
-        self.platformSources = tables.platformSources
-        self.platformSourceData = tables.platformSourceData
-        self.platformsPlatformSources = tables.platformsPlatformSources
-        self.platformsContentSourceTypes = tables.platformsContentSourceTypes
 
     @property
     def db(self):

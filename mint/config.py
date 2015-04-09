@@ -103,7 +103,6 @@ class MintConfig(conarycfg.ConfigFile):
     debugMode               = (CfgBool, False)
     disableAuthorization    = (CfgBool, False)
     entitlement             = conarycfg.CfgEntitlement
-    maintenanceLockPath     = (CfgPath, RBUILDER_DATA + '/run/maintenance.lock') 
     profiling               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     smallBugsEmail          = (CfgString, None)
@@ -220,15 +219,8 @@ class MintConfig(conarycfg.ConfigFile):
     availablePlatforms      = (CfgList(CfgString), [])
     configurablePlatforms   = (CfgList(CfgString), [])
     abstractPlatforms       = (CfgList(CfgString), [])
-    # Parallel lists of platform sources
-    platformSourceNames      = (CfgList(CfgString), [])
-    platformSourceUrls       = (CfgList(CfgString), [])
-    platformSourceLabels     = (CfgList(CfgString), [])
-    platformSources          = (CfgList(CfgString), [])
-    platformSourceTypes          = (CfgList(CfgString), [])
 
     acceptablePlatforms     = (CfgList(CfgString), [])
-    siteAuthCfgPath         = (CfgPath, RBUILDER_DATA + 'data/authorization.cfg')
 
     # Guided tours
     ec2GenerateTourPassword = (CfgBool, False,
@@ -300,6 +292,13 @@ class MintConfig(conarycfg.ConfigFile):
     includeBuildTypes       = None
     useInternalConaryProxy  = (CfgBool, True)
     packageCreatorConfiguration = None
+    maintenanceLockPath     = None
+    siteAuthCfgPath         = None
+    platformSourceNames     = None
+    platformSourceUrls      = None
+    platformSourceLabels    = None
+    platformSources         = None
+    platformSourceTypes     = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

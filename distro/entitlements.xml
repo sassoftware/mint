@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<entitlement>
-        <host name="products.rpath.com">
-                <class name="rpath-DIRECT-rBuilder"/>
-        </host>
-</entitlement>

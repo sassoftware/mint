@@ -21,7 +21,6 @@ from conary import conaryclient
 from conary.repository import errors
 from webob import exc as web_exc
 
-from mint import maintenance
 from mint.helperfuncs import getProjectText, configureClientProxies
 from mint.scripts import mirror as mirrormod
 from mint.web.webhandler import normPath, WebHandler
@@ -201,10 +200,8 @@ class AdminHandler(WebHandler):
                     self.client.addInboundMirror(projectId, [str(extLabel)] +
                         additionalLabels, url, authType, externalUser,
                         externalPass, externalEntKey, allLabels)
-                self.client.setBackgroundMirror(projectId, backgroundMirror)
             # remove mirroring if requested
             elif useMirror == 'none' and inboundMirror and editing:
-                self.client.setBackgroundMirror(projectId, False)
                 self.client.delInboundMirror(inboundMirror['inboundMirrorId'])
 
             verb = editing and "Edited" or "Added"
@@ -229,7 +226,7 @@ class AdminHandler(WebHandler):
         labelIdMap = self.client.getLabelsForProject(projectId)[0]
         label, labelId = labelIdMap.items()[0]
         labelInfo = self.client.getLabel(labelId)
-        backgroundMirror = bool(self.client.getBackgroundMirror(projectId))
+        backgroundMirror = False
 
         initialKwargs = {}
         initialKwargs['name'] = project.name
@@ -435,15 +432,6 @@ class AdminHandler(WebHandler):
         for outboundMirrorId in remove:
             self.client.delOutboundMirror(int(outboundMirrorId))
         self._redirectHttp("admin/outbound")
-
-    def maintenance(self, *args, **kwargs):
-        return self._write('admin/maintenance', kwargs = kwargs)
-
-    @intFields(curMode = None)
-    def toggleMaintLock(self, curMode, *args, **kwargs):
-        mode = curMode ^ 1
-        maintenance.setMaintenanceMode(self.cfg, mode)
-        self._redirectHttp("admin/maintenance")
 
     def updateServices(self, *args, **kwargs):
         updateServices = self.client.getUpdateServiceList()

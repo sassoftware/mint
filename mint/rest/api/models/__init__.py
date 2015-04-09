@@ -15,7 +15,6 @@ class RMCUrlField(fields.CalculatedField):
 from mint.rest.api.models.builddefinitions import *
 from mint.rest.api.models.capsules import *
 from mint.rest.api.models.members import *
-from mint.rest.api.models.siteauth import *
 from mint.rest.api.models.users import *
 from mint.rest.api.models.repos import *
 from mint.rest.api.models.descriptor import *
@@ -24,30 +23,6 @@ from mint.rest.api.models.products import *
 from mint.rest.api.models.productversions import *
 from mint.rest.api.models.images import *
 from mint.rest.api.models.modulehooks import *
-
-class RbuilderStatus(Model):
-    id                      = fields.AbsoluteUrlField(isAttribute=True)
-    version                 = fields.CharField()
-    conaryVersion           = fields.CharField()
-    rmakeVersion            = fields.CharField()
-    userName                = fields.CharField()
-    hostName                = fields.CharField()
-    isRBO                   = fields.BooleanField()
-    isExternalRba           = fields.BooleanField()
-    accountCreationRequiresAdmin = fields.BooleanField()
-    identity                = fields.ModelField(Identity)
-    rmcService              = RMCUrlField()
-    products                = fields.UrlField('products', None)
-    users                   = fields.UrlField('users', None)
-    platforms               = fields.UrlField('platforms', None)
-    moduleHooks             = fields.UrlField('moduleHooks', None)
-    maintMode               = fields.BooleanField()
-    proddefSchemaVersion    = fields.CharField()
-    inventoryConfigurationEnabled   = fields.BooleanField()
-    imageImportEnabled      = fields.BooleanField()
-
-    def get_absolute_url(self):
-        return '',
 
 class Fault(Model):
     code = fields.IntegerField()

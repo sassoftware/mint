@@ -12,11 +12,9 @@ from mint import mint_error
 from mint import projects
 from mint import userlevels
 from mint.db import repository as reposdb
-from mint.lib import siteauth
 from mint.rest.api import models
 from mint.rest import errors
 from mint.rest.db import authmgr
-from mint.rest.db import capsulemgr
 from mint.rest.db import filemgr
 from mint.rest.db import imagemgr
 from mint.rest.db import pkimgr
@@ -132,7 +130,6 @@ class Database(DBInterface):
         self.imageMgr = imagemgr.ImageManager(cfg, self, auth, self.publisher)
         self.userMgr = usermgr.UserManager(cfg, self, auth, self.publisher)
         self.platformMgr = platformmgr.PlatformManager(cfg, self, auth)
-        self.capsuleMgr = capsulemgr.CapsuleManager(cfg, self, auth)
         self.targetMgr = targetmgr.TargetManager(cfg, self, auth)
         self.pkiMgr = pkimgr.PKIManager(cfg, self, auth)
         self.systemMgr = systemmgr.SystemManager(cfg, self, auth)
@@ -141,12 +138,6 @@ class Database(DBInterface):
             subscribers = []
         for subscriber in subscribers:
             self.publisher.subscribe(subscriber)
-
-        # Don't instantiate things that go outside the core database
-        # connection if dbOnly is set.
-        self.siteAuth = None
-        if not dbOnly:
-            self.siteAuth = siteauth.getSiteAuth(cfg.siteAuthCfgPath)
         self._djMgr = None
 
     @property
@@ -177,7 +168,7 @@ class Database(DBInterface):
         pass
 
     def isOffline(self):
-        return self.siteAuth and self.siteAuth.isOffline()
+        return False
 
     @readonly
     def getUsername(self, userId):
@@ -488,12 +479,6 @@ class Database(DBInterface):
         else:
             return models.EmptyPlatformVersion()
 
-    def updateProductVersionStage(self, hostname, version, stageName, trove):
-        return self.productMgr.updateProductVersionStage(hostname, version, stageName, trove)
-
-    def getGroupPromoteJobStatus(self, hostname, version, stage, jobId):
-        return self.productMgr.getGroupPromoteJobStatus(hostname, version, stage, jobId)
-
     @readonly    
     def getProductVersionStage(self, hostname, version, stageName):
         self.auth.requireProductReadAccess(hostname)
@@ -501,12 +486,11 @@ class Database(DBInterface):
         stages = pd.getStages()
         for stage in stages:
             if str(stage.name) == stageName:
-                promotable = ((stage.name != stages[-1].name and True) or False) 
                 return models.Stage(name=str(stage.name),
                                     label=str(pd.getLabelForStage(stage.name)),
                                     hostname=hostname,
                                     version=version,
-                                    isPromotable=promotable)
+                                    isPromotable=False)
         raise errors.StageNotFound(stageName)
 
     @readonly    
@@ -516,12 +500,11 @@ class Database(DBInterface):
         stageList = models.Stages()
         stages = pd.getStages()
         for stage in stages:
-            promotable = ((stage.name != stages[-1].name and True) or False)
             stageList.stages.append(models.Stage(name=str(stage.name),
                                  label=str(pd.getLabelForStage(stage.name)),
                                  hostname=hostname,
                                  version=version,
-                                 isPromotable=promotable))
+                                 isPromotable=False))
         return stageList
 
     def listImagesForProductVersion(self, hostname, version):
@@ -611,31 +594,12 @@ class Database(DBInterface):
         self.auth.requireBuildsOnHost(hostname, [imageId])
         return self.imageMgr.listFilesForImage(hostname, imageId)
 
-    def getPlatformContentErrors(self, contentSourceName, instanceName):
-        return self.capsuleMgr.getIndexerErrors(contentSourceName, instanceName)
-
-    def getPlatformContentError(self, contentSourceName, instanceName, errorId):
-        return self.capsuleMgr.getIndexerError(contentSourceName, instanceName,
-            errorId)
-
-    def updatePlatformContentError(self, contentSourceName, instanceName,
-            errorId, resourceError):
-        return self.capsuleMgr.updateIndexerError(contentSourceName,
-            instanceName, errorId, resourceError)
-
     @commitafter
     def createUser(self, username, password, fullName, email, 
                    displayEmail, blurb, admin=False):
         self.auth.requireAdmin()
         self.userMgr.createUser(username, password, fullName, email, 
                                 displayEmail, blurb, admin=admin)
-
-
-    @readonly    
-    def getIdentity(self):
-        if self.siteAuth:
-            return self.siteAuth.getIdentityModel()
-        raise RuntimeError("Identity information is not loaded.")
 
     @commitafter
     def getPlatforms(self):
@@ -661,73 +625,9 @@ class Database(DBInterface):
     def getPlatformImageTypeDefs(self, request, platformId):
         return self.platformMgr.getPlatformImageTypeDefs(request, platformId)
 
-    @readonly
-    def getSourceTypes(self):
-        return self.platformMgr.getSourceTypes()
-
-    @readonly
-    def getSourceType(self, sourceType):
-        return self.platformMgr.getSourceType(sourceType)
-
-    @readonly
-    def getSourceTypeDescriptor(self, sourceType):
-        return self.platformMgr.getSourceTypeDescriptor(sourceType)
-
-    @commitafter
-    def getSources(self, sourceType):
-        return self.platformMgr.getSources(sourceType)
-
-    @commitafter
-    def getSourcesByPlatform(self, platformId):
-        return self.platformMgr.getSourcesByPlatform(platformId)
-
-    @commitafter
-    def getSource(self, shortName):
-        return self.platformMgr.getSource(shortName)
-
-    @readonly
-    def getSourceTypesByPlatform(self, platformId):
-        return self.platformMgr.getSourceTypesByPlatform(platformId)
-
-    @readonly
-    def getPlatformStatus(self, platformId):
-        return self.platformMgr.getPlatformStatus(platformId)
-
-    @readonly
-    def getPlatformStatusTest(self, platform):
-        return self.platformMgr.getPlatformStatusTest(platform)
-
-    @readonly
-    def getPlatformLoadStatus(self, platformId, jobId):
-        return self.platformMgr.getPlatformLoadStatus(platformId, jobId)
-
-    @commitafter
-    def getSourceStatusByName(self, sourceType, shortName):
-        return self.platformMgr.getSourceStatusByName(shortName)
-
-    @commitafter
-    def getSourceStatus(self, source):
-        return self.platformMgr.getSourceStatus(source)
-
-    @commitafter
-    def updateSource(self, shortName, sourceInstance):
-        return self.platformMgr.updateSource(sourceInstance)
-
     @commitafter
     def updatePlatform(self, platformId, platform):
         return self.platformMgr.updatePlatform(platformId, platform)
-
-    @commitafter
-    def loadPlatform(self, platformId, platformLoad):
-        return self.platformMgr.loadPlatform(platformId, platformLoad)
-
-    @commitafter
-    def createSource(self, source):
-        return self.platformMgr.createSource(source)
-
-    @commitafter
-    def deleteSource(self, shortName):
-        return self.platformMgr.deleteSource(shortName)
 
     @readonly
     def getCACertificates(self):

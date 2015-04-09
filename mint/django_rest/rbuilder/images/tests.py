@@ -826,35 +826,6 @@ class ImagesTestCase(RbacEngine):
         buildLog = self.mgr.getBuildLog(img.image_id)
         self.assertEqual(buildLog, data + data2)
 
-    class MockKey(object):
-        class MockPolicy(object):
-            class MockACL(object):
-                def add_user_grant(self, permission, user_id):
-                    pass
-
-            def __init__(self):
-                self.acl = self.MockACL()
-
-        def __init__(self, keyName):
-            self.keyName = keyName
-
-        def set_contents_from_file(self, fp, cb = None, policy = None):
-            if cb:
-                cb(10, 16)
-
-        def get_acl(self):
-            return self.MockPolicy()
-
-        def set_acl(self, acl):
-            pass
-
-    class MockBucket(test_utils.CallProxy):
-        def new_key(self, key_name):
-            return self.MockKey(key_name)
-        def get_key(self, key_name):
-            return self.MockKey(key_name)
-    MockBucket.MockKey = MockKey
-
     def testPutImageStatus(self):
         # Set up EC2
         # Needed by setTargetUserCredentials
@@ -878,10 +849,6 @@ class ImagesTestCase(RbacEngine):
         ))
         self.mgr.setTargetUserCredentials(tgt, dict(accountId="12345",
             publicAccessKeyId="public key", secretAccessKey="secret key"))
-
-        from mint import ec2
-        self.mock(ec2.S3Wrapper, 'createBucket',
-            lambda *args, **kwargs: self.MockBucket())
 
         img = self._setupImageOutputToken()
         archiveContents = file(self.createFakeAmiBuild()).read()

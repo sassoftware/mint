@@ -9,11 +9,10 @@ import os
 from conary import constants as conaryConstants
 from rmake import constants as rmakeConstants
 from rpath_proddef import api1 as proddef
-from mint import constants, maintenance
+from mint import constants
 
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.discovery import models
-from mint.django_rest.rbuilder import modellib
 exposed = basemanager.exposed
 
 class DiscoveryManager(basemanager.BaseManager):
@@ -40,7 +39,7 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.hostname = os.uname()[1]
         ci.is_external_rba = self._bool(self.cfg.rBuilderExternal)
         ci.account_creation_requires_admin = self._bool(self.cfg.adminNewUsers)
-        ci.maintenance_mode = self._bool(maintenance.getMaintenanceMode(self.cfg))
+        ci.maintenance_mode = 'false'
         ci.inventory_configuration_enabled = self._bool(self.cfg.inventoryConfigurationEnabled)
         ci.image_import_enabled = self._bool(self.cfg.imageImportEnabled)
         ci.rbuilder_id = self._getRbuilderId()

@@ -12,7 +12,6 @@ from mint import mint_error
 
 
 class Project(database.TableObject):
-    # XXX: the disabled column is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name', 'description', 'hostname',
         'domainname', 'namespace', 'projecturl', 'hidden', 'external',
         'isAppliance', 'disabled', 'timeCreated', 'timeModified',
@@ -67,9 +66,6 @@ class Project(database.TableObject):
     def getVersion(self):
         return self.version
 
-    def getCommits(self):
-        return self.server.getCommitsForProject(self.id)
-
     def getCommitEmail(self):
         return self.commitEmail
 
@@ -79,25 +75,8 @@ class Project(database.TableObject):
         except mint_error.ItemNotFound:
             return userlevels.NONMEMBER
 
-    def addMemberById(self, userId, level):
-        assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, userId, "", level)
-
-    def addMemberByName(self, username, level):
-        assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, 0, username, level)
-
-    def delMemberById(self, userId):
-        return self.server.delMember(self.id, userId)
-
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
-
-    def setCommitEmail(self, commitEmail):
-        return self.server.setProjectCommitEmail(self.id, commitEmail)
-
-    def setBackupExternal(self, backupExternal):
-        return self.server.setBackupExternal(self.id, backupExternal)
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
@@ -114,20 +93,11 @@ class Project(database.TableObject):
     def removeLabel(self, labelId):
         return self.server.removeLabel(self.id, labelId)
 
-    def addUserKey(self, username, keydata):
-        return self.server.addUserKey(self.id, username, keydata)
-
-    def projectAdmin(self, userName):
-        return self.server.projectAdmin(self.id, userName)
-
     def getUrl(self, baseUrl=None):
         if not baseUrl:
             baseUrl = 'http://%s%s' % (self.server._cfg.siteHost,
                     self.server._cfg.basePath)
         return '%sproject/%s/' % (baseUrl, self.hostname)
-
-    def getBuilds(self):
-        return self.server.getBuildsForProject(self.id)
 
     def getApplianceValue(self):
         if not self.isAppliance:

@@ -23,12 +23,11 @@ from webob import exc as web_exc
 from mint import shimclient
 from mint import userlevels
 from mint.helperfuncs import getProjectText, weak_signature_call
-from mint.mint_error import MaintenanceMode, MintError
+from mint.mint_error import MintError
 from mint.web import fields
 from mint.web.admin import AdminHandler
 from mint.web.site import SiteHandler
 from mint.web.webhandler import WebHandler, normPath
-from mint import maintenance
 
 
 # called from hooks.py if an exception was not caught
@@ -92,17 +91,8 @@ class MintApp(WebHandler):
 
         self.auth = self.client.checkAuth()
 
-        if not self.auth.admin and self.req.path_info_peek() not in (
-                'maintenance', 'processLogin', 'logout',
-                'validateSession', 'continueLogin', 'continueLogout'):
-            maintenance.enforceMaintenanceMode(self.cfg)
-
         if self.auth.authorized:
-            try:
-                self.user = self.client.getUser(self.auth.userId)
-            except MaintenanceMode:
-                # A disabled rBuilder will forbid shim calls, even as admin.
-                pass
+            self.user = self.client.getUser(self.auth.userId)
         self.auth.setToken(self.authToken)
 
         method = self._getHandler()
@@ -121,8 +111,6 @@ class MintApp(WebHandler):
         try:
             output = weak_signature_call(method, **d)
         except MintError, e:
-            if isinstance(e, MaintenanceMode):
-                raise
             tb = logTraceback()
             err_name = sys.exc_info()[0].__name__
             output = self._write("error", shortError = err_name, error = str(e),

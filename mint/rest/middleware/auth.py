@@ -15,10 +15,7 @@
 #
 
 from restlib.response import Response
-from mint import maintenance
 from mint import shimclient
-from mint.rest.api import models
-from mint.rest.modellib import converter
 
 
 # Decorator for public (unauthenticated) methods/functions
@@ -46,15 +43,6 @@ def tokenRequired(func):
     """
     func.tokenRequired = True
     return func
-
-
-def noDisablement(method):
-    """
-    Decorator for methods that should work even when the rBuilder's
-    authorization is invalid/expired.
-    """
-    method.dont_disable = True
-    return method
 
 
 class AuthenticationCallback(object):
@@ -89,53 +77,7 @@ class AuthenticationCallback(object):
         self.db.setAuth(mintAuth, request.auth)
         self.db.mintClient = mintClient
 
-        if self.db.siteAuth:
-            self.db.siteAuth.refresh()
-
-    def checkDisablement(self, request, viewMethod):
-        """
-        Check whether the rBuilder is disabled for maintenance or
-        authentication reasons. If it is, and the method being
-        invoked isn't flagged as always available, raise a fault.
-        """
-        if not getattr(viewMethod, 'dont_disable', False):
-            mode = maintenance.getMaintenanceMode(self.cfg)
-            if mode == maintenance.NORMAL_MODE:
-                return
-
-            code = 503
-            if mode == maintenance.EXPIRED_MODE:
-                content = ("The rBuilder's entitlement has expired.\n\n"
-                        "Please navigate to the rBuilder homepage for "
-                        "more information.\n")
-                error = 'site-disabled'
-            elif mode == maintenance.LOCKED_MODE:
-                content = ("The rBuilder is currently in maintenance mode."
-                        "\n\nPlease contact your site administrator for more "
-                        "information.\n")
-                error = 'maintenance-mode'
-
-            # Flex can't get headers from error responses in Firefox
-            isFlash = 'HTTP_X_FLASH_VERSION' in request.headers or 'X-Wrap-Response-Codes' in request.headers
-
-            if not getattr(request, 'contentType', None):
-                request.contentType = 'text/plain'
-                request.responseType = 'xml'
-
-            if isFlash or request.contentType != 'text/plain':
-                fault = models.Fault(code=code, message=content)
-                content = converter.toText(request.responseType, fault,
-                        self.controller, request)
-                if isFlash:
-                    code = 200
-            return Response(content, content_type=request.contentType,
-                    status=code, headers={'X-rBuilder-Error': error})
-
     def processMethod(self, request, viewMethod, args, kwargs):
-        response = self.checkDisablement(request, viewMethod)
-        if response:
-            return response
-
         remote = request.remote
         if isinstance(remote, (list, tuple)):
             remote = remote[0]

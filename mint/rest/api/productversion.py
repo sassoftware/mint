@@ -107,21 +107,12 @@ class BuildDefinitionMixIn(object):
         def write(self, data):
             self._digest.update(data)
 
-class PromotionJobStatusController(base.BaseController):
-    modelName = 'jobs'
-
-    def index(self, request, hostname, version, stageName):
-        return self.db.getGroupPromoteJobStatuses(hostname, version, stageName)
-
-    def get(self, request, hostname, version, stageName, jobs):
-        return self.db.getGroupPromoteJobStatus(hostname, version, stageName, jobs)
 
 class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
     modelName = 'stageName'
 
     urls = {'images' : dict(GET='getImages'),
             'imageDefinitions' : dict(GET='getImageDefinitions'),
-            'jobs' : PromotionJobStatusController,
            }
 
     @auth.public
@@ -131,14 +122,6 @@ class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
     @auth.public
     def get(self, request, hostname, version, stageName):
         return self.db.getProductVersionStage(hostname, version, stageName)
-
-    @requires('trove', models.Trove)
-    def update(self, request, hostname, version, stageName, trove):
-        return self.db.updateProductVersionStage(hostname, version, stageName, trove)
-
-    @requires('trove', models.Trove)
-    def process(self, request, hostname, version, stageName, trove):
-        return self.db.updateProductVersionStage(hostname, version, stageName, trove)
 
     @auth.public
     def getImages(self, request, hostname, version, stageName):

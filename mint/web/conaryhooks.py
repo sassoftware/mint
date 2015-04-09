@@ -7,7 +7,6 @@ import base64
 import socket
 from webob import exc as web_exc
 
-from mint import maintenance
 from mint.rest.errors import ProductNotFound
 
 from conary.repository import transport
@@ -25,8 +24,7 @@ class MintConaryHandler(wsgi_hooks.ConaryHandler):
         self.context = context
 
     def _loadCfg(self):
-        req, cfg, manager = self.context.req, self.context.cfg, self.context.rm
-        maintenance.enforceMaintenanceMode(cfg)
+        req, manager = self.context.req, self.context.rm
 
         fqdn = hostName = None
         if req.path_info_peek() == 'repos':

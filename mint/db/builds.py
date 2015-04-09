@@ -246,47 +246,6 @@ class BuildsTable(database.KeyedTable):
             assert not row.fields
             out.append(outRow)
             imageIdToImageHash[outRow['buildId']] = outRow
-        out.extend(self.addDeferredImagesByType(cu, queryTmpl, imageTypeId,
-            requestingUserId, limitToUserId, imageIdToImageHash, okHiddenProjectIds, keys))
-        return out
-
-    def addDeferredImagesByType(self, cu, queryTmpl, baseImageTypeId,
-            requestingUserId, limitToUserId, baseImageMap, okHiddenProjectIds,
-            keys):
-        out = []
-        imageTypeId = buildtypes.DEFERRED_IMAGE
-        extraSelect = ", base.buildId AS baseBuildId"
-        extraJoin = """
-            JOIN BuildData AS bd ON (b.buildId = bd.buildId)
-            JOIN Builds AS base ON (bd.value = base.output_trove)
-        """
-        extraWhere = """
-            AND bd.name = 'baseImageTrove'
-            AND base.buildType = ?
-        """
-        query = queryTmpl % {'extraWhere' : extraWhere,
-                         'extraSelect' : extraSelect,
-                         'extraJoin' : extraJoin}
-        cu.execute(query, requestingUserId, imageTypeId, baseImageTypeId)
-        for row in cu:
-            if not self._filterBuildVisibility(row,
-                    okHiddenProjectIds, limitToUserId):
-                continue
-            if row['baseBuildId'] not in baseImageMap:
-                # Base image not visible
-                continue
-            outRow = {}
-            for key in keys:
-                value = row.pop(key, None)
-                if key == 'troveFlavor':
-                    key = 'architecture'
-                    if value:
-                        value = helperfuncs.getArchFromFlavor(value)
-                if value is not None:
-                    outRow[key] = value
-            # Expose the build type as well
-            outRow['imageType'] = 'DEFERRED_IMAGE'
-            out.append(outRow)
         return out
 
 

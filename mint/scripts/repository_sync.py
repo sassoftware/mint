@@ -121,9 +121,6 @@ class SyncTool(object):
             return
         if pd.getProductDefinitionLabel() != label:
             # baselabel does not match
-            log.info("Product definition on label %s has base label %s; not "
-                    "synchronizing into database", label,
-                    pd.getProductDefinitionLabel())
             return
 
         platformLabel = pd.getPlatformSourceLabel()

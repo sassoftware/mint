@@ -482,12 +482,8 @@ class ImageManager(manager.Manager):
             imageFileListMap.update(dict((x, y)
                 for (x, y) in zip(imageIds, imageFilesList)))
 
-        deferredImages = []
         imageMap = {}
         for imageData in images:
-            if imageData['imageType'] == 'DEFERRED_IMAGE':
-                deferredImages.append(imageData)
-                continue
             imageId = imageData['buildId']
             imageFileList = imageFileListMap[imageId]
             imageFileData = [
@@ -502,18 +498,6 @@ class ImageManager(manager.Manager):
             imageData['files'] = imageFileData
             imageData['baseFileName'] = imagesBaseFileNameMap[imageId]
             imageMap[imageId] = imageData
-        # Now munge deferred images
-        for img in deferredImages:
-            imageId = img['buildId']
-            baseImage = imageMap[img['baseBuildId']]
-            # Copy file data from the base image
-            imageFileData = []
-            for fileData in baseImage['files']:
-                fileData = fileData.copy()
-                fileData['uniqueImageId'] = imageId
-                imageFileData.append(fileData)
-            img['files'] = imageFileData
-            img['baseFileName'] = imagesBaseFileNameMap[imageId]
         return images
 
     def _getImageLogger(self, hostname, imageId):

@@ -4,8 +4,6 @@
 # All Rights Reserved
 #
 
-import time
-
 from mint import buildtemplates
 from mint import buildtypes
 from mint import flavors
@@ -19,21 +17,6 @@ from conary import versions
 from conary.deps import deps
 
 PROTOCOL_VERSION = 1
-
-def getExtraFlags(buildFlavor):
-    """Return a list of human-readable strings describing various
-       characteristics that a flavor may have, defined by the
-       flavorFlags dictionary in buildtypes.py.
-    """
-    if type(buildFlavor) == str:
-        buildFlavor = deps.ThawFlavor(buildFlavor)
-
-    extraFlags = []
-    for flag, flavor in buildtypes.flavorFlagFlavors.items():
-        if buildFlavor.stronglySatisfies(deps.parseFlavor(flavor)):
-            extraFlags.append(buildtypes.flavorFlagNames[flag])
-
-    return extraFlags
 
 
 def getImportantFlavors(buildFlavor):
@@ -71,9 +54,6 @@ class Build(database.TableObject):
     def getName(self):
         return self.name
 
-    def setName(self, name):
-        return self.server.setBuildName(self.buildId, name.strip())
-
     def getDefaultName(self):
         """ Returns a generated build name based on the group trove
             the build is based upon and its version. This should be
@@ -83,9 +63,6 @@ class Build(database.TableObject):
 
     def getDesc(self):
         return self.description
-
-    def setDesc(self, desc):
-        return self.server.setBuildDesc(self.buildId, desc.strip())
 
     def getProjectId(self):
         return self.projectId
@@ -114,8 +91,6 @@ class Build(database.TableObject):
         return self.server.setBuildType(self.buildId, buildType)
 
     def getBuildType(self):
-        if not self.buildType:
-            self.buildType = self.server.getBuildType(self.buildId)
         return self.buildType
 
     def getFiles(self):
@@ -124,12 +99,6 @@ class Build(database.TableObject):
             if 'size' in bf:
                 bf['size'] = int(bf['size'])
         return filenames
-
-    def setFiles(self, filenames):
-        for f in filenames:
-            if len(f) == 4:
-                f[2] = str(f[2])
-        return self.server.setBuildFilenames(self.buildId, filenames)
 
     def getArch(self):
         """Return a printable representation of the build's architecture."""
@@ -176,15 +145,6 @@ class Build(database.TableObject):
             if name not in dataDict:
                 dataDict[name] = template[name][1]
         return dataDict
-
-    def serialize(self):
-        return self.server.serializeBuild(self.buildId)
-
-    def addFileUrl(self, fileId, urlType, url):
-        return self.server.addFileUrl(self.getId(), fileId, urlType, url)
-
-    def removeFileUrl(self, fileId, urlId):
-        return self.server.removeFileUrl(self.getId(), fileId, urlId)
 
     def deleteBuild(self):
         return self.server.deleteBuild(self.getId())

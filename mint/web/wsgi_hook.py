@@ -37,7 +37,6 @@ from mint.web import app
 from mint.web import catalog
 from mint.web import conaryhooks
 from mint.web import rpchooks
-from mint.web import uploader
 from mint.web import webhandler
 log = logging.getLogger(__name__)
 
@@ -146,9 +145,6 @@ class application(object):
         elif elem == 'catalog':
             self.req.path_info_pop()
             return catalog.catalogHandler(self)
-        elif elem == 'cgi-bin':
-            self.req.path_info_pop()
-            return uploader.handle(self)
         else:
             return self.handleWeb()
 

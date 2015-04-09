@@ -51,10 +51,6 @@ def filteredCall(self, *args, **kwargs):
 from mint import shimclient
 shimclient._ShimMethod.__call__ = filteredCall
 
-from mint_test import _apache
-sys.modules['_apache'] = _apache
-
-
 class Suite(suite.TestSuite):
     testsuite_module = sys.modules[__name__]
 

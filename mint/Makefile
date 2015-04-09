@@ -2,7 +2,7 @@
 # Copyright (c) SAS Institute Inc.
 #
 
-SUBDIRS = templates db django_rest image_gen lib rest scripts web
+SUBDIRS = templates db django_rest lib rest scripts web
 
 python_files = $(wildcard *.py)
 

@@ -1,4 +1,0 @@
-#!/bin/sh
-
-service gunicorn reload
-exit 0

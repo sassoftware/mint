@@ -77,10 +77,6 @@ rm -f /srv/rbuilder/data/platformName.cache
 # Old pcreator sessions are no longer useful (or desirable)
 rm -rf /srv/rbuilder/tmp/users
 
-# Primary migration is done, exit maintenance mode now since some scripts need
-# to talk to local repositories.
-rm -f /srv/rbuilder/run/maintenance.lock
-
 # Start ancillary services
 for name in $services
 do

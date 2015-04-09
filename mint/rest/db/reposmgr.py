@@ -228,17 +228,16 @@ class RepositoryManager(manager.Manager):
             cfg.configLine('user %s %s %s' % (fqdn, authInfo.username,
                                               authInfo.password))
 
-        if not self.db.siteAuth.isOffline():
-            nc = conaryclient.ConaryClient(cfg).getRepos()
-            try:
-                # use 2**64 to ensure we won't make the server do much
-                nc.getNewTroveList(fqdn, '4611686018427387904')
-            except reposerrors.InsufficientPermission, e:
-                e_tb = sys.exc_info()[2]
-                raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
-            except reposerrors.OpenError, e:
-                e_tb = sys.exc_info()[2]
-                raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
+        nc = conaryclient.ConaryClient(cfg).getRepos()
+        try:
+            # use 2**64 to ensure we won't make the server do much
+            nc.getNewTroveList(fqdn, '4611686018427387904')
+        except reposerrors.InsufficientPermission, e:
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryMirrorError(url, e), None, e_tb
+        except reposerrors.OpenError, e:
+            e_tb = sys.exc_info()[2]
+            raise errors.ExternalRepositoryAccessError(url, e), None, e_tb
 
     def _getNextMirrorOrder(self):
         cu = self.db.cursor()

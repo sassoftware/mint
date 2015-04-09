@@ -20,17 +20,7 @@ from mint.django_rest.rbuilder.packageindex.manager import PackageManager
 from mint.django_rest.rbuilder.projects.manager import ProjectManager
 from mint.django_rest.rbuilder.users.manager import UsersManager
 from mint.django_rest.rbuilder.modulehooks.manager import ModuleHooksManager
-from mint.django_rest.rbuilder.platforms.manager import SourceStatusManager, \
-                                                        SourceErrorsManager, \
-                                                        SourceManager, \
-                                                        SourceTypeDescriptorManager, \
-                                                        SourceTypeStatusTestManager, \
-                                                        SourceTypeManager, \
-                                                        PlatformLoadStatusManager, \
-                                                        PlatformSourceManager, \
-                                                        PlatformSourceTypeManager, \
-                                                        PlatformImageTypeManager, \
-                                                        PlatformLoadManager, \
+from mint.django_rest.rbuilder.platforms.manager import PlatformImageTypeManager, \
                                                         PlatformVersionManager, \
                                                         PlatformManager
 from mint.django_rest.rbuilder.repos.manager import ReposManager
@@ -55,17 +45,7 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
         'packageMgr' : PackageManager,
         'usersMgr' : UsersManager,
         'projectManager' : ProjectManager,
-        'sourceStatusMgr' : SourceStatusManager,
-        'sourceErrorsMgr' : SourceErrorsManager,
-        'sourceMgr' : SourceManager,
-        'sourceTypeDescriptorMgr': SourceTypeDescriptorManager,
-        'sourceTypeStatusTestMgr' : SourceTypeStatusTestManager,
-        'sourceTypeMgr' : SourceTypeManager,
-        'platformStatusMgr' : PlatformLoadStatusManager,
-        'platformSourceMgr' : PlatformSourceManager,
-        'platformSourceTypeMgr' : PlatformSourceTypeManager,
         'platformImageTypeMgr' : PlatformImageTypeManager,
-        'platformLoadMgr' : PlatformLoadManager,
         'platformVersionMgr' : PlatformVersionManager,
         'platformMgr' : PlatformManager,
         'modulehooksMgr' : ModuleHooksManager,

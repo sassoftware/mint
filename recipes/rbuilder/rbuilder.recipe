@@ -52,7 +52,6 @@ class rBuilderProduct(CPackageRecipe):
         'm2crypto',
         'mcp:python',
         'mod_python:runtime',
-        'pcreator:python',
         'pyOpenSSL',
         'python-beaker',
         'python-boto',

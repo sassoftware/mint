@@ -34,14 +34,8 @@ class User(database.TableObject):
     def getBlurb(self):
         return self.blurb
 
-    def setEmail(self, newEmail):
-        return self.server.setUserEmail(self.id, newEmail)
-
     def setPassword(self, newPassword):
         self.server.setPassword(self.id, newPassword)
-
-    def setFullName(self, fullName):
-        self.server.setUserFullName(self.id, fullName)
 
 
 class Authorization(object):
