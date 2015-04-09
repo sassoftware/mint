@@ -1308,7 +1308,7 @@ class MintServer(object):
             # created by the jobmaster for the jobslave to accommodate all the
             # layers, compressed and uncompressed, that we need at the same
             # time.
-            node.buildSettings['swapSize'] = 3 * int(
+            node.buildSettings['swapSize'] = 5 * int(
                     self._jobslaveSize(node) / 1024 / 1024)
         # Now find everything we need to build
         buildsMap = dict()
