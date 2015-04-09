@@ -35,7 +35,6 @@ testModules = [
 PythonModule('conary-test', setup='make', test=''), # cannot test because
                                               # it creates some recursion
                                               # problems.
-PythonModule('conary-factory-test', test='import factory_test'), 
 PythonModule('mcp-test', modulePath='mcp/test', test='import mcp_test.mcp_helper'),
 PythonModule('raa-test', test='import raa', reposName='raa-test'),
 PythonModule('mint-test', modulePath='mint/mint_test', test=''),

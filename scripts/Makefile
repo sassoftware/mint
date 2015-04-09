@@ -5,7 +5,6 @@
 static_files =				\
 	add-lvm-disk			\
 	add-rmake3-node			\
-	apply-proxy-settings		\
 	dump-rbuilder-databases		\
 	deleteproject			\
 	generate-certs.sh		\
