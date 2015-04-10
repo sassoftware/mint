@@ -397,15 +397,14 @@ class RestDBMixIn(object):
                  name='Build', description='Build Description',
                  troveName = 'foo',
                  troveVersion = '/localhost@test:1/1:0.1-1-1',
-                 troveFlavor = '', outputTrove=None, buildData=None):
+                 troveFlavor = '', buildData=None):
         troveVersion = versions.ThawVersion(troveVersion)
         troveFlavor = deps.parseFlavor(troveFlavor)
 
         img = models.Image(imageType=imageType, name=name, 
                            description=description,
                            troveName=troveName, troveVersion=troveVersion,
-                           troveFlavor=troveFlavor,
-                           outputTrove=outputTrove)
+                           troveFlavor=troveFlavor)
         imageId = db.imageMgr.createImage(hostname, img, buildData)
         return imageId
 

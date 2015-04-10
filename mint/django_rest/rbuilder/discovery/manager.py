@@ -41,7 +41,6 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.account_creation_requires_admin = self._bool(self.cfg.adminNewUsers)
         ci.maintenance_mode = 'false'
         ci.inventory_configuration_enabled = self._bool(self.cfg.inventoryConfigurationEnabled)
-        ci.image_import_enabled = self._bool(self.cfg.imageImportEnabled)
         ci.rbuilder_id = self._getRbuilderId()
         
         apiVersion.xml_resources = xr = models.XmlResources()

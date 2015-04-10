@@ -19,7 +19,6 @@ install: default-install
 	# rBuilder config
 	install -D -m0644 rbuilder.conf $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
 	sed -i "s/python2.4/python$(PYVER)/g" $(DESTDIR)/srv/rbuilder/config/rbuilder.conf
-	install -D -m0644 metadataDescriptor.xml $(DESTDIR)/srv/rbuilder/data/metadataDescriptor.xml
 	# gunicorn
 	install -D -m0644 gunicorn.conf $(DESTDIR)/etc/gunicorn.conf
 	install -D -m0644 gunicorn.sysconfig $(DESTDIR)/etc/sysconfig/gunicorn

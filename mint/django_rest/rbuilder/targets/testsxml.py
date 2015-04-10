@@ -315,13 +315,13 @@ all_target_jobs_GET = \
 job_xml_with_artifacts="""
 <job id="http://testserver/api/v1/jobs/%(jobUuid)s">
   <created_resources>
-     <image id="http://testserver/api/v1/images/9"/>
+     <image id="http://testserver/api/v1/images/5"/>
   </created_resources>
   <status_code>200</status_code>
   <job_state id="http://testserver/api/v1/job_states/3">Completed</job_state>
   <job_type id="http://testserver/api/v1/inventory/event_types/17">deploy image on target</job_type>
   <results>
-    <image id="http://testserver/api/v1/images/9"/>
+    <image id="http://testserver/api/v1/images/5"/>
   </results>
   <created_by id="http://testserver/api/v1/users/2002">
     <user_name>ExampleDeveloper</user_name>

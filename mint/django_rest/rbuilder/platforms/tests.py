@@ -123,49 +123,6 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
                 self.assertEquals(field.constraints.range.min, '1')
                 self.assertEquals(field.constraints.range.max, '32')
 
-        # FIXME
-        # we want to leave ITD's anonymous, but this is interesting... we're populating
-        # the list of valid target base images here, which COULD contain some confidental
-        # information.  If the type is deferred we may want to filter the list based
-        # on request._authUser and what they can see, as we'll need to do in the
-        # general collection / queryset as well.
-
-        # insert some placeholder images for the test
-        project = project_models.Project(
-           name='blippy', hostname='blippy', short_name='blippy', 
-           project_url='http://blippy.example.com', namespace='blippy'
-        ).save()
-        project = project_models.Project.objects.get(name='blippy') 
-
-        output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
-        image_name = 'group-bogus'
-        image_ver = '/example.rpath.com@other:label/0.0:1.0-1-1'
-        image_flavor = '1#x86'
-
-        i1 = imagemodels.Image(
-            project=project, name='alpha', output_trove=output_trove,
-            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
-        )
-        i2 = imagemodels.Image(
-            project=project, name='beta', output_trove=output_trove,
-            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
-        )
-        i3 = imagemodels.Image(
-            project=project, name='gamma', output_trove=None,
-            trove_name=image_name, trove_version=image_ver, trove_flavor=image_flavor,
-        )
-
-        self.mock(imagemodels.Image, '_computeMetadata', lambda *a, **k: None)
-
-        for x in [ i1, i2, i3 ]:
-            # keep app from making call to repos service
-            x.save()
-
-        response = self._get('platforms/image_type_definition_descriptors/deferredImage')
-        self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
-            testsxml.deferred_image_descriptor_xml)
-
         # an invalid one should 404
         response = self._get('platforms/image_type_definition_descriptors/doesNotExist')
         #    username='admin', password='password')
@@ -185,29 +142,6 @@ class NewPlatformTest(XMLTestCase, SmartformMixIn):
             self.assertEquals(response.status_code, 200)
             model = xobj.parse(response.content)
             self.failUnlessEqual(model.descriptor._xobj.tag, 'descriptor')
-
-        # FIXME
-        # we want to leave ITD's anonymous, but this is interesting... we're populating
-        # the list of valid target base images here, which COULD contain some confidental
-        # information.  If the type is deferred we may want to filter the list based
-        # on request._authUser and what they can see, as we'll need to do in the
-        # general collection / queryset as well.
-
-        # insert some placeholder images for the test
-        project = project_models.Project(
-           name='blippy', hostname='blippy', short_name='blippy', 
-           project_url='http://blippy.example.com', namespace='blippy'
-        ).save()
-        project = project_models.Project.objects.get(name='blippy') 
-
-        output_trove = 'dummy-trove=/example.rpath.com@dummy:label/1.0-1-1'
-
-        self.mock(imagemodels.Image, '_computeMetadata', lambda *a, **k: None)
-
-        response = self._get('platforms/image_type_definition_descriptors/deferredImage')
-        self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, 
-            testsxml.deferred_image_descriptor_no_base_images_xml)
 
         # an invalid one should 404
         response = self._get('platforms/image_type_definition_descriptors/doesNotExist')

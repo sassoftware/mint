@@ -407,10 +407,7 @@ class ProjectManager(basemanager.BaseManager):
 
     @exposed
     def updateImage(self, image):
-        # For now only metadata can be updated, in the future it will be
-        # necessary to figure out what changed before needlessly re-committing
-        # the image trove.
-        image.saveMetadata()
+        # Nothing to update for the moment
         return image
 
     @exposed

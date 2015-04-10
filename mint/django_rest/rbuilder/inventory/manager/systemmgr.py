@@ -44,17 +44,6 @@ from smartform import descriptor
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
-system_assimilate_descriptor = """<descriptor>
-  <metadata>
-    <displayName>System Assimilation</displayName>
-    <descriptions>
-      <desc>System Assimilation</desc>
-    </descriptions>
-  </metadata>
-  <dataFields/>
-</descriptor>
-"""
-
 survey_scan_descriptor = """<descriptor>
   <metadata>
     <displayName>System Scan</displayName>
@@ -166,9 +155,6 @@ class SystemManager(basemanager.BaseManager):
     ])
     SystemConfigurationEvents = set([
         jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
-    ])
-    AssimilationEvents = set([
-        jobmodels.EventType.SYSTEM_ASSIMILATE
     ])
 
     IncompatibleEvents = {
@@ -348,12 +334,6 @@ class SystemManager(basemanager.BaseManager):
         systems.system = \
             models.System.objects.select_related().filter(system_type__infrastructure=False)
         return systems
-
-    @exposed
-    def getImageImportMetadataDescriptor(self):
-        importDescriptorFile = open(self.cfg.metadataDescriptorPath)
-        descr = descriptor.ConfigurationDescriptor(fromStream=importDescriptorFile)
-        return descr
 
     @exposed
     def getInfrastructureSystems(self):
@@ -939,20 +919,6 @@ class SystemManager(basemanager.BaseManager):
 
             system.update(current_state=nstate, state_change_date=self.now())
 
-    @staticmethod
-    def _getTrovesForLayeredImage(system):
-        image = system.source_image
-        # do not send down trove info for images we did not build,
-        # images we built but never stored the source, or images
-        # that are not layered/deferred
-        if image is None or image.base_image is None:
-            return None, None
-        version = cny_versions.ThawVersion(str(image.trove_version))
-        flavor = cny_deps.ThawFlavor(str(image.trove_flavor))
-        installTrove = '%s=%s[%s]' % (image.trove_name, version, flavor)
-        projectLabel = str(version.trailingLabel())
-        return installTrove, projectLabel
-
     @classmethod
     def _getTroveSpecForImage(cls, image):
         if image is None:
@@ -982,22 +948,9 @@ class SystemManager(basemanager.BaseManager):
                 # than just assimilate
                 sshIfaceId = self.sshManagementInterface().pk
 
-                # Copy credentials from the source image if available.
-                self._copyImageCredentials(system)
-
                 if system.management_interface_id == sshIfaceId:
                     # if no credentials, then the system is not one we are
                     # supposed to assimilate
-                    if system.credentials:
-                        # TODO: refactor
-                        new_job = jobmodels.Job(
-                            job_type = jobmodels.EventType.objects.get(
-                                name=jobmodels.EventType.SYSTEM_ASSIMILATE
-                            )
-                        )
-                        self.scheduleJobAction(system, new_job)
-                        # assimilation will call rpath-register no need
-                        # to queue now, it's not ready
                     return None
 
                 if system.management_interface_id == wmiIfaceId:
@@ -1040,43 +993,6 @@ class SystemManager(basemanager.BaseManager):
             return None
         # Some other job state, do nothing
         return None
-
-    def _copyImageCredentials(self, system):
-        if not system.hasSourceImage():
-            return
-
-        # Now check to see if the source image has a base image trove in the
-        # builddata. This means it is a deferred image and we need to lookup
-        # the base image.
-        builddata = imagemodels.ImageData.objects.filter(
-                image=system.source_image, name='baseImageTrove')
-
-        if not builddata:
-            return
-
-        baseImageTrove = builddata[0].value
-        baseImage = imagemodels.Image.objects.filter(
-                output_trove=baseImageTrove)[0]
-
-        md = baseImage.metadata
-        username = password = domain = key = ''
-        if hasattr(md, 'credentials_username'):
-            username = md.credentials_username
-        if hasattr(md, 'credentials_password'):
-            password = md.credentials_password
-        if hasattr(md, 'credentials_domain'):
-            domain = md.credentials_domain
-        if hasattr(md, 'credentials_sshkey'):
-            key = md.credentials_sshkey
-
-        creds = dict(
-            username=username,
-            password=password,
-            domain=domain,
-            key=key,
-        )
-
-        self._addSystemCredentials(system, creds)
 
     def lookupTarget(self, targetTypeName, targetName):
         return targetmodels.Target.objects.get(
@@ -1700,29 +1616,10 @@ class SystemManager(basemanager.BaseManager):
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
-        params = None
-        if eventType not in self.AssimilationEvents:
-            params = self._computeDispatcherMethodParams(repClient, event.system,
-                destination, eventUuid, requiredNetwork)
-            if params is None:
-                # no follow up event for non-assimilation SSH operations
-                return
-        else:
-            # assimilation events are not management interface related
-            # so the computeDispatcher logic is short-circuited
-            event_data = cPickle.loads(event.event_data)
-            certs  = rbuildermodels.PkiCertificates.objects
-            hcerts = certs.filter(purpose="hg_ca").order_by('-time_issued')
-
-            cert   = hcerts[0].x509_pem
-
-            # look at the source image to find the label
-            installTrove, projectLabel = self._getTrovesForLayeredImage(
-                    event.system)
-            params = repClient.AssimilatorParams(host=destination,
-                caCert=cert, sshAuth=event_data,
-                eventUuid=eventUuid, projectLabel=projectLabel,
-                installTrove=installTrove)
+        params = self._computeDispatcherMethodParams(repClient, event.system,
+            destination, eventUuid, requiredNetwork)
+        if params is None:
+            return
 
         resultsLocation = repClient.ResultsLocation(
             path = "/api/v1/inventory/systems/%d" % event.system.pk,
@@ -1755,10 +1652,6 @@ class SystemManager(basemanager.BaseManager):
             method = repClient.detectMgmtInterface
             job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
-        elif eventType in self.AssimilationEvents:
-            method = repClient.bootstrap
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone) # sources=data)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
@@ -2189,7 +2082,6 @@ class SystemManager(basemanager.BaseManager):
         # FIXME: move this closer to the inventory action code
         system = models.System.objects.get(pk=systemId)
         methodMap = dict(
-            assimilation = self.getDescriptorAssimilation,
             configure    = self.getDescriptorConfigure,
             preview      = self.getDescriptorPreview,
             update       = self.getDescriptorUpdate,
@@ -2200,11 +2092,6 @@ class SystemManager(basemanager.BaseManager):
         if method is None:
             raise errors.errors.ResourceNotFound()
         return method(systemId)
-
-    def getDescriptorAssimilation(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=system_assimilate_descriptor)
-        return descr
 
     def getDescriptorPreview(self, systemId, *args, **kwargs):
         descr = descriptor.ConfigurationDescriptor(
@@ -2247,32 +2134,7 @@ class SystemManager(basemanager.BaseManager):
         that data to schedule a completely different job, which will
         be more complete.
         '''
-        # get integer job type even if not a django model
-        job_name = job.job_type.name
-
-        if job_name == jobmodels.EventType.SYSTEM_ASSIMILATE:
-            creds = self.getSystemCredentials(system)
-            password = getattr(creds, 'password', None)
-            if password is None:
-                raise Exception('no SSH credentials set')
-            auth = [dict(
-                sshUser     = 'root',
-                sshPassword = password,
-                sshKey      = creds.key,
-            )]
-            event = self._scheduleEvent(system, job_name, eventData=auth)
-            # we can completely ignore descriptor and descriptor_data
-            # for this job, because we have that data stored in credentials
-            # but other actions will have work to do with them in this
-            # function.
-        else:
-            raise Exception("action dispatch not yet supported on job type: %s" % job.job_type.name)
-
-        if event is None:
-            # this can happen if the event preconditions are not met and the exception
-            # gets caught somewhere up the chain (which we should fix)
-            raise Exception("failed to schedule event")
-        return event
+        raise Exception("action dispatch not yet supported on job type: %s" % job.job_type.name)
 
     @classmethod
     def _makeStageLabel(cls, stage):

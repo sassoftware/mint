@@ -175,32 +175,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         cfg.namespace = 'ns'
         cfg.authUser = 'auth_user_abcdefg'
         cfg.authPass = 'auth_pass_abcdefg'
-        metadataDescriptorFile = os.path.join(self.workDir, "metadataDescriptor.xml")
-        file(metadataDescriptorFile, "w").write("""\
-<metadataDescriptor>
-  <metadata>
-    <displayName>Metadata Descriptor</displayName>
-    <descriptions/>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>metadata.owner</name>
-      <descriptions><desc>Owner</desc></descriptions>
-      <type>str</type>
-      <required>true</required>
-      <readonly>true</readonly>
-    </field>
-    <field>
-      <name>metadata.admin</name>
-      <descriptions><desc>Admin</desc></descriptions>
-      <type>str</type>
-      <required>true</required>
-      <readonly>true</readonly>
-    </field>
-  </dataFields>
-</metadataDescriptor>
-""")
-        cfg.metadataDescriptorPath = metadataDescriptorFile
         cfg.imagesPath = os.path.join(self.workDir, 'finished-images')
         cfg.moduleHooksDir = os.path.join(self.workDir, 'module-hooks')
         return cfg
@@ -333,7 +307,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     def addImage(self, name, description=None,
             imageType=buildtypes.VMWARE_ESX_IMAGE,
-            stage=None, files=None, baseImage=None,
+            stage=None, files=None,
             fileNameTemplate='file-name-%s.ova', seed=None):
         if stage is None:
             branch = self.getProjectBranch(label='chater-foo.eng.rpath.com@rpath:chater-foo-1')
@@ -347,7 +321,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
         img = self.mgr.createImage(name=name, description=description,
             project_branch_stage=stage,
-            _image_type=imageType, base_image=baseImage)
+            _image_type=imageType)
         if not img.architecture and not img.trove_flavor:
             img.trove_flavor = ''
         self.mgr.createImageBuild(img)

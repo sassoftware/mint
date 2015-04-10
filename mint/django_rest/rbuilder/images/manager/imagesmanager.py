@@ -5,13 +5,11 @@
 import sys
 import errno
 import logging
-import hashlib
 import os
 from django.core import urlresolvers
 from mcp import client as mcp_client
 from mint import jobstatus
 from mint import urltypes
-from mint.django_rest.helpers import MultiRequestUploadHandler
 from mint.django_rest.rbuilder.jobs import models as jobsmodels
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.projects import models as projmodels
@@ -20,7 +18,6 @@ from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder import errors
 from conary.lib import sha1helper
 from mint.lib import data as datatypes
-from conary import trovetup
 from conary import versions
 from conary.deps import deps
 from conary.lib import util
@@ -120,14 +117,6 @@ class ImagesManager(basemanager.BaseManager):
         m = tgtmodels.TargetImagesDeployed(build_file=buildFile,
             target=target, target_image_id=targetInternalId)
         m.save() 
-    def _getOutputTrove(self, image):
-        if image.output_trove is None:
-            return None
-        name, version, flavor = trovetup.TroveSpec.fromString(image.output_trove)
-        version = versions.VersionFromString(version)
-        if flavor is None:
-            flavor = deps.Flavor()
-        return trovetup.TroveTuple(name, version, flavor)
 
     @exposed
     def setImageBuildStatus(self, image):
@@ -216,11 +205,6 @@ class ImagesManager(basemanager.BaseManager):
     def deleteImageBuild(self, image_id):
         image = models.Image.objects.get(pk=image_id)
 
-        # see if any images have this image as a baseimage, and if so, refuse to delete
-        layered_images = models.Image.objects.filter(base_image = image)
-        if len(layered_images) > 0:
-            raise errors.PermissionDenied(msg="Image is in use as a layered base image and cannot be deleted")
-
         log.info("Deleting image %s from project %s" % (image_id,
             image.project.short_name))
         # Delete image files from finished-images
@@ -254,18 +238,6 @@ class ImagesManager(basemanager.BaseManager):
             if err.args[0] not in (errno.ENOENT, errno.ENOTEMPTY):
                 log.exception("Failed to delete image directory %s", imageDir)
         image.delete()
-        # Delete the image trove from the repository if it is not referenced by
-        # any other image.
-        if image.output_trove:
-            others = models.Image.objects.filter(output_trove=image.output_trove)
-            if others:
-                log.info("Keeping image trove %s because it is claimed by "
-                        "other images", image.output_trove)
-            else:
-                log.info("Deleting image trove %s", image.output_trove)
-                reposMgr = self.mgr._restDb.productMgr.reposMgr
-                tup = trovetup.TroveSpec.fromString(image.output_trove)
-                reposMgr.deleteTroves([tup])
 
     @exposed
     def getImageBuildFile(self, image_id, file_id):
@@ -410,51 +382,7 @@ class ImagesManager(basemanager.BaseManager):
                 self._setImageDataValue(imageId, attrName, attrValue,
                         dataType=attrType)
 
-        if files.metadata is not None:
-            self._addImageToRepository(imageId, files.metadata)
-
         return self.getImageBuildFiles(imageId)
-
-    def _addImageToRepository(self, imageId, metadata):
-        metadataDict = metadata.asDict()
-        # Find the stage for this image, we need the label to commit to
-        buildLabels = projmodels.Stage.objects.filter(
-                images__image_id=imageId).values_list(
-                    'label', 'project__short_name', 'project__repository_hostname')
-        if not buildLabels:
-            raise Exception("Stage for image does not exist")
-        buildLabel, shortName, repositoryHostname = buildLabels[0]
-        factoryName = "rbuilder-image"
-        troveName = "image-%s" % shortName
-        troveVersion = imageId
-
-        filePaths = self._getImageFiles(imageId)
-
-        streamMap = dict((os.path.basename(x),
-            self.mgr.reposMgr.RegularFile(contents=file(x), config=False))
-                for x in filePaths)
-
-        try:
-            nvf = self.mgr.reposMgr.createSourceTrove(
-                repositoryHostname,
-                troveName,
-                buildLabel,
-                troveVersion, streamMap, changeLogMessage="Image imported",
-                factoryName=factoryName, admin=True,
-                metadata=metadataDict)
-        except Exception, e:
-            self.setImageStatus(imageId, code=jobstatus.FAILED,
-                message="Commit failed: %s" % (e, ))
-            log.error("Error: %s", e)
-            raise
-        else:
-            models.Image.objects.filter(image_id=imageId).update(
-                output_trove = nvf.asString())
-            msg = "Image committed as %s=%s/%s" % (nvf.name,
-                    nvf.version.trailingLabel(),
-                    nvf.version.trailingRevision())
-            log.info(msg)
-            #self._getImageLogger(hostname, imageId).info(msg)
 
     def setImageStatus(self, imageId, code=jobstatus.RUNNING, message=''):
         models.Image.objects.filter(image_id=imageId).update(status=code,
@@ -535,79 +463,3 @@ class ImagesManager(basemanager.BaseManager):
 
     def _getMcpClient(self):
         return mcp_client.Client(self.cfg.queueHost, self.cfg.queuePort)
-
-    @exposed
-    def getImageUploadStatus(self, image_id, basename, token):
-        image = self.getImageById(image_id)
-        filename = self._getUploadFilename(image, basename)
-        handler = MultiRequestUploadHandler()
-        status = handler.getStatus(filename)
-        return status
-
-    @exposed
-    def processImageUpload(self, image_id, token, uploaded_file, basename,
-                           chunk_id, num_chunks, checksum):
-        image = self.getImageById(image_id)
-        if image.status == jobstatus.BLOCKED:
-            outputToken = image.image_data.get(name='outputToken').value
-            if token == outputToken:
-                filename = self._getUploadFilename(image, basename)
-                handler = MultiRequestUploadHandler()
-                upload = handler.handle(uploaded_file, filename, chunk_id,
-                                        num_chunks, checksum)
-                if upload.isComplete():
-                    image = self._finishImageUpload(image, upload.filename)
-        return image
-
-    def _finishImageUpload(self, image, src_filename):
-        hostname = self._getImageHostname(image.image_id)
-        dst_filename = self._getImageFilePath(hostname, image.image_id,
-                                              src_filename, create=True)
-
-        # This copy operation is slow. It is done to calculate the sha1 hash
-        # of the image file. A better approach would be to do the calculation
-        # inside a job.
-        self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
-                            message="Calculating SHA-1 digest")
-        src = open(src_filename, 'rb')
-        dst = open(dst_filename, 'wb')
-        digest = hashlib.sha1()
-        util.copyfileobj(src, dst, digest=digest)
-
-        try:
-            os.remove(src_filename)
-            imageid_dir = os.path.dirname(src_filename)
-            os.rmdir(imageid_dir)
-            hostname_dir = os.path.dirname(imageid_dir)
-            os.rmdir(hostname_dir)
-        except OSError:
-            pass
-
-        self.createImageBuildFile(image, url=dst_filename,
-                                  urlType=urltypes.LOCAL,
-                                  title=os.path.basename(dst_filename),
-                                  size=os.path.getsize(dst_filename),
-                                  sha1=digest.hexdigest())
-
-        self.setImageStatus(image.image_id, code=jobstatus.RUNNING,
-                            message="Adding image to repository")
-        self._addImageToRepository(image.image_id, None)
-        image.image_data.get(name='outputToken').delete()
-
-        image.status = jobstatus.FINISHED
-        self._postFinished(image)
-        return self.getImageById(image.image_id)
-
-    def _getUploadFilename(self, image, basename):
-        image_id = str(image.image_id)
-        project = image.project.short_name
-
-        if basename == '' or basename is None:
-            basename = '%s-%s-%s.ova' % (project,
-                                         image_id,
-                                         image.architecture)
-
-        return os.path.join(self.cfg.imagesUploadPath,
-                            project,
-                            image_id,
-                            os.path.basename(basename))

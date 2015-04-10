@@ -469,17 +469,6 @@ class InventoryInfrastructureSystemsService(BaseInventoryService):
 
     def get(self):
         return self.mgr.getInfrastructureSystems()
-    
-class ImageImportMetadataDescriptorService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-
-    def get(self):
-        descriptor = self.mgr.getImageImportMetadataDescriptor()
-        return self.mgr.serializeDescriptor(descriptor)
 
 # NOTE: rbac_can_create_system does not exist because registration (temporarily)
 # must be anonymous for rpath_register.   
@@ -735,8 +724,6 @@ class InventorySystemJobsService(BaseInventoryService):
     def rest_POST(self, request, system_id, job):
         '''request starting a job on this system'''
         system = self.mgr.getSystem(system_id)
-        if job.job_type.name == job.job_type.SYSTEM_ASSIMILATE:
-            return self.mgr.scheduleJobAction(system, job)
         return self.mgr.addJob(job, system_id=system_id)
 
 class InventorySystemJobDescriptorService(BaseInventoryService):

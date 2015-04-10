@@ -56,9 +56,7 @@ images_get_xml = """
       <short_name>foo0</short_name>
       <name>foo0</name>
     </project>
-    <output_trove></output_trove>
     <architecture>x86</architecture>
-    <base_image/>
     <image_count>1</image_count>
     <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/1/jobs"/>
@@ -118,9 +116,7 @@ images_get_xml = """
       <short_name>foo1</short_name>
       <name>foo1</name>
     </project>
-    <output_trove></output_trove>
     <architecture>x86</architecture>
-    <base_image/>
     <image_count>1</image_count>
     <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/2/jobs"/>
@@ -180,9 +176,7 @@ images_get_xml = """
       <short_name>foo2</short_name>
       <name>foo2</name>
     </project>
-    <output_trove></output_trove>
     <architecture>x86</architecture>
-    <base_image/>
     <image_count>1</image_count>
     <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
     <jobs id="http://testserver/api/v1/images/3/jobs"/>
@@ -257,9 +251,7 @@ image_get_xml = """
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
-  <output_trove></output_trove>
   <architecture>x86</architecture>
-  <base_image/>
   <image_count>1</image_count>
   <job_uuid>7be3373b-38f4-4048-9e30-dce87d8529c9</job_uuid>
   <jobs id="http://testserver/api/v1/images/1/jobs"/>
@@ -312,7 +304,6 @@ image_post_xml = """
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
-  <output_trove></output_trove>
   <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
 </image>
 """
@@ -349,7 +340,6 @@ image_put_xml = """
     <short_name>foo0</short_name>
     <name>foo0</name>
   </project>
-  <output_trove></output_trove>
   <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
 </image>
 """
@@ -388,7 +378,6 @@ build_file_post_xml = \
         <short_name>foo0</short_name>
         <name>foo0</name>
       </project>
-      <output_trove></output_trove>
       <job_uuid>c4610ef0-f937-4af3-a8f8-8665451ab416</job_uuid>
     </image>
     <sha1>0</sha1>

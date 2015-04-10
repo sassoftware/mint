@@ -273,25 +273,3 @@ class ImageDescriptorsService(service.BaseService):
     def get(self, image_id, descriptor_type):
         return self.mgr.serializeDescriptor(
             self.mgr.getImageDescriptor(image_id, descriptor_type))
-
-class ImageUploadFilesService(service.BaseService):
-    @access.anonymous
-    def rest_GET(self, request, image_id, token):
-        return self.get(image_id, request.GET.get('name', ''), token)
-
-    def get(self, image_id, filename, token):
-        status = self.mgr.getImageUploadStatus(image_id, filename, token)
-        return HttpResponse(urllib.urlencode(status),
-                            mimetype='application/x-www-form-urlencoded')
-
-    @access.anonymous
-    @return_xml
-    def rest_POST(self, request, image_id, token):
-        return self.mgr.processImageUpload(image_id,
-                                           token,
-                                           next(iter(request.FILES.values())),
-                                           request.GET.get('name'),
-                                           request.GET.get('chunk'),
-                                           request.GET.get('chunks'),
-                                           request.GET.get('md5chunk'))
-

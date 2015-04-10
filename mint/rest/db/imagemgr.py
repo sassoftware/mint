@@ -43,7 +43,7 @@ class ImageManager(manager.Manager):
                     b.troveName, b.troveVersion, b.troveFlavor,
                     b.troveLastChanged, b.timeCreated, b.timeUpdated,
                     b.status AS statusCode, b.statusMessage, b.buildCount,
-                    b.stageName AS stage, b.output_trove,
+                    b.stageName AS stage,
                 cr_user.username AS creator, up_user.username AS updater
 
             FROM Builds b
@@ -69,7 +69,6 @@ class ImageManager(manager.Manager):
             rows = cu
 
         images = []
-        toGetMetadata = {}
         for row in rows:
             imageType = row['imageType']
             if row['troveFlavor'] is not None:
@@ -94,12 +93,9 @@ class ImageManager(manager.Manager):
             status.set_status(code=row.pop('statusCode'),
                     message=row.pop('statusMessage'))
 
-            outputTrove = row.pop('output_trove')
             image = models.Image(row)
             image.imageStatus = status
             images.append(image)
-            if outputTrove:
-                toGetMetadata.setdefault(outputTrove, []).append(image)
 
         imageIds = [ x.imageId for x in images ]
         imagesBaseFileNameMap = self.getImagesBaseFileName(hostname, imageIds)
@@ -108,26 +104,6 @@ class ImageManager(manager.Manager):
         for image, imageFiles in zip(images, imagesFiles):
             image.files = imageFiles
             image.baseFileName = imagesBaseFileNameMap[image.imageId]
-
-        if toGetMetadata:
-            metaSpecs = sorted(toGetMetadata)
-            metaTups = []
-            for metaSpec in metaSpecs:
-                name, version, flavor = trovetup.TroveSpec.fromString(metaSpec)
-                version = versions.VersionFromString(version)
-                if flavor is None:
-                    flavor = deps.Flavor()
-                metaTups.append((name, version, flavor))
-            allMetadata = self.db.productMgr.reposMgr.getKeyValueMetadata(
-                    metaTups)
-            for metaSpec, metadata in zip(metaSpecs, allMetadata):
-                if metadata is None:
-                    continue
-                metaxml = xobj.XObj()
-                for key, value in metadata.items():
-                    setattr(metaxml, key, value)
-                for image in toGetMetadata[metaSpec]:
-                    image.metadata = metaxml
 
         if getOne:
             return images[0]
@@ -354,15 +330,15 @@ class ImageManager(manager.Manager):
         sql = '''INSERT INTO Builds (projectId, name, buildType, timeCreated, 
                                      buildCount, createdBy, troveName, 
                                      troveVersion, troveFlavor, stageName, 
-                                     productVersionId, output_trove, stageid)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+                                     productVersionId, stageid)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
         assert buildType is not None
         cu.execute(sql, productId, buildName, buildType,    
                    time.time(), 0, self.auth.userId,
                    troveTuple[0], troveTuple[1].freeze(),
                    troveTuple[2].freeze(),
                    stage, productVersionId,
-                   image.outputTrove, stageId)
+                   stageId)
         buildId = cu.lastrowid
 
         buildDataTable = self.db.db.buildData

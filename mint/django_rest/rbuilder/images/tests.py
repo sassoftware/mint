@@ -73,7 +73,7 @@ class ImagesTestCase(RbacEngine):
                 project=proj, _image_type=10, job_uuid=jobUuids[i],
                 name="image-%s" % i, trove_name='troveName%s' % i, trove_version='/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-%d-1' % i,
                 trove_flavor='1#x86:i486:i586:i686|5#use:~!xen', created_by=user1, updated_by=user2, image_count=1,
-                output_trove=None, project_branch=branch, stage_name='stage%s' % i,
+                project_branch=branch, stage_name='stage%s' % i,
                 description="image-%s" % i)
             image.save()
             # now buildfiles and fileurls
@@ -236,86 +236,9 @@ class ImagesTestCase(RbacEngine):
     def testCreateImageNoAuthz(self):
         self._testCreateImage('testuser', 403)
 
-    def _testUpdateImage(self, username, expected_code):
-        response = self._post('images/',
-            username=username, password='password', data=testsxml.image_post_xml)
-        self.assertEquals(response.status_code, expected_code)
-        if expected_code != 200:
-            return
-        image = xobj.parse(response.content)
-        response = self._put('images/%s' % image.image.image_id,
-            username=username, password='password', data=testsxml.image_put_xml)
-        self.assertEquals(response.status_code, expected_code)
-        # XXX FIXME: only metadata is editable. This test does not
-        # handle metadata. Technically the status code should probably
-        # be different too.
-        return
-        #image_updated = xobj.parse(response.content)
-        #self.assertEquals(image_updated.image.trove_name, 'troveName20-Changed')
-
-    def testUpdateImageAdmin(self):
-        self._testUpdateImage('admin', 200)
-
-    def testUpdateImageNonAdmin(self):
-        self._testUpdateImage('ExampleDeveloper', 200)
-
-    def testUpdateImageNoAuthz(self):
-        self._testUpdateImage('testuser', 403)
-
-    def testUpdateImageMetadata(self):
-        img = self._setupImageOutputToken()
-        models.Image.objects.filter(image_id=img.image_id).update(
-                output_trove="image-foo:source=/chater-foo.eng.rpath.com@rpath:chater-foo-1/1-1[]")
-        data = """\
-<image>
-  <metadata>
-    <key1>value1</key1>
-    <key2>value2</key2>
-    <key3>value3</key3>
-  </metadata>
-</image>
-"""
-        # mock Conary access
-        # We need the metadata dict twice, since we compute it once at
-        # load time and once at save time
-        kvmeta = [dict(a=1, b=2)]
-        def mockGetKeyValueMetadata(slf, troveTups):
-            return kvmeta
-
-        def mockUpdateKeyValueMetadata(slf, jobs, *args, **kwargs):
-            del kvmeta[:]
-            kvmeta.append(jobs[0][1])
-            return [ x[0] for x in jobs ]
-
-        self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
-            'getKeyValueMetadata', mockGetKeyValueMetadata)
-        self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
-            'updateKeyValueMetadata', mockUpdateKeyValueMetadata)
-
-        url = "images/%s" % img.image_id
-        response = self._put(url, data=data,
-            username='ExampleDeveloper', password='password')
-        self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.assertEquals(obj.image.metadata.key1, 'value1')
-        self.assertEquals(obj.image.metadata.key2, 'value2')
-        self.assertEquals(obj.image.metadata.key3, 'value3')
-
-        # Make sure something got logged
-        fileObj = self.mgr.restDb.fileMgr.openImageFile(
-            img.project.short_name, img.image_id, "build.log", "r")
-        self.assertEquals(fileObj.read(), "")
-
     def _testDeleteImage(self, username, expected_code):
         response = self._delete('images/1', username=username, password='password')
         self.assertEquals(response.status_code, expected_code)
-
-    def testCannotDeleteLayeredSource(self):
-        image1 = models.Image.objects.get(pk=1)
-        image2 = models.Image.objects.get(pk=2)
-        image2.base_image = image1
-        image2.save()
-        self._testDeleteImage('admin', 403)
 
     def testDeleteImageAdmin(self):
         self._testDeleteImage('admin', 204)
@@ -695,109 +618,6 @@ class ImagesTestCase(RbacEngine):
             with open(params['filename'] + '.sha1', 'w') as fobj:
                 fobj.write(sha1 + '\n')
         return fileContentList
-
-    def testPutImageBuildFiles(self):
-        # Mock repository interaction
-        retNvf = trovetup.TroveTuple(
-            'image-blabbedy',
-            versions.VersionFromString('/example.com@test:1/1-1-1'),
-            deps.deps.Flavor(''))
-
-        createSourceTroveCallArgs = []
-        def mockCreateSourceTrove(slf, *args, **kwargs):
-            createSourceTroveCallArgs.append((args, kwargs))
-            return retNvf
-        self.mock(self.mgr.reposMgr.__class__, 'createSourceTrove', mockCreateSourceTrove)
-
-        retKVmeta = [ dict(owner='Jennay', workload='heavy') ]
-        getKeyValueMetadataCallArgs = []
-        def mockGetKeyValueMetadata(slf, *args, **kwargs):
-            getKeyValueMetadataCallArgs.append((args, kwargs))
-            return retKVmeta
-        self.mock(self.mgr.restDb.productMgr.reposMgr.__class__,
-                'getKeyValueMetadata', mockGetKeyValueMetadata)
-
-        xmlFilesTmpl = """<files>%s<attributes><installed_size>56245126</installed_size><docker_image_id>decafbad</docker_image_id></attributes></files>"""
-        xmlFileTmpl = """
-  <file>
-    <title>%(title)s</title>
-    <size>%(size)s</size>
-    <sha1>%(sha1)s</sha1>
-    <file_name>%(filename)s</file_name>
-  </file>"""
-
-        img = self._setupImageOutputToken()
-        fileContentList = self._setupFileContentsList(img)
-
-        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
-
-        # Grab the image outputToken
-        outputToken = img.image_data.filter(name='outputToken')[0].value
-
-        response = self._put('images/%s/build_files' % img.image_id,
-            data=xml,
-            headers={'X-rBuilder-OutputToken': outputToken},
-        )
-
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(
-            [(x.title, x.sha1) for x in obj.files.file],
-            [(x['title'], x['sha1']) for x in fileContentList])
-
-        # Make sure installed_size got in the db
-        self.assertEquals(
-            [ (x.value, x.data_type) for x in
-                img.image_data.filter(name='attributes.installed_size') ],
-            [ ('56245126', 2), ])
-        self.assertEquals(
-            [ (x.value, x.data_type) for x in
-                img.image_data.filter(name='attributes.docker_image_id') ],
-            [ ('decafbad', 0), ])
-
-        self.failUnlessEqual(createSourceTroveCallArgs, [])
-
-        # same deal, now with metadata
-        xmlFilesTmpl = xmlFilesTmpl.replace('</files>', """\
-  <metadata>
-    <owner>JeanValjean</owner>
-  </metadata>
-</files>""")
-
-        # We can't pass an arbitrary sha1 anymore, the code validates it
-        fileContentList[-1].update(title='Fake')
-        xml = xmlFilesTmpl % '\n'.join(xmlFileTmpl % x for x in fileContentList)
-
-        response = self._put('images/%s/build_files' % img.image_id,
-            data=xml,
-            headers={'X-rBuilder-OutputToken': outputToken},
-        )
-
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        self.failUnlessEqual(
-            [(x.title, x.sha1) for x in obj.files.file],
-            [(x['title'], x['sha1']) for x in fileContentList])
-
-        self.failUnlessEqual(
-                [ (x[0][:4], x[0][4].keys(), x[1]) for x in createSourceTroveCallArgs ],
-                [
-                    (
-                        (u'chater-foo.eng.rpath.com', u'image-chater-foo',
-                            u'chater-foo.eng.rpath.com@rpath:chater-foo-1-devel',
-                            u'1'),
-                        ['filename1.ova', 'filename2.tar.gz', ],
-                        {'admin': True, 'changeLogMessage': 'Image imported',
-                            'factoryName': 'rbuilder-image',
-                            'metadata': {'owner': 'JeanValjean'}}
-                    ),
-                ])
-        self.failUnlessEqual(
-            [ ([ y.asString() for y in x[0][0] ], x[1]) for x in getKeyValueMetadataCallArgs ],
-            [
-                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
-                (['image-blabbedy=/example.com@test:1/1-1-1[]'], {}),
-            ])
 
     def testPutImageBuildLog(self):
         img = self._setupImageOutputToken()

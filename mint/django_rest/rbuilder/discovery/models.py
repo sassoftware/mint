@@ -72,7 +72,6 @@ class ConfigInfo(modellib.XObjIdModel):
 
     account_creation_requires_admin = modellib.SyntheticField()
     hostname = modellib.SyntheticField()
-    image_import_enabled = modellib.SyntheticField()
     inventory_configuration_enabled = modellib.SyntheticField()
     is_external_rba = modellib.SyntheticField()
     maintenance_mode = modellib.SyntheticField()

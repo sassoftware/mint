@@ -47,7 +47,6 @@ class ImageFileList(Model):
     hostname = fields.CharField(display=False)
     imageId = fields.IntegerField(display=False)
     files = fields.ListField(ImageFile, displayName='file')
-    metadata = fields.XObjField()
 
     def get_absolute_url(self):
         return ('products.images.files', self.hostname, str(self.imageId))
@@ -114,9 +113,6 @@ class Image(Model):
     imageStatus = fields.ModelField(ImageStatus)
     files = fields.ModelField(ImageFileList)
     baseFileName = fields.CharField()
-    upload_files = fields.ImageUploadsHrefField()
-    metadata = fields.XObjField()
-    outputTrove = fields.CharField()
 
     # TODO: we want to expose all buildData via a dict.  But that requires
     # a DictField which doesn't exist yet.

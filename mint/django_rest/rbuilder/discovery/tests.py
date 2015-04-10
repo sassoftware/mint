@@ -53,7 +53,6 @@ class VersionsTestCase(XMLTestCase):
   <config_info>
     <account_creation_requires_admin>false</account_creation_requires_admin>
     <hostname>superduper.example.com</hostname>
-    <image_import_enabled>true</image_import_enabled>
     <inventory_configuration_enabled>true</inventory_configuration_enabled>
     <is_external_rba>false</is_external_rba>
     <maintenance_mode>false</maintenance_mode>

@@ -563,94 +563,6 @@ install needle
         response = self._post('inventory/systems/', data=system_xml)
         self.assertEquals(response.status_code, 200)
 
-class AssimilatorTestCase(XMLTestCase, test_utils.SmartformMixIn):
-    '''
-    This tests actions as well as the assimilator.  See if we can list the jobs on
-    a system, get the descriptor for spawning that job, and whether we can actually
-    start that job.  note: rpath-repeater is mocked, so that will return successful
-    job XML even if parameters are insufficient.
-    '''
-
-    def setUp(self):
-        # make a new system, get ids to use when spawning job
-        XMLTestCase.setUp(self)
-        self.system = self.newSystem(name="blinky", description="ghost")
-        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(self.system)
-        self.assimilate = jobmodels.EventType.SYSTEM_ASSIMILATE
-        self.event_type = jobmodels.EventType.objects.get(name=self.assimilate)
-        self.type_id  = self.event_type.pk
-        self.system.save()
-
-        # system needs  a network
-        network = models.Network()
-        network.dns_name = 'testnetwork.example.com'
-        network.system = self.system
-        network.save()
-        self.system.networks.add(network)
-        # system.save not required
-        self.system = models.System.objects.get(pk=self.system.pk)
-        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
-        self.setUpSchemaDir()
-
-    def testExpectedActions(self):
-        # do we see assimilate as a possible action?
-        response = self._get('inventory/systems/%s' % self.system.pk, username="admin",
-            password="password")
-        doc = etree.fromstring(response.content)
-        actions = doc.xpath('./actions/action')
-        self.assertEqual(len(actions), 6)
-
-    def testFetchActionsDescriptor(self):
-        descriptorTestData = [
-            ('assimilation', 'System Assimilation', 'System Assimilation'),
-            ('survey_scan', 'System Scan', 'System Scan'),
-        ]
-        for descriptorType, descrName, descrDescr in descriptorTestData:
-            # can we determine what smartform we need to populate?
-            url = "inventory/systems/%s/descriptors/%s" % (self.system.pk, descriptorType)
-            response = self._get(url, username="admin", password="password")
-            self.failUnlessEqual(response.status_code, 200)
-            obj = etree.fromstring(response.content)
-            # We have namespaces, grumble...
-            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
-            self.assertEquals(metadata.xpath('./sm:displayName/text()',
-                namespaces=dict(sm=metadata.nsmap[None])),
-                [descrName])
-            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
-                namespaces=dict(sm=metadata.nsmap[None])),
-                [descrDescr])
-            # make sure the same works with parameters
-            url = "inventory/systems/%s/descriptors/%s?foo=bar" % (self.system.pk,
-                descriptorType)
-            response = self._get(url, username="admin", password="password")
-            self.failUnlessEqual(response.status_code, 200)
-            obj = etree.fromstring(response.content)
-            metadata = obj.find('{%s}metadata' % obj.nsmap[None])
-            self.failUnlessEqual(metadata.xpath('./sm:displayName/text()',
-                namespaces=dict(sm=metadata.nsmap[None])),
-                [descrName])
-            self.failUnlessEqual(metadata.xpath('./sm:descriptions/sm:desc/text()',
-                namespaces=dict(sm=metadata.nsmap[None])),
-                [descrDescr])
-
-    def testSpawnAction(self):
-        # can we launch the job>?
-        # first make sure SSH managemnet interface credentials are set
-        self.assertTrue(self.mgr.sysMgr.getSystemHasHostInfo(self.system))
-        response = self._post('inventory/systems/%s/credentials' % \
-            self.system.pk,
-            data=testsxml.ssh_credentials_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        # now post a barebones job to the systems jobs collection
-        url = "inventory/systems/%s/jobs/" % (self.system.pk)
-        response = self._post(url, testsxml.system_assimilator_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        obj = etree.fromstring(response.content)
-        self.failUnlessEqual(obj.find('event_type').attrib['id'],
-            'http://testserver/api/v1/inventory/event_types/12')
 
 class InventoryTestCase(XMLTestCase):
 
@@ -5038,21 +4950,6 @@ class AntiRecursiveSaving(XMLTestCase):
         interfaces = list(models.ManagementInterface.objects.all())
         self.assertEquals(len(interfaces), 3, 'no interfaces added')
 
-class DescriptorTestCase(XMLTestCase, test_utils.RepeaterMixIn):
-    def setUp(self):
-        XMLTestCase.setUp(self)
-        self.setUpRepeaterClient()
-
-    def testGetImageMetadataImportDescriptor(self):
-        response = self._get("inventory/image_import_metadata_descriptor",
-            username='testuser', password='password')
-        self.failUnlessEqual(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        fields = obj.descriptor.dataFields.field
-        # These are coming from test_utils, not from the real descriptor
-        self.failUnlessEqual(
-            [x.name for x in fields],
-            ['metadata.owner', 'metadata.admin'])
 
 class ModuleHooksTest(XMLTestCase):
     """

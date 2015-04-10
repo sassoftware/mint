@@ -159,12 +159,6 @@ class ReposManager(basemanager.BaseManager, reposdbmgr.RepomanMixin):
         return reposdbmgr.RepomanMixin.createSourceTrove(self, *args, **kwargs)
 
     @exposed
-    def updateKeyValueMetadata(self, *args, **kwargs):
-        # Overriden only to make it exposed
-        kwargs.update(auth=self.auth)
-        return reposdbmgr.RepomanMixin.updateKeyValueMetadata(self, *args, **kwargs)
-
-    @exposed
     def getAdminClient(self, write=False):
         # Overriden only to make it exposed
         return reposdbmgr.RepomanMixin.getAdminClient(self, write=write)

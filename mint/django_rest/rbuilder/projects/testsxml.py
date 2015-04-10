@@ -296,7 +296,6 @@ project_branch_stage_images_post_xml = \
       <name>chater-foo</name>
     </project>
     <job_uuid></job_uuid>
-    <output_trove></output_trove>
     <time_created></time_created>
     <build_count>0</build_count>
     <status_message></status_message>
@@ -330,7 +329,6 @@ project_branch_stage_images_post_return_xml = \
     </project>
     <image_id>2</image_id>
     <job_uuid></job_uuid>
-    <output_trove></output_trove>
     <time_created></time_created>
     <build_count>0</build_count>
     <status_message></status_message>
@@ -378,7 +376,6 @@ test_get_images_from_pbs_xml = \
       <user_name>ExampleDeveloper</user_name>
       <full_name>ExampleDeveloper</full_name>
     </created_by>
-    <base_image></base_image>
     <status_message></status_message>
     <trove_name></trove_name>
     <status>-1</status>
@@ -396,7 +393,6 @@ test_get_images_from_pbs_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <output_trove></output_trove>
     <time_created>2011-11-30T14:48:20.430000+00:00</time_created>
     <image_count>0</image_count>
     <job_uuid></job_uuid>
@@ -425,7 +421,6 @@ test_get_images_from_pbs_xml = \
       <user_name>ExampleDeveloper</user_name>
       <full_name>ExampleDeveloper</full_name>
     </created_by>
-    <base_image></base_image>
     <status_message></status_message>
     <trove_name></trove_name>
     <status>-1</status>
@@ -443,7 +438,6 @@ test_get_images_from_pbs_xml = \
       <short_name>chater-foo</short_name>
       <name>chater-foo</name>
     </project>
-    <output_trove></output_trove>
     <time_created>2011-11-30T14:48:20.430000+00:00</time_created>
     <image_count>0</image_count>
     <job_uuid></job_uuid>

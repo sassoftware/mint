@@ -16,9 +16,6 @@ from mint import helperfuncs
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from xobj import xobj
-from conary import trovetup
-from conary import versions
-from conary.deps import deps
 import sys
 from mint.django_rest.rbuilder.images.manager import models_manager
 from mint.django_rest.rbuilder.jobs import models as jobmodels
@@ -103,25 +100,6 @@ class ImageType(modellib.XObjIdModel):
     def get_url_key(self):
         return [ self.image_type_id ]
 
-class ImageMetadata(modellib.XObjIdModel):
-    class Meta:
-        abstract = True
-    objects = models_manager.ImageMetadataManager()
-
-    def asDict(self):
-        return self._imageMetadata
-
-    def setMetadata(self, metadataDict):
-        self._imageMetadata = dict(metadataDict)
-
-    def serialize(self, request, tag=None, **kwargs):
-        E = modellib.Etree
-        etreeModel = E.Node(tag)
-        for k, v in self._imageMetadata.items():
-            if v is None:
-                continue
-            etreeModel.append(E.Node(k, text=unicode(v)))
-        return etreeModel
 
 class Image(modellib.XObjIdModel):
     class Meta:
@@ -167,8 +145,6 @@ class Image(modellib.XObjIdModel):
     trove_last_changed = D(modellib.DecimalTimestampField(null=True,
             db_column='trovelastchanged'),
             "Image trove last changed, by default is null", short="Image trove last changed")
-    output_trove = D(models.TextField(null=True),
-    "Image output trove, by default is null", short="Image output trove")
     time_created = D(modellib.DecimalTimestampField(db_column='timecreated'), "Image time created", short="Image time created")
     created_by = D(modellib.ForeignKey('users.User',
         db_column='createdby',null=True, related_name='created_images'), "Image created by", short="Image created by")
@@ -186,13 +162,10 @@ class Image(modellib.XObjIdModel):
     status = D(models.IntegerField(null=True, default=-1), "Image status, by default is null", short="Image status")
     status_message = D(models.TextField(null=True, blank=True, default='',
         db_column="statusmessage"), "Image status message, by default is null", short="Image status message")
-    base_image = D(modellib.DeferredForeignKey('Image', null=True,
-        related_name='layered_images', db_column='base_image'), "Image base image, by default is null", short="Image base image")
     image_model = D(models.TextField(null=True, blank=True),
             "Optional system model used to create the image",
             short="Image system model")
 
-    metadata = D(modellib.SyntheticField(ImageMetadata), "Image metadata", short="Image metadata")
     architecture = D(modellib.SyntheticField(), "Image architecture", short="Image architecture")
     trailing_version = modellib.SyntheticField()
     num_image_files = D(modellib.SyntheticField(), "Image file count", short="Image file count")
@@ -205,8 +178,6 @@ class Image(modellib.XObjIdModel):
         "Upload image files by POSTing them to this URL")
 
     def computeSyntheticFields(self, sender, **kwargs):
-        self._computeMetadata()
-
         if self.trove_flavor is not None:
             self.architecture = helperfuncs.getArchFromFlavor(str(self.trove_flavor))
 
@@ -227,65 +198,7 @@ class Image(modellib.XObjIdModel):
             self.image_type = ImageType.fromImageTypeId(self._image_type)
         self.jobs = modellib.HrefFieldFromModel(self, "ImageJobs")
 
-        if self.status == jobstatus.BLOCKED:
-            image_data = ImageData.objects.filter(image=self.image_id,
-                                                  name="outputToken")
-            if image_data:
-                outputToken = image_data[0].value
-                self.upload_files = modellib.HrefField(
-                    href=reverse('ImageUpload', args=[self.image_id,
-                                                      outputToken]))
-
         self._computeActions()
-
-    def getMetadata(self):
-        troveTup = self._getOutputTrove()
-        if self._rbmgr is None or troveTup is None:
-            return
-        reposMgr = self._rbmgr.restDb.productMgr.reposMgr
-        metadata = reposMgr.getKeyValueMetadata([troveTup])[0]
-        return metadata
-
-    def _computeMetadata(self):
-        metadataDict = self.getMetadata()
-        if metadataDict is None:
-            return
-        self.metadata = metadata = ImageMetadata()
-        metadata.setMetadata(metadataDict)
-
-    def saveMetadata(self):
-        if (self._rbmgr is None or self.output_trove is None
-                or self.metadata is None):
-            return
-        # Commit a new image trove with updated metadata to repository and save
-        # its NVF back to the output_trove field.
-        metadata = self._getMetadataDict()
-        oldTup = self._getOutputTrove()
-        reposMgr = self._rbmgr.restDb.productMgr.reposMgr
-        newTup = reposMgr.updateKeyValueMetadata([(oldTup, metadata)],
-                admin=True)[0]
-        self.output_trove = newTup.asString()
-        self.save()
-        # Log new image tuple
-        msg = "Updated image committed as %s=%s/%s" % (newTup.name,
-                newTup.version.trailingLabel(),
-                newTup.version.trailingRevision())
-        self._rbmgr.restDb.imageMgr._getImageLogger(self.project.short_name,
-                self.image_id).info(msg)
-
-    def _getOutputTrove(self):
-        if self.output_trove is None:
-            return None
-        name, version, flavor = trovetup.TroveSpec.fromString(self.output_trove)
-        version = versions.VersionFromString(version)
-        if flavor is None:
-            flavor = deps.Flavor()
-        return trovetup.TroveTuple(name, version, flavor)
-
-    def _getMetadataDict(self):
-        if self.metadata is None:
-            return None
-        return self.metadata.asDict()
 
     def save(self, *args, **kwargs):
         if self.image_type is not None:
@@ -295,10 +208,7 @@ class Image(modellib.XObjIdModel):
         return modellib.XObjIdModel.save(self, *args, **kwargs)
 
     def _computeActions(self):
-        if self._image_type == buildtypes.DEFERRED_IMAGE and self.base_image:
-            self.actions = self._computeActionsForImage(self.base_image)
-        else:
-            self.actions = self._computeActionsForImage(self)
+        self.actions = self._computeActionsForImage(self)
 
     def _computeActionsForImage(self, image):
         # Lazy import to prevent circular imports
@@ -424,7 +334,6 @@ class BuildFiles(modellib.Collection):
 
     _xobj = xobj.XObjMetadata(tag='files')
     list_fields = ['file']
-    metadata = modellib.SyntheticField(ImageMetadata)
     attributes = modellib.SyntheticField(modellib.EtreeField)
 
 class BuildFile(modellib.XObjIdModel):

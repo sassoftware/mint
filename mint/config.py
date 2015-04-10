@@ -244,10 +244,6 @@ class MintConfig(conarycfg.ConfigFile):
 
     # inventory - configuration
     inventoryConfigurationEnabled = (CfgBool, True, "Whether or not managed systems can be configured vai the API")
-    
-    # image import
-    imageImportEnabled = (CfgBool, True, "Whether or not base images can be imported directly as project images")
-    metadataDescriptorPath = (CfgPath, RBUILDER_DATA + 'data/metadataDescriptor.xml')
 
     rwbsLabel = (CfgString, 'pdt.cny.sas.com@sas:rwbs-8')
 
@@ -299,6 +295,8 @@ class MintConfig(conarycfg.ConfigFile):
     platformSourceLabels    = None
     platformSources         = None
     platformSourceTypes     = None
+    metadataDescriptorPath  = None
+    imageImportEnabled      = None
 
     # AMI configuration -- migrated in schema (45, 6)
     ec2PublicKey            = (CfgString, '', "The AWS account id")

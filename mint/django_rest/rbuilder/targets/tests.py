@@ -1565,26 +1565,11 @@ ZcY7o9aU
                     description="target image description %02d" % j,
                     target_internal_id=targetInternalImageId)
 
-                # Create deferred images too
-                self.createDeferredImage(image,
-                    "Deferred image based on %s" % image.image_id,
-                    projectBranchStage=stage)
-
         self._markAllImagesAsFinished()
         ret = [ target1, target2, target3 ]
         if withEc2:
             ret.append(targetEc2)
         return ret
-
-    def createDeferredImage(self, baseImage, name, description=None,
-            projectBranchStage=None):
-        # Deferred images have no build files
-        img = self.addImage(name=name, description=description,
-            imageType=buildtypes.DEFERRED_IMAGE,
-            stage=projectBranchStage, baseImage=baseImage,
-            files=[])
-        self._retagQuerySets()
-        return img
 
     def testRecomputeTargetDeployableImages(self):
         targets = self._setupImages()
@@ -1725,51 +1710,6 @@ ZcY7o9aU
         self.failUnlessEqual(doc.descriptor.metadata.rootElement, "descriptor_data")
         self.failUnlessEqual(doc.descriptor.dataFields.field.default, "7")
 
-        baseImg = img
-
-        # Check deferred image
-        imgName = "image 02"
-        img = imgmodels.Image.objects.get(
-            name="Deferred image based on %s" % baseImg.image_id,
-            _image_type=buildtypes.DEFERRED_IMAGE)
-
-        url = "images/%s" % img.image_id
-        resp = self._get(url, username="ExampleDeveloper", password="password")
-        self.failUnlessEqual(resp.status_code, 200)
-        doc = xobj.parse(resp.content)
-        actions = doc.image.actions.action
-        self.failUnlessEqual([ x.name for x in actions ],
-            [
-             "Deploy image on 'Target Name vmware' (vmware)",
-             "Deploy image on 'Target Name vcloud' (vcloud)",
-             "Deploy image on '%s' (vmware)" % targetX.name,
-             "Launch system on 'Target Name vmware' (vmware)",
-             "Launch system on 'Target Name vcloud' (vcloud)",
-             "Launch system on '%s' (vmware)" % targetX.name,
-             "Cancel image build",
-            ])
-        # We should be referring to the base image's files
-        file1 = baseImg.files.all()[0]
-        self.failUnlessEqual([ x.descriptor.id for x in actions ],
-            [
-            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
-                (target1.target_id, file1.file_id),
-            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
-                (target3.target_id, file1.file_id),
-            'http://testserver/api/v1/targets/%s/descriptors/deploy/file/%s' %
-                (targetX.target_id, file1.file_id),
-            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
-                (target1.target_id, file1.file_id),
-            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
-                (target3.target_id, file1.file_id),
-            'http://testserver/api/v1/targets/%s/descriptors/launch/file/%s' %
-                (targetX.target_id, file1.file_id),
-            'http://testserver/api/v1/images/%s/descriptors/cancel_build' %
-                (img.image_id, ),
-            ])
-        self.failUnlessEqual(doc.image.jobs.id,
-            'http://testserver/api/v1/images/%s/jobs' % img.image_id)
-
     def testRecomputeTargetDeployableImagesEC2(self):
         targets = self._setupImages(withEc2=True)
         self.mgr.targetsManager.recomputeTargetDeployableImages()
@@ -1812,16 +1752,6 @@ ZcY7o9aU
                 name='filesystemSize', value='3141',
                 data_type=mintdata.RDT_INT)
         self._testDeployImage(targets, img)
-
-    def testDeployDeferredImage(self):
-        targets = self._setupImages()
-        imgName = "image 02"
-        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
-        imgmodels.ImageData.objects.create(image=img,
-                name='filesystemSize', value='3141',
-                data_type=mintdata.RDT_INT)
-        deferredImg = imgmodels.Image.objects.get(base_image=img)
-        self._testDeployImage(targets, deferredImg, img)
 
     def _testDeployImage(self, targets, img, baseImg=None):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
@@ -1927,14 +1857,6 @@ ZcY7o9aU
         imgName = "image 02"
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
         self._testLaunchSystem(targets, img, zone=zone)
-
-    def testLaunchSystemFromDeferredImage(self):
-        targets = self._setupImages()
-        imgName = "image 02"
-        img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
-        deferredImg = imgmodels.Image.objects.get(base_image=img)
-        self._testLaunchSystem(targets, deferredImg, img)
-
 
     def _testLaunchSystem(self, targets, img, baseImg=None, configData=None,
             expectedStatusCode=200, zone=None):
@@ -2441,7 +2363,7 @@ ZcY7o9aU
                 'http://testserver/api/v1/targets/5/descriptors/launch/file/7',
                 'http://testserver/api/v1/targets/6/descriptors/launch/file/7',
                 'http://testserver/api/v1/targets/1/descriptors/launch/profile/1/file/7',
-                'http://testserver/api/v1/images/9/descriptors/cancel_build'
+                'http://testserver/api/v1/images/5/descriptors/cancel_build'
         ])
 
         # Fetch descriptor via launch profile

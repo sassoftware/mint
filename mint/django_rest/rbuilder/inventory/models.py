@@ -85,7 +85,6 @@ class Inventory(modellib.XObjModel):
     job_states = D(modellib.HrefField('job_states'), "an entry point into the inventory job states collection")
     inventory_systems = D(modellib.HrefField('inventory_systems'), "an entry point into the collection of inventory systems (all systems visible in the UI under Systems)")
     infrastructure_systems = D(modellib.HrefField('infrastructure_systems'), "an entry point into the collection of infrastructure systems (all systems visible in the UI under Infrastructure)")
-    image_import_metadata_descriptor = D(modellib.HrefField('image_import_metadata_descriptor'), 'No documentation')
 
 class Systems(modellib.Collection):
 
@@ -382,27 +381,6 @@ class NetworkAddress(modellib.XObjModel):
         return (self.address == other.address and
                 bool(self.pinned) == bool(other.pinned))
 
-class AssimilationParameters(modellib.XObjModel):
-    '''Used to install management S/W on a system already in inventory'''
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-        tag = 'assimilation_parameters',
-        elements = ['assimilation_credential']
-    )
-    list_fields = ['assimilation_credential']
-
-class AssimilationCredential(modellib.XObjModel):
-    '''One of many login credentials to try when using AssimilationParameters'''
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-       tag = 'assimilation_credential'
-    )
-
-    ssh_username = D(models.CharField(max_length=100), "OS username")
-    ssh_password = D(models.CharField(max_length=512), "OS or SSH key password")
-    ssh_key      = D(models.TextField(null=True), "SSH key")
 
 class System(modellib.XObjIdModel):
 
@@ -942,8 +920,6 @@ class System(modellib.XObjIdModel):
 
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        assimEnabled = bool(self.management_interface_id and
-            self.management_interface.name == 'ssh')
         scanEnabled = bool(self.management_interface_id and
             self.management_interface.name in ('cim', 'wmi'))
         configureEnabled = False
@@ -967,14 +943,6 @@ class System(modellib.XObjIdModel):
             configureEnabled = bool(self.configuration is not None)
 
         actions.action.extend([
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_ASSIMILATE,
-                actionName="Assimilate system",
-                actionDescription="Assimilate system",
-                descriptorModel=self,
-                descriptorHref="descriptors/assimilation",
-                enabled=assimEnabled,
-            ),
             jobmodels.EventType.makeAction(
                 jobmodels.EventType.SYSTEM_SCAN,
                 actionName="System scan",

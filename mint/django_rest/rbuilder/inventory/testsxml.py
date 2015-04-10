@@ -3,7 +3,6 @@ inventory_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <inventory>
   <event_types id="http://testserver/api/v1/inventory/event_types"/>
-  <image_import_metadata_descriptor id="http://testserver/api/v1/inventory/image_import_metadata_descriptor"/>
   <infrastructure_systems id="http://testserver/api/v1/inventory/infrastructure_systems"/>
   <inventory_systems id="http://testserver/api/v1/inventory/inventory_systems"/>
   <job_states id="http://testserver/api/v1/inventory/job_states"/>
@@ -1041,14 +1040,6 @@ systems_xml = """\
     <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
     <actions>
       <action>
-        <description>Assimilate system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/assimilation"/>
-        <enabled>false</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-        <key>system_assimilation</key>
-        <name>Assimilate system</name>
-      </action>
-      <action>
         <description>Scan system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/survey_scan"/>
         <enabled>False</enabled>
@@ -1160,14 +1151,6 @@ systems_xml = """\
     <configuration_set>False</configuration_set>
     <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
     <actions>
-      <action>
-        <description>Assimilate system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
-        <enabled>false</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-        <key>system_assimilation</key>
-        <name>Assimilate system</name>
-      </action>
       <action>
         <description>Scan system</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
@@ -1423,14 +1406,6 @@ system_xml = """\
   <configuration_set>False</configuration_set>
   <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <actions>
-    <action>
-      <description>Assimilate system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-      <key>system_assimilation</key>
-      <name>Assimilate system</name>
-    </action>
     <action>
       <description>Scan system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
@@ -1831,14 +1806,6 @@ system_target_xml = """\
   <configuration_set>False</configuration_set>
   <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <actions>
-    <action>
-      <description>Assimilate system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-      <key>system_assimilation</key>
-      <name>Assimilate system</name>
-    </action>
     <action>
       <description>Scan system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
@@ -2283,14 +2250,6 @@ system_with_target = """\
   <surveys id="http://testserver/api/v1/inventory/systems/4/surveys"/>
   <actions>
     <action>
-      <description>Assimilate system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/assimilation"/>
-      <enabled>false</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-      <key>system_assimilation</key>
-      <name>Assimilate system</name>
-    </action>
-    <action>
       <description>Scan system</description>
       <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/survey_scan"/>
       <enabled>False</enabled>
@@ -2493,14 +2452,6 @@ configuration_descriptor_xml = """\
   <metadata/>
 </configuration_descriptor>"""
 
-system_assimilator_xml = """\
-<job>
-  <job_type id='https://localhost/api/v1/inventory/event_types/12'>system assimilation</job_type>
-  <descriptor id='https://localhost/api/v1/inventory/systems/3/descriptors/assimilation'/>
-  <descriptor_data/>
-</job>
-"""
-
 system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 <system>
   <configuration_applied>False</configuration_applied>
@@ -2550,14 +2501,6 @@ retirement_xml = """
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   <actions>
-    <action>
-      <name>Assimilate system</name>
-      <job_type id="http://testserver/api/v1/inventory/event_types/12"/>
-      <enabled>true</enabled>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/assimilation"/>
-      <key>system_assimilation</key>
-      <description>Assimilate system</description>
-    </action>
     <action>
         <description>Apply system configuration</description>
         <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
