@@ -249,8 +249,6 @@ class ExceptionLoggerMiddleware(SwitchableLogMiddleware):
         return None
 
     def process_request(self, request):
-        mintutils.setupLogging(consoleLevel=logging.INFO,
-                consoleFormat='apache')
         return None
 
     def process_exception(self, request, exception):
