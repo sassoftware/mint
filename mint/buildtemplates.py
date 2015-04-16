@@ -321,7 +321,7 @@ class VirtualIronVHDTemplate(Template):
 
 class AMITemplate(Template):
     __slots__ = ['freespace', 'baseFileName', 'ebsBacked',
-                 'amiHugeDiskMountpoint', 'buildOVF10']
+                 'swapSize', 'amiHugeDiskMountpoint', 'buildOVF10']
     id = buildtypes.AMI
 
 class ApplianceISOTemplate(Template):
