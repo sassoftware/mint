@@ -1,6 +1,7 @@
 import hashlib
 import os
 import subprocess
+import uuid
 
 from testutils import mock
 import testsxml
@@ -12,10 +13,8 @@ logging.disable(logging.CRITICAL)
 from mint.django_rest import test_utils
 XMLTestCase = test_utils.XMLTestCase
 
-from conary import deps, trovetup, versions
-
 from mint import jobstatus
-from mint.lib import uuid, data as mintlibdata
+from mint.lib import data as mintlibdata
 from mint.django_rest.rbuilder.images import models
 from mint.django_rest.rbuilder.inventory import models as invmodels
 from mint.django_rest.rbuilder.jobs import models as jobsmodels

@@ -3875,7 +3875,7 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         def mockedUuid4():
             self._uuid += 1
             return "really-unique-uuid-%03d" % self._uuid
-        from mint.lib import uuid
+        import uuid
         self.mock(uuid, 'uuid4', mockedUuid4)
 
     def _dispatchEvent(self, event):

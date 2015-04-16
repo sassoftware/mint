@@ -6,7 +6,6 @@
 
 from mint.lib import database
 
-from conary import versions
 
 class CommitsTable(database.DatabaseTable):
     name = "Commits"
@@ -17,41 +16,3 @@ class CommitsTable(database.DatabaseTable):
         cu.execute("INSERT INTO Commits VALUES (?, ?, ?, ?, ?)",
             projectId, timestamp, troveName, troveVersion, userId)
         self.db.commit()
-
-    def getCommitsByProject(self, projectId, limit = 10, sourceOnly = True):
-        """ Returns a list of up to the limit (default 10) most recent commits.
-        Each commit is represented by a 4-tuple (trove name, short trailing
-        version string, full version string with timestamp, commit timestamp."""
-        commitList = []
-        if sourceOnly:
-            like = "AND troveName LIKE '%%:source'"
-        else:
-            like = ""
-
-        cu = self.db.cursor()
-        cu.execute("""SELECT troveName, version, timestamp
-                            FROM Commits
-                            WHERE projectId = ? %s
-                            ORDER BY timestamp DESC LIMIT ?""" % like,
-                   projectId, limit)
-        for x in cu.fetchall():
-            v = versions.VersionFromString(x[1])
-            # FIXME: set all the timestamps to 1.0.  The timestamps
-            # are not needed by any user of this method, but some functions
-            # that are used currently expect a frozen version instead of
-            # a version string.
-            # FIXME: we're using an internal method here
-            v._clearVersionCache()
-            for item in v.iterRevisions():
-                item.timeStamp = 1.0
-            commitList.append( (x[0], v.trailingRevision().asString(),
-                                v.freeze(), x[2]) )
-        return commitList
-    
-    def deleteCommitsByProject(self, projectId):
-        """
-        Delete all committs for the specified project
-        """
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM Commits WHERE projectId=?", projectId)
-        return True

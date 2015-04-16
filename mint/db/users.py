@@ -11,7 +11,6 @@ from conary.lib.digestlib import md5
 from conary.repository.netrepos.netauth import nameCharacterSet
 from conary.repository.netrepos.auth_tokens import ValidPasswordToken
 
-from mint import userlisting
 from mint.mint_error import (DuplicateItem, InvalidUsername,
         IllegalUsername, UserAlreadyExists, ItemNotFound)
 from mint.lib import auth_client
@@ -170,80 +169,6 @@ class UsersTable(database.KeyedTable):
         else:
             self.db.commit()
         return userId
-
-    def getUsersWithEmail(self):
-        """
-        Returns a list of all users suitable for sending e-mail
-        """
-        cu = self.db.cursor()
-        SQL = """SELECT userId, fullName, email FROM Users"""
-
-        cu.execute(SQL)
-
-        results = cu.fetchall()
-        return results
-
-    def getUsersWithAwsAccountNumber(self):
-        """
-        Returns a list of all users with Aws account numbers.
-        """
-        cu = self.db.cursor()
-        SQL = """
-            SELECT u.userId, tc.credentials AS creds
-              FROM Users u
-              JOIN TargetUserCredentials AS tuc USING (userId)
-              JOIN TargetCredentials AS tc USING (targetCredentialsId)
-              JOIN Targets AS t ON (t.targetId=tuc.targetId)
-              JOIN target_types AS tt ON (t.target_type_id = t.target_type_id)
-             WHERE tt.name = ?
-               AND t.name = ?
-            """
-        cu.execute(SQL, self.EC2TargetType, self.EC2TargetName)
-        results = cu.fetchall()
-        return [ (x[0], data.unmarshalTargetUserCredentials(self.cfg, x[1]
-            ).get('accountId')) for x in results ]
-
-    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
-        """
-        Returns a list of users for browsing limited by L{limit}
-        starting with item L{offset}.
-        @param limit:  Number of items to return
-        @param offset: Count at which to begin listing
-        @param includeInactive: set True to include users needing confirmations
-        @return:       a list of the requested items.
-        """
-        cu = self.db.cursor()
-
-        if not includeInactive:
-            whereClause = "WHERE active=1"
-        else:
-            whereClause = ""
-
-        SQL = userlisting.sqlbase % (whereClause,
-                userlisting.ordersql[sortOrder], limit, offset)
-
-        cu.execute(SQL)
-
-        ids = []
-        for x in cu.fetchall():
-            ids.append(list(x))
-            if len(ids[-1][userlisting.blurbindex]) > userlisting.blurbtrunclength:
-                ids[-1][userlisting.blurbindex] = ids[-1][userlisting.blurbindex][:userlisting.blurbtrunclength] + "..."
-
-        return ids
-
-    def getNumUsers(self, includeInactive=False):
-        """
-        Returns the count of Users
-        """
-        cu = self.db.cursor()
-        if not includeInactive:
-            whereClause = "WHERE active=1"
-        else:
-            whereClause = ""
-        cu.execute( "SELECT count(userId) FROM Users " + whereClause )
-        return cu.fetchone()[0]
-
 
     def getUsername(self, userId):
         cu = self.db.cursor()

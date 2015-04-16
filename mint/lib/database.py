@@ -3,7 +3,6 @@
 #
 
 import decimal
-import sys
 import weakref
 
 from conary.dbstore import sqlerrors
@@ -113,8 +112,6 @@ class DatabaseTable(object):
         since MintServer object holds the db and all DatabaseTables objects."""
         assert(self.name and self.fields)
         self.db = db
-        # XXX what purpose does creating an unused cursor serve?
-        cu = self.db.cursor()
 
     def _getDb(self):
         return self._db()
@@ -304,74 +301,3 @@ class KeyedTable(DatabaseTable):
         stmt = "DELETE FROM %s WHERE %s=?" % (self.name, self.key)
         cu.execute(stmt, id)
         return True
-
-    @dbReader
-    def search(self, cu, columns, table, where, order, modified, limit, offset, leftJoins=[]):
-        """
-        Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
-        @param columns: list of columns to return
-        @param table: Table, join or view against which to search
-        @param where: Where clause returned by Searcher.where()
-        @param searchcols: List of columns to compare with L{terms}
-        @param modified: Last modification time.  Empty string to skip this check.
-        @param offset: Count at which to begin listing
-        @param limit:  Number of items to return
-        @param leftJoins: tuples of table(s) to join on (table, using)
-        @return:       a dictionary of the requested items.
-                       each entry will contain four bits of data:
-                        The hostname for use with linking,
-                        The project name,
-                        The project's description
-                        The date last modified.
-        """
-        subs = [ ]
-        count = 0
-
-        if modified:
-            where = where[0] + " AND " + modified, where[1]
-
-        #First get the search result count
-        query = "SELECT count(%s) FROM %s " % (columns[0], table) + where[0]
-        try:
-            cu.execute(query, *where[1])
-            r = cu.fetchone()
-            count = r[0]
-        except Exception, e:
-            print >> sys.stderr, str(e), query
-            sys.stderr.flush()
-            raise
-        #Now the actual search results
-        query = "SELECT " + ", ".join(columns) + " FROM %s " % table
-        for leftJoin in leftJoins:
-            query += " LEFT OUTER JOIN %s USING (%s) " % leftJoin
-        query += where[0] + " ORDER BY %s" % order
-        subs.extend(where[1])
-
-        if limit > 0:
-            query += " LIMIT ? "
-            subs.append(limit)
-        if offset > 0:
-            query += " OFFSET ? "
-            subs.append(offset)
-
-        try:
-            cu.execute(query, *subs)
-        except Exception, e:
-            print >> sys.stderr, str(e), query, subs
-            sys.stderr.flush()
-            raise
-
-        ids = []
-        for r in cu.fetchall():
-            ids.append(r)
-        return ids, count
-
-def createTemporaryTable(db, tableName, tableColumns):
-    cu = db.cursor()
-    if tableName in db.tempTables:
-        cu.execute("DELETE FROM %s" % tableName)
-    else:
-        sql = "CREATE TEMPORARY TABLE %s (%s)" % (
-            tableName, ','.join(tableColumns))
-        cu.execute(sql)
-        db.tempTables[tableName] = True

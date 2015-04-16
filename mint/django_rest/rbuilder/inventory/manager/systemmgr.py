@@ -10,6 +10,7 @@ import sys
 import random
 import time
 import traceback
+import uuid
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from conary import trovetup
@@ -22,7 +23,7 @@ from django.contrib.redirects import models as redirectmodels
 from django.contrib.sites import models as sitemodels
 from django.core.exceptions import ObjectDoesNotExist
 
-from mint.lib import uuid, x509
+from mint.lib import x509
 from mint.lib import data as mintdata
 from mint.django_rest import signals, timeutils
 from mint.django_rest.rbuilder import models as rbuildermodels
@@ -34,7 +35,6 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
-from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.django_rest.rbuilder.users import models as usermodels
 from mint.rest import errors as mint_rest_errors

@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import urllib
 import urlparse
+import uuid
 
 from testutils import sqlharness
 
@@ -112,7 +113,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
 
     @classmethod
     def uuid4(cls):
-        from mint.lib import uuid
         return uuid.uuid4()
 
     def _fixture_setup(self):

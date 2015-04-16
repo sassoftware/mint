@@ -18,7 +18,6 @@ from mint.rest.db import database as rest_database
 from mint import users
 from mint.lib import data
 from mint.lib import database
-from mint.lib import profile
 from mint.lib.mintutils import ArgFiller
 from mint import builds
 from mint import helperfuncs
@@ -222,17 +221,12 @@ class MintServer(object):
         # reopen the database if it's changed
         self.db.reopen()
 
-        prof = profile.Profile(self.cfg)
-
         try:
             if methodName.startswith('_'):
                 raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
             return (True, ("MethodNotSupported", (methodName,)))
-
-        # start profile
-        prof.startXml(methodName)
 
         try:
             try:
@@ -279,7 +273,6 @@ class MintServer(object):
                     self.db.commit()
                 return (False, r)
         finally:
-            prof.stopXml(methodName)
             if self.restDb:
                 self.restDb.reset()
 

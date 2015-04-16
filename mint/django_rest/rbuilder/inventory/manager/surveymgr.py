@@ -5,13 +5,12 @@
 #
 
 import logging
+import uuid
 from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.inventory import models as inventory_models
-from mint.django_rest.rbuilder.projects import models as project_models
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.inventory.manager.surveydiff import SurveyDiffRender
 from mint.django_rest import timeutils
-from mint.lib import uuid
 from conary import versions
 from lxml import etree
 from datetime import datetime, timedelta

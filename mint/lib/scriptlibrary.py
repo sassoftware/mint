@@ -10,7 +10,6 @@ import os
 import os.path
 import signal
 import sys
-import traceback
 from conary.lib.log import logger
 from mint import config
 from mint.lib import mintutils

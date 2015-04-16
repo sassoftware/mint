@@ -26,7 +26,6 @@ from webob import exc as web_exc
 from mint import helperfuncs
 from mint import shimclient
 from mint.lib import maillib
-from mint.lib import profile
 from mint import users
 
 log = logging.getLogger(__name__)
@@ -49,14 +48,10 @@ class WebHandler(object):
     baseUrl = None
 
     def _write(self, templateName, templatePath = None, **values):
-        prof = profile.Profile(self.cfg)
-        wasCacheHit = False
-
         if not templatePath:
             templatePath = self.cfg.templatePath
 
         path = os.path.join(templatePath, templateName + ".kid")
-        prof.startKid(templateName)
 
         template = kid.load_template(path)
 
@@ -83,7 +78,6 @@ class WebHandler(object):
 
         t.assume_encoding = 'latin1'
         returner = t.serialize(encoding = "utf-8", output = self.output)
-        prof.stopKid(templateName, wasCacheHit)
 
         return returner
 
