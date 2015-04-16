@@ -11,8 +11,6 @@ from mint.django_rest.rbuilder.manager import basemanager
 
 from mint.django_rest.rbuilder.discovery.manager import DiscoveryManager
 from mint.django_rest.rbuilder.inventory.manager.systemmgr import SystemManager
-from mint.django_rest.rbuilder.inventory.manager.surveymgr import SurveyManager
-from mint.django_rest.rbuilder.inventory.manager.versionmgr import VersionManager
 from mint.django_rest.rbuilder.inventory.manager.repeatermgr import RepeaterManager
 from mint.django_rest.rbuilder.jobs.manager import JobManager
 from mint.django_rest.rbuilder.querysets.manager import QuerySetManager
@@ -37,8 +35,6 @@ class RbuilderManager(basemanager.BaseRbuilderManager):
     MANAGERS = {
         'discMgr' : DiscoveryManager,
         'sysMgr' : SystemManager,
-        'surveyMgr' : SurveyManager,
-        'versionMgr' : VersionManager,
         'repeaterMgr' : RepeaterManager,
         'jobMgr' : JobManager,
         'querySetMgr' : QuerySetManager,

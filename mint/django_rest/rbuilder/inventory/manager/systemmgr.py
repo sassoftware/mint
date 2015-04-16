@@ -15,7 +15,6 @@ from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
 from conary import trovetup
 from lxml import etree
-from xobj import xobj
 
 from django.db import connection
 from django.conf import settings
@@ -30,112 +29,16 @@ from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
-from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.projects import models as projectmodels
-from mint.django_rest.rbuilder.users import models as usermodels
 from mint.rest import errors as mint_rest_errors
-
-from smartform import descriptor
 
 log = logging.getLogger(__name__)
 exposed = basemanager.exposed
 
-survey_scan_descriptor = """<descriptor>
-  <metadata>
-    <displayName>System Scan</displayName>
-    <descriptions>
-      <desc>System Scan</desc>
-    </descriptions>
-  </metadata>
-  <dataFields/>
-</descriptor>
-"""
-
-update_descriptor = """<descriptor>
-  <metadata>
-    <displayName>Update Software</displayName>
-    <descriptions>
-      <desc>Update your system</desc>
-    </descriptions>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>trove_label</name>
-      <descriptions>
-        <desc>Group</desc>
-      </descriptions>
-      <type>str</type>
-      <required>true</required>
-    </field>
-    <field>
-      <name>dry_run</name>
-      <descriptions>
-        <desc>Run in test mode</desc>
-      </descriptions>
-      <type>bool</type>
-      <required>true</required>
-    </field>
-  </dataFields>
-</descriptor>
-"""
-
-preview_descriptor = """<descriptor>
-  <metadata>
-    <displayName>Preview Software Update</displayName>
-    <descriptions>
-      <desc>Preview Software Update</desc>
-    </descriptions>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>updates</name>
-      <descriptions>
-        <desc>Items to update</desc>
-      </descriptions>
-      <type>str</type>
-      <required>true</required>
-      <multiple>true</multiple>
-    </field>
-  </dataFields>
-</descriptor>
-"""
-
-sync_descriptor = """<descriptor>
-  <metadata>
-    <displayName>Apply Software Update</displayName>
-    <descriptions>
-      <desc>Apply Software Update</desc>
-    </descriptions>
-  </metadata>
-  <dataFields>
-    <field>
-      <name>preview_id</name>
-      <descriptions>
-        <desc>Preview ID</desc>
-      </descriptions>
-      <type>str</type>
-      <required>true</required>
-    </field>
-  </dataFields>
-</descriptor>
-"""
-
-
-# TODO: copy/paste here could really use some templates
-configure_descriptor = """<descriptor>
-  <metadata>
-    <displayName>Apply System Configuration</displayName>
-    <descriptions>
-      <desc>Apply System Configuration</desc>
-    </descriptions>
-  </metadata>
-  <dataFields/>
-</descriptor>
-"""
 
 class SystemManager(basemanager.BaseManager):
     RegistrationEvents = set([
@@ -153,28 +56,8 @@ class SystemManager(basemanager.BaseManager):
         jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
         jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
     ])
-    SystemConfigurationEvents = set([
-        jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
-    ])
 
     IncompatibleEvents = {
-        # All events are incompatible with themselves (enforced in
-        # checkEventCompatibility)
-        # Can't shutdown and update at the same time
-        # Can't shutdown and configure at the same time
-
-        jobmodels.EventType.SYSTEM_UPDATE:\
-            [jobmodels.EventType.SYSTEM_SHUTDOWN,
-             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
-        jobmodels.EventType.SYSTEM_SHUTDOWN:\
-            [jobmodels.EventType.SYSTEM_UPDATE,
-            jobmodels.EventType.SYSTEM_CONFIGURE],
-        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE:\
-            [jobmodels.EventType.SYSTEM_UPDATE,
-             jobmodels.EventType.SYSTEM_CONFIGURE],
-        jobmodels.EventType.SYSTEM_CONFIGURE:\
-            [jobmodels.EventType.SYSTEM_SHUTDOWN,
-             jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE],
     }
 
     X509 = x509.X509
@@ -293,14 +176,6 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def deleteSystem(self, system_id):
         system = models.System.objects.get(pk=system_id)
-        # API deletions used here to prevent cascade delete loop issues
-        # that occur via diffs combined with latest_survey association
-        matching_surveys = survey_models.Survey.objects.filter(
-            system=system
-        )
-        for survey in matching_surveys:
-            self.mgr.deleteSurvey(survey.uuid)
-
         system.delete()
 
     @exposed
@@ -610,14 +485,6 @@ class SystemManager(basemanager.BaseManager):
         # add the system
         system.save()
 
-        if system.survey is not None:
-            # XXX we theoretically shouldn't have to have the synthetic
-            # field, and be able to pass the survey as part of the
-            # surveys collection, but because of all the special parsing
-            # in surveymgr, this is not possible at the moment -- misa
-            survey = self.mgr.addSurveyForSystemFromEtree(system.system_id, system.survey)
-            system = survey.system
-
         # Verify potential duplicates here
         system = self.mergeSystems(system)
 
@@ -706,7 +573,6 @@ class SystemManager(basemanager.BaseManager):
             """, [ system.pk, other.pk ])
 
         self._mergeLogs(cu, system, other)
-        self._mergeSurveys(system, other)
 
         # Add a redirect from the deleted system to the saved system
         redirect = redirectmodels.Redirect(
@@ -738,12 +604,6 @@ class SystemManager(basemanager.BaseManager):
              WHERE system_log_id = %s
         """, [ systemLog.pk, otherSystemLog.pk ])
 
-    def _mergeSurveys(self, system, other):
-        # Point all surveys to the final system
-        survey_models.Survey.objects.filter(system=other).update(
-            system=system)
-        system.update(latest_survey=other.latest_survey)
-
     def postprocessEvent(self, system):
         # removable legacy artifact given new jobs infrastructure?  Does anything call this?
         pass
@@ -770,7 +630,6 @@ class SystemManager(basemanager.BaseManager):
                 # No credentials, nothing to do here
                 system.update(current_state=credentialsMissing)
             else:
-                self._scheduleApplySystemConfiguration(system)
                 if (system.management_interface_id == wmiIfaceId and
                         system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE):
                     self._scheduleRwbsInstallation(system)
@@ -865,9 +724,6 @@ class SystemManager(basemanager.BaseManager):
             self.addSystem(system, generateCertificates=False,
                 withManagementInterfaceDetection=False,
                 withRetagging=False)
-        elif system.survey is not None:
-            survey = self.mgr.addSurveyForSystemFromEtree(system.system_id, system)
-            system = survey.system
         self.setSystemStateFromJob(system)
         if for_user:
             system.modified_by = for_user
@@ -1001,13 +857,11 @@ class SystemManager(basemanager.BaseManager):
     @exposed
     def addLaunchedSystems(self, systems, job=None, forUser=None):
         img = None
-        configurationData = None
         if job:
             # Try to extract the image for this job
             images = job.images.all()
             if images:
                 img = images[0].image
-                configurationData = self._getConfigurationDataFromJob(job)
         # Copy the incoming systems; we'll replace them with real ones
         slist = systems.system
         rlist = systems.system = []
@@ -1015,7 +869,7 @@ class SystemManager(basemanager.BaseManager):
             djSystem = self.mgr.addLaunchedSystem(system,
                 dnsName=system.dnsName,
                 targetName=system.targetName, targetType=system.targetType,
-                sourceImage=img, job=job, configurationData=configurationData,
+                sourceImage=img, job=job,
                 for_user=forUser)
             rlist.append(djSystem)
             if system.dnsName:
@@ -1036,16 +890,13 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def addLaunchedSystem(self, system, dnsName=None, targetName=None,
-            targetType=None, for_user=None, sourceImage=None, job=None,
-            configurationData=None):
+            targetType=None, for_user=None, sourceImage=None, job=None):
         if isinstance(targetType, basestring):
             targetTypeName = targetType
         else:
             targetTypeName = targetType.name
         target = self.lookupTarget(targetTypeName=targetTypeName,
             targetName=targetName)
-        system.configuration = configurationData
-        system.configuration_set = bool(configurationData is not None)
         system.target = target
         system.source_image = sourceImage
         # Copy incoming certs (otherwise read-only)
@@ -1105,11 +956,6 @@ class SystemManager(basemanager.BaseManager):
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
         self.addSystem(system, for_user=for_user,
             withManagementInterfaceDetection=False)
-        troveSpec, _, _, _ = self._getTroveSpecForImage(sourceImage)
-        if troveSpec:
-            troveSpecs = set([troveSpec])
-            self.setDesiredTopLevelItems(system, troveSpecs)
-            self.setObservedTopLevelItems(system, troveSpecs)
         # Add target system
         # get_or_create needs the defaults arg to do this properly (#1631)
         defaults=dict(
@@ -1137,62 +983,6 @@ class SystemManager(basemanager.BaseManager):
                 system=system, job=job)
 
         return system
-
-    def _getConfigurationDataFromJob(self, job):
-        if job._descriptor_data is None:
-            return None
-        descriptorData = models.modellib.Etree.fromstring(job._descriptor_data)
-        if not self.descriptorHasConfigurationData(descriptorData):
-            return None
-
-        # This has validated, so it Should Not Fail (TM)
-        data = descriptorData.find('system_configuration')
-        # RCE-1138
-        data.tag = 'configuration'
-        configurationData = etree.tostring(data)
-        return configurationData
-
-    @exposed
-    def descriptorHasConfigurationData(self, descriptorDataEtree):
-        withConfigurationData = descriptorDataEtree.find('withConfiguration')
-        if withConfigurationData is not None:
-            return withConfigurationData.text.lower() == 'true'
-        return False
-
-    @exposed
-    def setDesiredTopLevelItems(self, system, topLevelItems):
-        existing = set(x.trove_spec for x in system.desired_top_level_items.all())
-        mgr = models.SystemDesiredTopLevelItem.objects
-        for toAdd in topLevelItems.difference(existing):
-            mgr.create(system=system, trove_spec=toAdd)
-        mgr.filter(system=system,
-            trove_spec__in=existing.difference(topLevelItems)).delete()
-
-    @exposed
-    def setObservedTopLevelItems(self, system, topLevelItems):
-        existing = set(x.trove_spec for x in system.observed_top_level_items.all())
-        mgr = models.SystemObservedTopLevelItem.objects
-        for toAdd in topLevelItems.difference(existing):
-            mgr.create(system=system, trove_spec=toAdd)
-        mgr.filter(system=system,
-            trove_spec__in=existing.difference(topLevelItems)).delete()
-
-        # update the project/branch/stage
-        system = models.System.objects.get(pk=system.pk)
-        for top_level in system.observed_top_level_items.all():
-            if not ("group-" in top_level.trove_spec and "-appliance" in top_level.trove_spec):
-                continue
-            (name, ver, flavor) = trovetup.TroveTuple(top_level.trove_spec)
-            label = ver.trailingLabel()
-            labelstr = label.asString()
-            stages = projectmodels.Stage.objects.filter(label=labelstr)
-            if len(stages) > 0:
-                stage = stages[0]
-                project = stage.project
-                branch = stage.project_branch
-                system.update(project=project, project_branch=branch, project_branch_stage=stage)
-            else:
-                pass
 
     def _addOldStyleJob(self, system):
         if system.boot_uuid is None:
@@ -1343,45 +1133,6 @@ class SystemManager(basemanager.BaseManager):
                         credentials['ssl_client_certificate']
                 if credentials.has_key('ssl_client_key'):
                     system._ssl_client_key = credentials['ssl_client_key']
-
-    @exposed
-    def getSystemConfiguration(self, system_id):
-        system = models.System.objects.get(pk=system_id)
-        if system.configuration is None:
-            return '<configuration></configuration>'
-        return system.configuration
-
-    @exposed
-    def saveSystemConfiguration(self, system_id, configuration):
-        system = self.getSystem(system_id)
-        descr = self.mgr.getSystemConfigurationDescriptorObject(system)
-        if descr is None:
-            # Data not available, nothing to do here...
-            parsedConfig = configuration
-        else:
-            try:
-                descrData = descriptor.DescriptorData(descriptor=descr,
-                    fromStream=configuration)
-                parsedConfig = descrData.toxml(validate=True)
-            except descriptor.errors.ConstraintsValidationError, e:
-                raise errors.InvalidSystemConfiguration(msg=str(e))
-
-        system.configuration = parsedConfig
-        system.configuration_set = True
-        system.configuration_applied = False
-        system.save()
-        return system.configuration
-
-    @classmethod
-    def unmarshalConfiguration(cls, configString):
-        config = mintdata.unmarshalGenericData(configString)
-        # Keys should be strings, not unicode
-        config = dict((str(k), v) for (k, v) in config.iteritems())
-        return config
-
-    @classmethod
-    def marshalConfiguration(cls, configDict):
-        return mintdata.marshalGenericData(configDict)
 
     @exposed
     def getSystemEvent(self, event_id):
@@ -1633,11 +1384,6 @@ class SystemManager(basemanager.BaseManager):
             method = getattr(repClient, "register_" + mgmtInterfaceName)
             job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
-        elif eventType in self.SystemConfigurationEvents:
-            data = event.event_data
-            method = getattr(repClient, "configuration_" + mgmtInterfaceName)
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone, configuration=data)
         elif eventType in self.ShutdownEvents:
             method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
             job = self._runSystemEvent(event, method, params, resultsLocation,
@@ -1800,14 +1546,6 @@ class SystemManager(basemanager.BaseManager):
             jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
             enableTime=self.now())
 
-    @exposed
-    def scheduleSystemConfigurationEvent(self, system):
-        '''Schedule an event for the system to be configured'''
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_CONFIG_IMMEDIATE,
-            enableTime=self.now(),
-            eventData=system.configuration)
-
     def _scheduleEvent(self, system, eventType, enableTime=None,
             eventData=None):
         eventTypeObject = self.eventType(eventType)
@@ -1886,64 +1624,6 @@ class SystemManager(basemanager.BaseManager):
         job.descriptor_data = etree.fromstring('<descriptor_data/>')
         self.mgr.addJob(job)
         return job
-
-    def _scheduleApplySystemConfiguration(self, system):
-        if not system.configuration:
-            return None
-        network = self.extractNetworkToUse(system)
-        if not network:
-            self.log_system(system, "Not applying system configuration - network information unavailable")
-            return None
-        jobType = self.getEventTypeByName(jobmodels.EventType.SYSTEM_CONFIGURE)
-        job = jobmodels.Job(job_type=jobType)
-        job.descriptor = self.getDescriptorConfigure(system.system_id)
-        job.descriptor.id = ("/api/v1/inventory/systems/%s/descriptors/configure" %
-            system.system_id)
-        job.descriptor_data = etree.fromstring("<descriptor_data/>")
-        self.mgr.addJob(job, forUser=system.created_by,
-            system_id=system.system_id)
-        self.log_system(system, "Applying system configuration")
-        return job
-
-    def _scheduleRwbsInstallation(self, system):
-        network = self.extractNetworkToUse(system)
-        if not network:
-            self.log_system(system, "Not installing Windows Build Service software - network information unavailable")
-            return None
-        topLevelGroup = self._getRwbsGroup()
-
-        jobType = self.getEventTypeByName(jobmodels.EventType.SYSTEM_UPDATE)
-        job = jobmodels.Job(job_type=jobType)
-        job.descriptor = self.getDescriptorUpdate(system.system_id)
-        job.descriptor.id = ("/api/v1/inventory/systems/%s/descriptors/update" %
-            system.system_id)
-        job.descriptor_data = etree.fromstring("<descriptor_data/>")
-        etree.SubElement(job.descriptor_data, 'trove_label').text = topLevelGroup
-        etree.SubElement(job.descriptor_data, 'dry_run').text = 'false'
-
-        user = system.created_by
-        if user is None:
-            # If this is a registration originated from the system, it's
-            # perfectly normal to not have a user specified.
-            # Grab the first admin user. addJob only uses it to check
-            # via RBAC if the user is allowed to manage the system,
-            # which for a new system it doesn't matter.
-            user = usermodels.User.objects.filter(is_admin=True).order_by('user_id')[0]
-        self.mgr.addJob(job, forUser=user, system_id=system.system_id)
-        self.log_system(system, "Scheduled installation of Windows Build Service software")
-        return job
-
-    def _getRwbsGroup(self):
-        rwbsGroupName = 'group-rwbs-appliance'
-        trvSpec = trovetup.TroveSpec(rwbsGroupName, self.cfg.rwbsLabel)
-        # Request is usually unauthenticated, we need an admin client
-        cclient = self.mgr.getAdminClient()
-        trvs = cclient.repos.findTrove(None, trvSpec)
-        if not trvs:
-            return
-        trv = trovetup.TroveTuple(trvs[0])
-        # don't use asString() since we don't want the flavor passed
-        return "%s=%s" % (trv.name, trv.version)
 
     @exposed
     def importTargetSystems(self):
@@ -2079,49 +1759,8 @@ class SystemManager(basemanager.BaseManager):
 
     @exposed
     def getSystemDescriptorForAction(self, systemId, descriptorType, parameters=None):
-        # FIXME: move this closer to the inventory action code
-        system = models.System.objects.get(pk=systemId)
-        methodMap = dict(
-            configure    = self.getDescriptorConfigure,
-            preview      = self.getDescriptorPreview,
-            update       = self.getDescriptorUpdate,
-            survey_scan  = self.getDescriptorSurveyScan,
-            apply_update = self.getDescriptorApplyUpdate,
-        )
-        method = methodMap.get(descriptorType)
-        if method is None:
-            raise errors.errors.ResourceNotFound()
-        return method(systemId)
-
-    def getDescriptorPreview(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=preview_descriptor)
-        return descr
-
-    def getDescriptorApplyUpdate(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=sync_descriptor)
-        return descr
-
-    def getDescriptorUpdate(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=update_descriptor)
-        return descr
-
-    def getDescriptorSurveyScan(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=survey_scan_descriptor)
-        return descr
-
-    def getDescriptorConfigure(self, systemId, *args, **kwargs):
-        descr = descriptor.ConfigurationDescriptor(
-            fromStream=configure_descriptor)
-        return descr
-
-    @exposed
-    def getPreview(self, preview_id):
-        preview = models.Cache.get(jobmodels.JobPreviewArtifact, pk=int(preview_id))
-        return preview
+        # OBSOLETE
+        raise errors.errors.ResourceNotFound()
 
     @exposed
     def scheduleJobAction(self, system, job):
@@ -2146,9 +1785,3 @@ class SystemManager(basemanager.BaseManager):
         wrapper = models.modellib.etreeObjectWrapper(
             descriptor.getElementTree(validate=validate))
         return wrapper
-
-class Configuration(object):
-    _xobj = xobj.XObjMetadata(
-        tag = 'configuration')
-    def __init__(self, **kwargs):
-        self.__dict__ = kwargs

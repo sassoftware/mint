@@ -10,7 +10,6 @@ from django.db import models
 from mint.django_rest.deco import D
 from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.users import models as usermodels
-from mint.django_rest.rbuilder.inventory import survey_models
 
 from xobj import xobj
 
@@ -27,20 +26,6 @@ class JobSystemArtifact(modellib.XObjModel):
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_systems'))
     system      = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
 
-class JobPreviewArtifact(modellib.XObjModel):
-    class Meta:
-        db_table = 'jobs_created_preview'
-        unique_together = [ 'job', 'preview' ]
-    _xobj = xobj.XObjMetadata(tag = 'preview')
-    view_name = 'PreviewService'
-    
-    creation_id  = XObjHidden(models.AutoField(primary_key=True))
-    job          = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_previews'))
-    preview      = modellib.XMLField()
-    system       = modellib.ForeignKey('inventory.System', db_column='system_id', related_name='+')
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
-        'the date the preview was created (UTC)')
-
 class JobImageArtifact(modellib.XObjModel):
     class Meta:
         db_table = 'jobs_created_image'
@@ -50,16 +35,6 @@ class JobImageArtifact(modellib.XObjModel):
     creation_id = XObjHidden(models.AutoField(primary_key=True))
     job         = XObjHidden(modellib.ForeignKey('Job', db_column='job_id', related_name='created_images'))
     image       = modellib.ForeignKey('images.Image', db_column='image_id', related_name='+')
-
-class JobSurveyArtifact(modellib.XObjModel):
-    class Meta:
-        db_table = 'jobs_created_survey'
-        unique_together = [ 'job', 'survey' ]
-    _xobj = xobj.XObjMetadata(tag = 'survey_artifact')
-
-    id = XObjHidden(models.AutoField(primary_key=True))
-    job = XObjHidden(modellib.ForeignKey('Job', related_name='created_surveys'))
-    survey = modellib.ForeignKey(survey_models.Survey, related_name='created_surveys')
 
 class ActionResources(modellib.UnpaginatedCollection):
     class Meta:
@@ -203,7 +178,6 @@ class Job(modellib.XObjIdModel):
         resources = []
         resources.extend([ x.image for x in self.created_images.all() ])
         resources.extend([ x.system for x in self.created_systems.all() ])
-        resources.extend([ x for x in self.created_previews.all() ])
         resources.extend([ x for x in self.created_launch_profiles.filter(
             job__job_type__name = EventType.TARGET_CREATE_LAUNCH_PROFILE) ])
         resources2 = []

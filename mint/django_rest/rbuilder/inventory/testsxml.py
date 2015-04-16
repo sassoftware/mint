@@ -420,22 +420,16 @@ system_type_systems_xml="""
 <?xml version="1.0"?>
 <systems count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems" id="http://testserver/api/v1/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/3">
-    <configuration_applied>False</configuration_applied>
-    <configuration_set>False</configuration_set>
-    <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
     <source_image/>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-    <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-    <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Registered</description>
       <name>registered</name>
       <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
-    <desired_top_level_items/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -471,8 +465,6 @@ system_type_systems_xml="""
         <pinned/>
       </network>
     </networks>
-    <observed_top_level_items/>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
@@ -645,16 +637,10 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_nodes>
   <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-    <configuration_applied>False</configuration_applied>
-    <configuration_set>False</configuration_set>
-    <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
-    <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
-    <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
     <has_active_jobs>false</has_active_jobs>
@@ -723,16 +709,10 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port> 
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -800,7 +780,6 @@ management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -837,16 +816,10 @@ management_node_post_xml = """\
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port> 
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -913,10 +886,7 @@ management_node_post_response_xml = """\
 management_node_zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
   <ssl_client_key>test management node client key</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -953,16 +923,10 @@ management_node_zone_post_xml = """\
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/management_nodes/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/management_nodes/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/management_nodes/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -1035,57 +999,10 @@ systems_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/query_sets/5/all" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
-    <configuration_applied>False</configuration_applied>
-    <configuration_set>False</configuration_set>
-    <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
-    <actions>
-      <action>
-        <description>Scan system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/survey_scan"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
-        <key>system_scan</key>
-        <name>System scan</name>
-      </action>
-      <action>
-        <description>Update your system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/update"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_update_software</key>
-        <name>Update Software</name>
-      </action>
-      <action>
-        <description>Preview software update</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/preview"/>
-        <enabled>True</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_preview_software_update</key>
-        <name>Preview Software Update</name>
-      </action>
-      <action>
-        <description>Apply software update</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/apply_update"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_apply_update_software</key>
-        <name>Apply Software Update</name>
-      </action>
-      <action>
-        <description>Apply system configuration</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/2/descriptors/configure"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-        <key>system_apply_configuration</key>
-        <name>Apply system configuration</name>
-     </action>
-    </actions>
+    <actions/>
     <agent_port/>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
-    <configuration id="http://testserver/api/v1/inventory/systems/2/configuration"/>
-    <configuration_descriptor id="http://testserver/api/v1/inventory/systems/2/configuration_descriptor"/>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <created_date>2010-08-18T22:28:26+00:00</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
@@ -1094,8 +1011,6 @@ systems_xml = """\
       <system_state_id>1</system_state_id>
     </current_state>
     <description>Local rPath Update Service</description>
-    <desired_top_level_items/>
-    <observed_top_level_items/>
     <generated_uuid/>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -1147,57 +1062,10 @@ systems_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
-    <configuration_applied>False</configuration_applied>
-    <configuration_set>False</configuration_set>
-    <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
-    <actions>
-      <action>
-        <description>Scan system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
-        <enabled>True</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
-        <key>system_scan</key>
-        <name>System scan</name>
-      </action>
-      <action>
-        <description>Update your system</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_update_software</key>
-        <name>Update Software</name>
-      </action>
-      <action>
-        <description>Preview software update</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
-        <enabled>True</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_preview_software_update</key>
-        <name>Preview Software Update</name>
-      </action>
-      <action>
-        <description>Apply software update</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-        <key>system_apply_update_software</key>
-        <name>Apply Software Update</name>
-      </action>
-      <action>
-        <description>Apply system configuration</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-        <key>system_apply_configuration</key>
-        <name>Apply system configuration</name>
-     </action>
-    </actions>
+    <actions/>
     <agent_port>5989</agent_port>
     <project/>
     <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-    <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-    <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <created_date>%s</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
@@ -1206,8 +1074,6 @@ systems_xml = """\
       <system_state_id>3</system_state_id>
     </current_state>
     <description>testsystemdescription</description>
-    <desired_top_level_items/>
-    <observed_top_level_items/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <has_active_jobs>false</has_active_jobs>
     <has_running_jobs>false</has_running_jobs>
@@ -1265,9 +1131,7 @@ systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/v1/inventory/systems/1">
-    <surveys id="http://testserver/api/v1/inventory/systems/1/surveys"/>
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <networks>
@@ -1309,9 +1173,7 @@ systems_put_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/2">
-    <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
     <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-    <out_of_date>false</out_of_date>
     <registration_date/>
     <generated_uuid>testsystem2generateduuid</generated_uuid>
     <networks>
@@ -1357,9 +1219,7 @@ systems_put_xml = """\
 systems_put_mothball_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1402,65 +1262,16 @@ systems_put_mothball_xml = """\
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
-  <actions>
-    <action>
-      <description>Scan system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
-      <enabled>True</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
-      <key>system_scan</key>
-      <name>System scan</name>
-    </action>
-    <action>
-      <description>Update your system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_update_software</key>
-      <name>Update Software</name>
-    </action>
-    <action>
-      <description>Preview software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
-      <enabled>True</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_preview_software_update</key>
-      <name>Preview Software Update</name>
-    </action>
-    <action>
-      <description>Apply software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_apply_update_software</key>
-      <name>Apply Software Update</name>
-    </action>
-    <action>
-        <description>Apply system configuration</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-        <key>system_apply_configuration</key>
-        <name>Apply system configuration</name>
-     </action>
-  </actions>
+  <actions/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
     <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <desired_top_level_items/>
-  <observed_top_level_items/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -1519,7 +1330,6 @@ system_post_xml = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1554,7 +1364,6 @@ system_post_xml = """\
 
 system_post_xml_bad_network = """
 <system>
-    <configuration />
     <current_state />
     <description>exampleNewDescription</description>
     <management_interface />
@@ -1578,7 +1387,6 @@ system_mgmt_interface_put_xml = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1616,7 +1424,6 @@ system_delete_mgmt_interface_put_xml = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1653,16 +1460,10 @@ system_delete_mgmt_interface_put_xml = """\
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -1701,8 +1502,6 @@ system_post_xml_response = """\
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
   <description>testsystemdescription</description>
-  <desired_top_level_items/>
-  <observed_top_level_items/>
   <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
   <target_system_id/>
   <target_system_name/>
@@ -1762,7 +1561,6 @@ system_post_xml_dup = """\
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1802,60 +1600,11 @@ system_post_xml_dup2 = system_post_xml_dup.replace(
 system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
-  <actions>
-    <action>
-      <description>Scan system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/survey_scan"/>
-      <enabled>True</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
-      <key>system_scan</key>
-      <name>System scan</name>
-    </action>
-    <action>
-      <description>Update your system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_update_software</key>
-      <name>Update Software</name>
-    </action>
-    <action>
-      <description>Preview software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/preview"/>
-      <enabled>True</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_preview_software_update</key>
-      <name>Preview Software Update</name>
-    </action>
-    <action>
-      <description>Apply software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/apply_update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_apply_update_software</key>
-      <name>Apply Software Update</name>
-    </action>
-   <action>
-      <description>Apply system configuration</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-      <key>system_apply_configuration</key>
-      <name>Apply system configuration</name>
-   </action>
-  </actions>
+  <actions/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-  <desired_top_level_items/>
-  <observed_top_level_items/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -2056,14 +1805,9 @@ systems_log_xml = """\
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <agent_port>5989</agent_port>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
   %s
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
@@ -2071,7 +1815,6 @@ system_version_xml = """\
     <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
     <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
   </jobs>
-  <out_of_date>true</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <has_active_jobs>false</has_active_jobs>
@@ -2139,13 +1882,9 @@ system_version_put_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/2">
   %s
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set >
-  <surveys id="http://testserver/api/v1/inventory/systems/2/surveys"/>
   <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
   <registered>True</registered>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <managing_zone/>
@@ -2245,51 +1984,7 @@ Aj/9jaPTk+mjBIgXSVEHkJCtxfGZWYFx/eNItfaAAfZVX68txm5Hyp2J6Equnr82
 
 system_with_target = """\
 <system id="http://testserver/api/v1/inventory/systems/4">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/4/surveys"/>
-  <actions>
-    <action>
-      <description>Scan system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/survey_scan"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/24"/>
-      <key>system_scan</key>
-      <name>System scan</name>
-    </action>
-    <action>
-      <description>Update your system</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_update_software</key>
-      <name>Update Software</name>
-    </action>
-    <action>
-      <description>Preview software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/preview"/>
-      <enabled>True</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_preview_software_update</key>
-      <name>Preview Software Update</name>
-    </action>
-    <action>
-      <description>Apply software update</description>
-      <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/apply_update"/>
-      <enabled>False</enabled>
-      <job_type id="http://testserver/api/v1/inventory/event_types/26"/>
-      <key>system_apply_update_software</key>
-      <name>Apply Software Update</name>
-    </action>
-    <action>
-        <description>Apply system configuration</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/4/descriptors/configure"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-        <key>system_apply_configuration</key>
-        <name>Apply system configuration</name>
-     </action>
-  </actions>
+  <actions/>
   <system_events id="http://testserver/api/v1/inventory/systems/4/system_events"/>
   <generated_uuid/>
   <networks>
@@ -2315,7 +2010,6 @@ system_with_target = """\
   <launching_user/>
   <launch_date/>
   <ssl_client_certificate/>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <jobs id="http://testserver/api/v1/inventory/systems/4/jobs">
     <queued_jobs id="http://testserver/api/v1/inventory/systems/4/job_states/1/jobs"/>
@@ -2332,8 +2026,6 @@ system_with_target = """\
   <agent_port/>
   <project/>
   <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/4/configuration"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/4/configuration_descriptor"/>
   <target id="http://testserver/api/v1/targets/1">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <network_address>
@@ -2432,33 +2124,10 @@ credentials_wmi_put_resp_xml = """\
 </credentials>
 """
 
-configuration_post_xml = """\
-<?xml version="1.0"?>
-<configuration>
-  <http_port>89</http_port>
-</configuration>
-"""
-
-configuration_put_xml = """\
-<?xml version="1.0"?>
-<configuration>
-  <http_port>890</http_port>
-</configuration>
-"""
-
-configuration_descriptor_xml = """\
-<configuration_descriptor xmlns="http://www.rpath.com/permanent/descriptor-1.1.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
-  <dataFields/>
-  <metadata/>
-</configuration_descriptor>"""
-
 system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 <system>
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <out_of_date>false</out_of_date>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -2493,23 +2162,10 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 
 retirement_xml = """
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <configuration_applied>False</configuration_applied>
-  <configuration_set>False</configuration_set>
-  <surveys id="http://testserver/api/v1/inventory/systems/3/surveys"/>
   <networks/>
   <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">Secure Shell (SSH)</management_interface>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <configuration_descriptor id="http://testserver/api/v1/inventory/systems/3/configuration_descriptor"/>
-  <actions>
-    <action>
-        <description>Apply system configuration</description>
-        <descriptor id="http://testserver/api/v1/inventory/systems/3/descriptors/configure"/>
-        <enabled>False</enabled>
-        <job_type id="http://testserver/api/v1/inventory/event_types/27"/>
-        <key>system_apply_configuration</key>
-        <name>Apply system configuration</name>
-     </action>
-  </actions>
+  <actions/>
   <has_running_jobs>false</has_running_jobs>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
   <generated_uuid></generated_uuid>
@@ -2539,10 +2195,8 @@ retirement_xml = """
     <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
   </jobs>
   <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <configuration id="http://testserver/api/v1/inventory/systems/3/configuration"/>
   <source_image></source_image>
   <name>blinky</name>
-  <out_of_date>false</out_of_date>
   <target></target>
   <local_uuid></local_uuid>
   <target_system_state></target_system_state>
@@ -2555,1021 +2209,5 @@ retirement_xml = """
   <project></project>
   <created_date>2011-11-17T18:47:49.469749+00:00</created_date>
   <target_system_description></target_system_description>
-</system>
-"""
-
-surveys_xml = """
-<surveys count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems/3/surveys/" id="http://testserver/api/v1/inventory/systems/3/surveys/" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
-  <survey id="http://testserver/api/v1/inventory/surveys/%(uuid)s">
-    <description/>
-    <name>x</name>
-    <removable>True</removable>
-    <uuid>%(uuid)s</uuid>
-    <execution_error_count/>
-    <overall_compliance>True</overall_compliance>
-    <overall_validation>False</overall_validation>
-    <updates_pending>False</updates_pending>
-    <has_errors>False</has_errors>
-    <system id="http://testserver/api/v1/inventory/systems/3"/>
-  </survey>
-</surveys>
-"""
-
-survey_output_xml = """
-<survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000">
-    <system_model/>
-    <system_model_modified_date/>
-    <has_system_model>false</has_system_model>
-    <config_properties_descriptor/>
-    <desired_properties_descriptor/>
-    <compliance_summary/>
-    <config_compliance/>
-    <comment></comment>
-    <preview/>
-    <removable>True</removable>
-    <modified_date>2012-02-03T16:28:08.137616+00:00</modified_date>
-    <modified_by id="http://testserver/api/v1/users/2">
-      <user_name>JeanValjean1</user_name>
-      <full_name></full_name>
-    </modified_by>
-    <uuid>00000000-0000-4000-0000-000000000000</uuid>
-    <tags>
-      <tag id="http://testserver/api/v1/inventory/survey_tags/1">
-        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
-        <name>needs_review</name>
-        <tag_id>1</tag_id>
-      </tag>
-    </tags>
-    <windows_patches/>
-    <windows_packages/>
-    <windows_services/>
-    <rpm_packages>
-      <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
-        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
-        <rpm_package_id>1</rpm_package_id>
-        <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
-          <description>enterprise middleware abstraction layer</description>
-          <epoch>0</epoch>
-          <version>5</version>
-          <architecture>x86_64</architecture>
-          <signature>X</signature>
-          <release>6</release>
-          <name>asdf</name>
-        </rpm_package_info>
-        <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
-      </rpm_package>
-    </rpm_packages>
-    <description></description>
-    <system id="http://testserver/api/v1/inventory/systems/3"/>
-    <created_by id="http://testserver/api/v1/users/2">
-      <user_name>JeanValjean1</user_name>
-      <full_name></full_name>
-    </created_by>
-    <created_date>2012-02-03T16:28:08.137524+00:00</created_date>
-    <services>
-      <service id="http://testserver/api/v1/inventory/survey_services/1">
-        <status>is maybe doing stuff</status>
-        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
-        <running>false</running>
-        <service_info id="http://testserver/api/v1/inventory/service_info/1">
-          <name>httpd</name>
-          <autostart>1</autostart>
-          <runlevels>3,4,5</runlevels>
-        </service_info>
-        <service_id>1</service_id>
-      </service>
-    </services>
-    <conary_packages>
-      <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1">
-        <conary_package_id>1</conary_package_id>
-        <survey id="http://testserver/api/v1/inventory/surveys/00000000-0000-4000-0000-000000000000"/>
-        <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
-        <is_top_level>False</is_top_level>
-        <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
-          <description>Type-R</description>
-          <name>jkl</name>
-          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
-          <architecture>ia64</architecture>
-          <signature>X</signature>
-          <rpm_package_info>
-            <name>asdf</name>
-            <epoch>0</epoch>
-            <version>5</version>
-            <architecture>x86_64</architecture>
-            <signature>X</signature>
-            <release>6</release>
-            <rpm_package_id>1</rpm_package_id>
-            <description>enterprise middleware abstraction layer</description>
-          </rpm_package_info>
-          <flavor>orange</flavor>
-          <revision>8</revision>
-        </conary_package_info>
-      </conary_package>
-    </conary_packages>
-    <name>x</name>
-    <config_properties></config_properties>
-    <desired_properties></desired_properties>
-    <observed_properties></observed_properties>
-    <discovered_properties></discovered_properties>
-    <validation_report></validation_report>
-</survey>
-"""
-
-survey_preview_template = """
-<preview>
-<observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
-<desired>group-foo-appliance/1.2.3.4</desired>
-<compliant>true</compliant>
-<conary_package_changes>
-<conary_package_change>
-<type>removed</type>
-<!-- ASK: since this won't be in the database, we can forego IDs -->
-<removed_conary_package>
-<name>blah</name>
-<version>blah</version>
-<signature>X</signature>
-<architecture>arch</architecture>
-<flavor>orange</flavor>
-</removed_conary_package>
-</conary_package_change>
-<conary_package_change>
-<type>added</type>
-<added_conary_package>
-<name>blah</name>
-<version>blah</version>
-<architecture>blah</architecture>
-<signature>X</signature>
-<flavor>orange</flavor>
-</added_conary_package>
-</conary_package_change>
-<conary_package_change>
-<type>changed</type>
-<from>
-<name>name</name>
-<version>1</version>
-<architecture>arch</architecture>
-<signature>X</signature>
-</from>
-<to>
-<name>name</name>
-<version>2</version>
-<architecture>arch</architecture>
-<signature>X</signature>
-</to>
-<conary_package_diff>
-<version>
-<from>1</from>
-<to>2</to>
-</version>
-</conary_package_diff>
-</conary_package_change>
-<!-- IMPORTANT: nothing in the preview but conary packages -->
-</conary_package_changes>
-</preview>
-"""
-
-survey_preview = survey_preview_template
-survey_preview_alt = survey_preview_template
-
-# NOTE: the examples in the XML items below are not domain-specific, but structural
-# so if "STIG checker" doesn't make sense in all examples, don't take it literally
-# see RCE-303
-
-config_properties_template = """
-<config_properties>
-  <values> <!-- bogus element to see if we rename it to 'configuration' -->
-  <apache_configuration>
-    <port>8080</port>
-    <processInfo>
-      <!-- This is a compound data type field -->
-      <user>nobody</user>
-      <group>nobody</group>
-    </processInfo>
-    <vhosts list="true">
-      <vhost>
-        <serverName>vhost1.example.com</serverName>
-        <documentRoot>/home/vhost1/public_html</documentRoot>
-      </vhost>
-      <vhost>
-        <serverName>vhost2.example.com</serverName>
-        <documentRoot>/home/vhost2/public_html</documentRoot>
-      </vhost>
-    </vhosts>
-    <aliases list="true">
-      <alias>
-        <handle>/images</handle>
-        <directory>/srv/www/images</directory>
-      </alias>
-      <alias>
-        <handle>/icons</handle>
-        <directory>/srv/www/icons</directory>
-      </alias>
-      <alias>
-        <handle>/robots.txt</handle>
-        <directory>/home/admin/hg/web-docs/robots.txt</directory>
-      </alias>
-    </aliases>
-  </apache_configuration>
-  <disa_stig_compliance_checker>
-    <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
-    <credentials>
-      <username>host-123</username>
-      <password>my-password-123</password>
-    </credentials>
-  </disa_stig_compliance_checker>
-  </values>
-</config_properties>
-"""
-
-config_properties = config_properties_template
-config_properties_alt = config_properties_template
-
-
-desired_properties_template = """
-<desired_properties>
-  <apache_configuration>
-    <port>8080</port>
-    <processInfo>
-      <!-- This is a compound data type field -->
-      <user>nobody</user>
-      <group>nobody</group>
-    </processInfo>
-    <vhosts list="true">
-      <vhost>
-        <serverName>vhost1.example.com</serverName>
-        <documentRoot>/home/vhost1/public_html</documentRoot>
-      </vhost>
-      <vhost>
-        <serverName>vhost2.example.com</serverName>
-        <documentRoot>/home/vhost2/public_html</documentRoot>
-      </vhost>
-    </vhosts>
-    <aliases list="true">
-      <alias>
-        <handle>/images</handle>
-        <directory>/srv/www/images</directory>
-      </alias>
-      <alias>
-        <handle>/icons</handle>
-        <directory>/srv/www/icons</directory>
-      </alias>
-      <alias>
-        <handle>/robots.txt</handle>
-        <directory>/home/admin/hg/web-docs/robots.txt</directory>
-      </alias>
-    </aliases>
-  </apache_configuration>
-  <disa_stig_compliance_checker>
-    <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
-    <credentials>
-      <username>host-123</username>
-      <password>my-password-123</password>
-    </credentials>
-  </disa_stig_compliance_checker>
-</desired_properties>
-"""
-
-desired_properties = desired_properties_template
-desired_properties_alt = desired_properties_template
-
-observed_properties_template = """
-<observed_properties>
-  <extensions>
-    <apache_configuration>
-      <name>Apache configuration</name> 
-      <port>8081</port>
-    </apache_configuration>
-  </extensions>
-  <errors>
-    <apache_configuration>
-      <!-- Overall the reader succeeded (hypothetically) -->
-      <success>true</success>
-      <error_list>
-        <error>
-          <!-- Global error -->
-          <code>500</code>
-          <message>General error: apache not running</message>
-          <detail>Lazy sysadmin didn't start apache</detail>
-        </error>
-        <error>
-          <!-- Error processing just one of the fields -->
-          <!-- Deep fields will be separated by / -->
-          <field>processInfo/user</field>
-          <code>1</code>
-          <message>Apache claims user blah, user blah does not exist</message>
-          <detail>Traceback: blah</detail>
-        </error>
-      </error_list>
-    </apache_configuration>
-    <disa_stig_compliance_checker>
-      <success>false</success>
-      <error_list>
-        <error>
-          <!-- Global error, the whole reader plugin failed -->
-          <code>100</code>
-          <message>Error: DISA compliance checker segfaulted</message>
-          <detail>Core dump here</detail>
-        </error>
-      </error_list>
-    </disa_stig_compliance_checker>
-  </errors>
-</observed_properties>
-"""
-
-observed_properties = observed_properties_template
-observed_properties_alt = observed_properties_template.replace("Lazy","Studious")
-
-estub0 = """
-  <apache_configuration>
-      <name>Apache Configuration Checker</name>
-      <probes>
-        <port>
-          <name>Apache Port Check</name>
-          <value content_type="text/html" encoding="base64">80</value>
-        </port>
-        <port>
-          <name>Foo Port Check</name>
-          <value content_type="text/html" encoding="base64">5000</value>
-        </port>
-      </probes>
-    </apache_configuration>
-"""
-
-estub1 = estub0.replace("apache","nginx").replace("Apache","nginx")
-estub2 = estub0.replace("apache","tomcat").replace("Apache","Tomcat")
-
-discovered_properties_template = """
-<discovered_properties>
-  <extensions>
-    EXTENSION_STUB0
-    EXTENSION_STUB1
-    EXTENSION_STUB2
-  </extensions>
-  <errors>
-    <apache_configuration>
-      <!-- Overall the reader succeeded (hypothetically) -->
-      <success>true</success>
-      <error_list>
-        <error>
-          <!-- Global error -->
-          <code>500</code>
-          <message>General error: apache not running</message>
-          <detail>Lazy sysadmin didn't start apache</detail>
-        </error>
-        <error>
-          <code>1</code>
-          <message>Apache claims user blah, user blah does not exist</message>
-          <detail>Traceback: blah</detail>
-        </error>
-      </error_list>
-    </apache_configuration>
-    <disa_stig_compliance_checker>
-      <success>false</success>
-      <error_list>
-        <error>
-          <!-- Global error, the whole reader plugin failed -->
-          <code>100</code>
-          <message>Error: DISA compliance checker segfaulted</message>
-          <detail>Core dump here</detail>
-        </error>
-      </error_list>
-    </disa_stig_compliance_checker>
-  </errors>
-</discovered_properties>
-""".replace('EXTENSION_STUB0', estub0)
-
-discovered_properties = discovered_properties_template.replace('EXTENSION_STUB1','').replace('EXTENSTION_STUB2',estub2)
-discovered_properties_alt = discovered_properties_template.replace("false","true").replace("5000","5001").replace('EXTENSION_STUB1',estub1).replace('EXTENSION_STUB2','')
-
-validation_report_template = """
-<validation_report>
-  <status>fail</status>
-  <extensions>
-    <apache_configuration>
-      <name>Apache Configuration Checker</name>
-      <status>fail</status>
-      <message>Same as in the probes below</message>
-      <details/>
-      <probes>
-        <port>
-          <name>Apache Port Check</name>
-          <status>fail</status>
-          <message>Apache not running on port</message>
-          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
-        </port>
-        <port>
-          <name>Apache Port Check</name>
-          <status>fail</status>
-          <message>Apache not running on port</message>
-          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
-        </port>
-      </probes>
-    </apache_configuration>
-    FILLER1
-    FILLER2
-  </extensions>
-  <errors>
-    <apache_configuration>
-      <!-- Overall the handler succeeded (hypothetically) -->
-      <success>true</success>
-      <error_list>
-        <error>
-          <!-- Global error -->
-          <code>500</code>
-          <message>General error: apache not running</message>
-          <detail>Lazy sysadmin didn't start apache</detail>
-        </error>
-        <error>
-          <code>1</code>
-          <message>Apache claims user blah, user blah does not exist</message>
-          <detail>Traceback: blah</detail>
-        </error>
-      </error_list>
-    </apache_configuration>
-    <disa_stig_compliance_checker>
-      <success>false</success>
-      <error_list>
-        <error>
-          <!-- Global error, the whole reader plugin failed -->
-          <code>100</code>
-          <message>Error: DISA compliance checker segfaulted</message>
-          <detail>Core dump here</detail>
-        </error>
-      </error_list>
-    </disa_stig_compliance_checker>
-  </errors>
-</validation_report>
-"""
-
-stub1 = """
-<xyz_configuration>
-      <name>XYZ Configuration Checker</name>
-      <status>fail</status>
-      <message>Same as in the probes below</message>
-      <details/>
-      <probes>
-        <port>
-          <name>XYZ Port Check</name>
-          <status>fail</status>
-          <message>XYZ not running on port</message>
-          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
-        </port>
-      </probes>
-</xyz_configuration>
-"""
-
-stub2 = """
-<abc_configuration>
-      <name>ABC Configuration Checker</name>
-      <status>fail</status>
-      <message>Same as in the probes below</message>
-      <details/>
-      <probes>
-        <port>
-          <name>ABC Port Check</name>
-          <status>fail</status>
-          <message>ABC not running on port</message>
-          <details content_type="text/html" encoding="base64">base64-encoded HTML here</details>
-        </port>
-      </probes>
-</abc_configuration>
-"""
-
-
-validation_report = validation_report_template.replace("FILLER1",stub1).replace("FILLER2","")
-validation_report_alt = validation_report_template.replace("false","true").replace("not running on port","jump on it").replace("FILLER1","").replace("FILLER2",stub2).replace("user blah does not exist","user quota exceeded")
-
-# input without ids
-# FIXME -- created_by/modified_by should be nullable for system
-#          user?
-
-system_model = """
-  <system_model>
-    <contents>search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
-install group-haystack
-install needle
-</contents>
-    <modified_date>1234567890</modified_date>
-  </system_model>
-"""
-
-system_model_ret = """
-  <system_model>search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
-install group-haystack
-install needle
-</system_model>
-  <system_model_modified_date>2009-02-13T23:31:30+00:00</system_model_modified_date>
-  <has_system_model>true</has_system_model>
-"""
-
-survey_input_xml_template = """
-<survey>
-    %(system_model)s
-    %(config_properties)s
-    %(observed_properties)s
-    %(discovered_properties)s
-    %(validation_report)s
-    %(survey_preview)s
-    <config_properties_descriptor><blarg/></config_properties_descriptor>
-    <comment></comment>
-    <uuid>1234</uuid>
-    <removable>False</removable>
-    <tags>
-      <tag>
-        <name>needs_review</name>
-      </tag>
-    </tags>
-    <rpm_packages>
-      <rpm_package id="1">
-        <rpm_package_info>
-          <description>enterprise middleware abstraction layer</description>
-          <epoch>0</epoch>
-          <version>5</version>
-          <architecture>x86_64</architecture>
-          <signature>X</signature>
-          <release>6</release>
-          <name>asdf</name>
-        </rpm_package_info>
-        <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
-      </rpm_package>
-    </rpm_packages>
-    <description></description>
-    <system id="http://testserver/api/v1/inventory/systems/3"/>
-    <created_by id="http://testserver/api/v1/users/2"/>
-    <created_date>0</created_date>
-    <services>
-      <service id="2">
-        <status>is maybe doing stuff</status>
-        <running>false</running>
-        <service_info>
-          <name>httpd</name>
-          <autostart>1</autostart>
-          <runlevels>3,4,5</runlevels>
-        </service_info>
-      </service>
-    </services>
-    <conary_packages>
-      <conary_package id="3">
-        <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
-        <is_top_level>true</is_top_level>
-        <conary_package_info>
-          <description>Type-R</description>
-          <name>jkl</name>
-          <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
-          <architecture>ia64</architecture>
-          <signature>X</signature>
-          <rpm_package_info id="1">
-            <name>asdf</name>
-            <epoch>0</epoch>
-            <version>5</version>
-            <architecture>x86_64</architecture>
-            <signature>X</signature>
-            <release>6</release>
-            <description>enterprise middleware abstraction layer</description>
-          </rpm_package_info>
-          <flavor>orange</flavor>
-          <revision>8</revision>
-        </conary_package_info>
-      </conary_package>
-    </conary_packages>
-    <name>x</name>
-</survey>
-"""
-
-survey_input_xml = (survey_input_xml_template % dict(
-    system_model=system_model,
-    config_properties=config_properties, 
-    observed_properties=observed_properties, 
-    discovered_properties=discovered_properties, 
-    validation_report=validation_report,
-    survey_preview=survey_preview
-))
-
-survey_input_xml_alt = (survey_input_xml_template % dict(
-    system_model="",
-    config_properties=config_properties_alt, 
-    observed_properties=observed_properties_alt, 
-    discovered_properties=discovered_properties_alt, 
-    validation_report=validation_report_alt,
-    survey_preview=survey_preview_alt
-)).replace("1234", "99999")
-
-survey_output_xml2 = """
-<survey id="http://testserver/api/v1/inventory/surveys/1234">
-  <comment/>
-  <compliance_summary>
-    <config_execution>
-      <compliant>False</compliant>
-      <failure_count>3</failure_count>
-    </config_execution>
-    <config_sync>
-      <compliant>False</compliant>
-    </config_sync>
-    <overall>
-      <compliant>False</compliant>
-    </overall>
-    <software>
-      <compliant>False</compliant>
-      <message>0 added, 0 removed, 0 changed</message>
-    </software>
-  </compliance_summary>
-  <conary_packages>
-    <conary_package id="http://testserver/api/v1/inventory/survey_conary_packages/1">
-      <conary_package_id>1</conary_package_id>
-      <conary_package_info id="http://testserver/api/v1/inventory/conary_package_info/1">
-        <architecture>ia64</architecture>
-        <description>Type-R</description>
-        <flavor>orange</flavor>
-        <name>jkl</name>
-        <revision>8</revision>
-        <rpm_package_info>
-          <architecture>x86_64</architecture>
-          <description>enterprise middleware abstraction layer</description>
-          <epoch>0</epoch>
-          <name>asdf</name>
-          <release>6</release>
-          <rpm_package_id>1</rpm_package_id>
-          <signature>X</signature>
-          <version>5</version>
-        </rpm_package_info>
-        <signature>X</signature>
-        <version>/cny.tv@lnx:1/1234.5:7-1-1</version>
-      </conary_package_info>
-      <install_date>2012-02-03T16:28:08.169386+00:00</install_date>
-      <is_top_level>True</is_top_level>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-    </conary_package>
-  </conary_packages>
-  <config_compliance>
-    <compliant>False</compliant>
-    <config_values>
-      <config_value>
-        <desired>8080</desired>
-        <key>port</key>
-        <keypath>/apache_configuration/port</keypath>
-        <read>8081</read>
-      </config_value>
-    </config_values>
-  </config_compliance>
-  <config_properties>
-    <apache_configuration>
-      <aliases list="True">
-        <alias>
-          <directory>/srv/www/images</directory>
-          <handle>/images</handle>
-        </alias>
-        <alias>
-          <directory>/srv/www/icons</directory>
-          <handle>/icons</handle>
-        </alias>
-        <alias>
-          <directory>/home/admin/hg/web-docs/robots.txt</directory>
-          <handle>/robots.txt</handle>
-        </alias>
-      </aliases>
-      <port>8080</port>
-      <processInfo>
-        <group>nobody</group>
-        <user>nobody</user>
-      </processInfo>
-      <vhosts list="True">
-        <vhost>
-          <documentRoot>/home/vhost1/public_html</documentRoot>
-          <serverName>vhost1.example.com</serverName>
-        </vhost>
-        <vhost>
-          <documentRoot>/home/vhost2/public_html</documentRoot>
-          <serverName>vhost2.example.com</serverName>
-        </vhost>
-      </vhosts>
-    </apache_configuration>
-    <disa_stig_compliance_checker>
-      <credentials>
-        <password>my-password-123</password>
-        <username>host-123</username>
-      </credentials>
-      <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
-    </disa_stig_compliance_checker>
-  </config_properties>
-  <config_properties_descriptor>
-    <blarg/>
-  </config_properties_descriptor>
-  <description/>
-  <desired_properties>
-    <apache_configuration>
-      <aliases list="True">
-        <alias>
-          <directory>/srv/www/images</directory>
-          <handle>/images</handle>
-        </alias>
-        <alias>
-          <directory>/srv/www/icons</directory>
-          <handle>/icons</handle>
-        </alias>
-        <alias>
-          <directory>/home/admin/hg/web-docs/robots.txt</directory>
-          <handle>/robots.txt</handle>
-        </alias>
-      </aliases>
-      <port>8080</port>
-      <processInfo>
-        <group>nobody</group>
-        <user>nobody</user>
-      </processInfo>
-      <vhosts list="True">
-        <vhost>
-          <documentRoot>/home/vhost1/public_html</documentRoot>
-          <serverName>vhost1.example.com</serverName>
-        </vhost>
-        <vhost>
-          <documentRoot>/home/vhost2/public_html</documentRoot>
-          <serverName>vhost2.example.com</serverName>
-        </vhost>
-      </vhosts>
-    </apache_configuration>
-    <disa_stig_compliance_checker>
-      <credentials>
-        <password>my-password-123</password>
-        <username>host-123</username>
-      </credentials>
-      <dashboardServer>dashboard.eng.rpath.com</dashboardServer>
-    </disa_stig_compliance_checker>
-  </desired_properties>
-  <desired_properties_descriptor>
-    <configuration_descriptor xsi_schemaLocation="http://www.rpath.com/permanent/descriptor-1.1.xsd descriptor-1.1.xsd" version="1.1">
-      <dataFields/>
-      <metadata/>
-    </configuration_descriptor>
-  </desired_properties_descriptor>
-  <discovered_properties>
-    <errors>
-      <apache_configuration>
-        <error_list>
-          <error>
-            <code>500</code>
-            <detail>Lazy sysadmin didn't start apache</detail>
-            <message>General error: apache not running</message>
-          </error>
-          <error>
-            <code>1</code>
-            <detail>Traceback: blah</detail>
-            <message>Apache claims user blah, user blah does not exist</message>
-          </error>
-        </error_list>
-        <success>True</success>
-      </apache_configuration>
-      <disa_stig_compliance_checker>
-        <error_list>
-          <error>
-            <code>100</code>
-            <detail>Core dump here</detail>
-            <message>Error: DISA compliance checker segfaulted</message>
-          </error>
-        </error_list>
-        <success>False</success>
-      </disa_stig_compliance_checker>
-    </errors>
-    <extensions>
-      <apache_configuration>
-        <name>Apache Configuration Checker</name>
-        <probes>
-          <port>
-            <name>Apache Port Check</name>
-            <value content_type="text/html" encoding="base64">80</value>
-          </port>
-          <port>
-            <name>Foo Port Check</name>
-            <value content_type="text/html" encoding="base64">5000</value>
-          </port>
-        </probes>
-      </apache_configuration>
-    </extensions>
-  </discovered_properties>
-  <name>blinky</name>
-  <observed_properties>
-    <errors>
-      <apache_configuration>
-        <error_list>
-          <error>
-            <code>500</code>
-            <detail>Lazy sysadmin didn't start apache</detail>
-            <message>General error: apache not running</message>
-          </error>
-          <error>
-            <code>1</code>
-            <detail>Traceback: blah</detail>
-            <field>processInfo/user</field>
-            <message>Apache claims user blah, user blah does not exist</message>
-          </error>
-        </error_list>
-        <success>True</success>
-      </apache_configuration>
-      <disa_stig_compliance_checker>
-        <error_list>
-          <error>
-            <code>100</code>
-            <detail>Core dump here</detail>
-            <message>Error: DISA compliance checker segfaulted</message>
-          </error>
-        </error_list>
-        <success>False</success>
-      </disa_stig_compliance_checker>
-    </errors>
-    <extensions>
-      <apache_configuration>
-        <port>8081</port>
-      </apache_configuration>
-    </extensions>
-  </observed_properties>
-  <preview>
-    <compliant>True</compliant>
-    <conary_package_changes>
-      <conary_package_change>
-        <removed_conary_package>
-          <architecture>arch</architecture>
-          <flavor>orange</flavor>
-          <name>blah</name>
-          <signature>X</signature>
-          <version>blah</version>
-        </removed_conary_package>
-        <type>removed</type>
-      </conary_package_change>
-      <conary_package_change>
-        <added_conary_package>
-          <architecture>blah</architecture>
-          <flavor>orange</flavor>
-          <name>blah</name>
-          <signature>X</signature>
-          <version>blah</version>
-        </added_conary_package>
-        <type>added</type>
-      </conary_package_change>
-      <conary_package_change>
-        <conary_package_diff>
-          <version>
-            <from>1</from>
-            <to>2</to>
-          </version>
-        </conary_package_diff>
-        <from>
-          <architecture>arch</architecture>
-          <name>name</name>
-          <signature>X</signature>
-          <version>1</version>
-        </from>
-        <to>
-          <architecture>arch</architecture>
-          <name>name</name>
-          <signature>X</signature>
-          <version>2</version>
-        </to>
-        <type>changed</type>
-      </conary_package_change>
-    </conary_package_changes>
-    <desired>group-foo-appliance/1.2.3.4</desired>
-    <observed>group-foo-appliance/1.2.3.3 possibly-other-junk/1.2.3.4</observed>
-  </preview>
-  <removable>True</removable>
-  <rpm_packages>
-    <rpm_package id="http://testserver/api/v1/inventory/survey_rpm_packages/1">
-      <install_date>2012-02-03T16:28:08.177050+00:00</install_date>
-      <rpm_package_id>1</rpm_package_id>
-      <rpm_package_info id="http://testserver/api/v1/inventory/rpm_package_info/1">
-        <architecture>x86_64</architecture>
-        <description>enterprise middleware abstraction layer</description>
-        <epoch>0</epoch>
-        <name>asdf</name>
-        <release>6</release>
-        <signature>X</signature>
-        <version>5</version>
-      </rpm_package_info>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-    </rpm_package>
-  </rpm_packages>
-  <services>
-    <service id="http://testserver/api/v1/inventory/survey_services/1">
-     <running>False</running>
-      <service_id>1</service_id>
-      <service_info id="http://testserver/api/v1/inventory/service_info/1">
-        <autostart>1</autostart>
-        <name>httpd</name>
-        <runlevels>3,4,5</runlevels>
-      </service_info>
-      <status>is maybe doing stuff</status>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-    </service>
-  </services>
-  <system id="http://testserver/api/v1/inventory/systems/3"/>
-  %(system_model)s
-  <tags>
-    <tag id="http://testserver/api/v1/inventory/survey_tags/1">
-      <name>needs_review</name>
-      <survey id="http://testserver/api/v1/inventory/surveys/1234"/>
-      <tag_id>1</tag_id>
-    </tag>
-  </tags>
-  <uuid>1234</uuid>
-  <validation_report>
-    <errors>
-      <apache_configuration>
-        <error_list>
-          <error>
-            <code>500</code>
-            <detail>Lazy sysadmin didn't start apache</detail>
-            <message>General error: apache not running</message>
-          </error>
-          <error>
-            <code>1</code>
-            <detail>Traceback: blah</detail>
-            <message>Apache claims user blah, user blah does not exist</message>
-          </error>
-        </error_list>
-        <success>True</success>
-      </apache_configuration>
-      <disa_stig_compliance_checker>
-        <error_list>
-          <error>
-            <code>100</code>
-            <detail>Core dump here</detail>
-            <message>Error: DISA compliance checker segfaulted</message>
-          </error>
-        </error_list>
-        <success>False</success>
-      </disa_stig_compliance_checker>
-    </errors>
-    <extensions>
-      <apache_configuration>
-        <details/>
-        <message>Same as in the probes below</message>
-        <name>Apache Configuration Checker</name>
-        <probes>
-          <port>
-            <details content_type="text/html" encoding="base64">80</details>
-            <message>Apache not running on port</message>
-            <name>Apache Port Check</name>
-            <status>fail</status>
-          </port>
-          <port>
-            <details content_type="text/html" encoding="base64">5000</details>
-            <message>Apache not running on port</message>
-            <name>Foo Port Check</name>
-            <status>fail</status>
-          </port>
-        </probes>
-        <status>fail</status>
-      </apache_configuration>
-    </extensions>
-    <status>fail</status>
-  </validation_report>
-  <windows_packages/>
-  <windows_patches/>
-  <windows_services/>
-</survey>
-""" % dict(system_model=system_model_ret)
-
-# FIXME: add tests trying to clobber fields it should not clobber
-# or if it can erase things
-
-survey_mod_xml="""
-<survey id='http://testserver/api/v1/inventory/surveys/1234'>
-    <comment>Here is a comment</comment>
-    <uuid>1234</uuid>
-    <name>Here is a name</name>
-    <removable>True</removable>
-    <tags>
-      <tag>
-        <name>onfire</name>
-      </tag>
-      <tag>
-        <name>stat</name>
-      </tag>
-    </tags>
-</survey>
-"""
-
-system_configuration_xml = """
-<job>
-<descriptor id='http://testserver/api/v1/inventory/systems/%s/descriptors/configure'/>
-<descriptor_data />
-<job_type id='https://testserver/api/v1/inventory/event_types/27' href='https://testserver/api/v1/inventory/event_types/27' />
-</job>
-"""
-
-rwbs_registration_xml = """
-<system>
-  <management_interface id="https://_/api/v1/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
-  <hostname>d76643</hostname>
-  <network_address>
-    <address>10.20.15.2</address>
-    <pinned>true</pinned>
-  </network_address>
-  <system_type id="https://_/api/v1/inventory/system_types/3"/>
-  <local_uuid>4C4C4544-004D-5410-8031-B2C04F385631</local_uuid>
-  <generated_uuid>3ca9ab4f-3644-40ea-82b3-9d7dd8da09b0</generated_uuid>
-  <credentials>
-    <username>bob</username>
-    <password>sikrit</password>
-  </credentials>
-  <managing_zone id="http://_/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
 </system>
 """

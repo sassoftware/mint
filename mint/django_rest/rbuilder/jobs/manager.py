@@ -13,9 +13,7 @@ import weakref
 import exceptions
 from django.core import urlresolvers
 from django.db import IntegrityError, transaction
-from lxml import etree
 
-from conary import trovetup
 from smartform import descriptor as smartdescriptor
 
 from mint import urltypes
@@ -26,8 +24,6 @@ from mint.django_rest.rbuilder.images import models as imagemodels
 from mint.django_rest.rbuilder.jobs import models
 from mint.django_rest.rbuilder.inventory import models as inventorymodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
-from mint.django_rest.rbuilder.users import models as usermodels
-from mint.django_rest.rbuilder.rbac.manager.rbacmanager import MODMEMBERS
 from mint.logerror import logErrorAndEmail
 
 exposed = basemanager.exposed
@@ -304,9 +300,7 @@ class ResultsProcessingMixIn(object):
             # handle this
             if tag == 'image':
                 models.JobImageArtifact(job=job, image=resource).save()
-            elif tag == 'survey':
-                models.JobSurveyArtifact.objects.create(job=job, survey=resource)
-            elif tag not in set(['target', 'system', 'preview']):
+            elif tag not in set(['target', 'system']):
                 raise Exception("internal error, don't know how to save resource: %s" % tag)
         job.results = models.JobResults()
         job.results.result = [ modellib.HrefFieldFromModel(x) for x in resources ]
@@ -679,27 +673,13 @@ class JobHandlerRegistry(HandlerRegistry):
             return tmpl % dict(targetId=self.target.target_id)
 
     class TargetLaunchSystem(TargetDeployImage):
-        __slots__ = ['configDescriptorData']
+        __slots__ = []
         jobType = models.EventType.TARGET_LAUNCH_SYSTEM
         ResultsTag = 'systems'
 
         def getRepeaterMethod(self, cli, job):
             JobHandlerRegistry.TargetDeployImage.getRepeaterMethod(self, cli, job)
-            self.parseConfigDescriptorData(job)
             return cli.targets.launchSystem
-
-        def parseConfigDescriptorData(self, job):
-            # Validate config descriptor data, if necessary
-            self.configDescriptorData = None
-            if self.mgr.mgr.descriptorHasConfigurationData(job.descriptor_data):
-                descr = self.mgr.mgr.getConfigDescriptorForImage(self.image)
-                if descr is not None:
-                    try:
-                        ddata = smartdescriptor.DescriptorData(
-                            fromStream=job._descriptor_data, descriptor=descr)
-                    except smartdescriptor.errors.Error, e:
-                        raise errors.InvalidData(msg="Data validation error: %s" % e.args[0])
-                    self.configDescriptorData = ddata
 
         def getRepeaterMethodArgs(self, cli, job):
             args, kwargs = JobHandlerRegistry.TargetDeployImage.getRepeaterMethodArgs(self, cli, job)
@@ -876,86 +856,6 @@ class JobHandlerRegistry(HandlerRegistry):
             self.mgr.mgr.setTargetUserCredentials(self.target, creds)
             return self.target
 
-    class SystemScan(DescriptorJobHandler):
-        __slots__ = [ 'system', 'eventUuid', ]
-        jobType = models.EventType.SYSTEM_SCAN
-        ResultsTag = 'surveys'
-
-        def getRepeaterMethod(self, cli, job):
-            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
-            cimInterface = self.mgr.mgr.cimManagementInterface()
-            wmiInterface = self.mgr.mgr.wmiManagementInterface()
-            methodMap = {
-                cimInterface.management_interface_id : cli.survey_scan_cim,
-                wmiInterface.management_interface_id : cli.survey_scan_wmi,
-            }
-            method = methodMap.get(self.system.management_interface_id)
-            if method is None:
-                raise errors.InvalidData(msg="Unsupported management interface")
-            return method
-
-        def getDescriptor(self, descriptorId):
-            descriptor = self.mgr.mgr.sysMgr.getDescriptorSurveyScan(None)
-            match = self.splitResourceId(descriptorId)
-            systemId = int(match.kwargs['system_id'])
-            self._setSystem(systemId)
-            return descriptor
-
-        def getRelatedResource(self, descriptor):
-            return self.system
-
-        def getRelatedThroughModel(self, descriptor):
-            return inventorymodels.SystemJob
-
-        def getRepeaterMethodArgs(self, cli, job):
-            self.eventUuid = uuid.uuid4()
-            nw = self.system.extractNetworkToUse(self.system)
-            if not nw:
-                raise errors.InvalidData(msg="No network available for system")
-            destination = nw.ip_address or nw.dns_name
-            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
-                self.system, destination, eventUuid=str(self.eventUuid),
-                requiredNetwork=None)
-            desiredTopLevelItems = [ x.trove_spec.strip()
-                for x in self.system.desired_top_level_items.all() ]
-            kwargs = dict(zone=self.system.managing_zone.name)
-            if self.system.latest_survey_id is None or not self.system.latest_survey.has_system_model:
-                kwargs.update(desiredTopLevelItems=desiredTopLevelItems)
-            else:
-                systemModel = self.mgr.systemModelForSystem(
-                        self.system, [ self._troveTupForSystemModel(x)
-                            for x in desiredTopLevelItems ])
-                kwargs.update(systemModel=systemModel)
-            return (params, ), kwargs
-
-        def _troveTupForSystemModel(self, trvspec):
-            trvtup = trovetup.TroveTuple(trvspec)
-            return "%s=%s" % (trvtup.name, trvtup.version.asString())
-
-        def postprocessRelatedResource(self, job, model):
-            model.event_uuid = str(self.eventUuid)
-
-        def _setSystem(self, systemId):
-            system = inventorymodels.System.objects.get(system_id=systemId)
-            self.system = system
-
-        def _processJobResults(self, job):
-            descriptor = smartdescriptor.ConfigurationDescriptor(fromStream=job._descriptor)
-            match = self.splitResourceId(descriptor.getId())
-            systemId = int(match.kwargs['system_id'])
-            self._setSystem(systemId)
-            # Grab the first survey
-            surveyEtree = self.results.find('survey')
-            if surveyEtree is None:
-                raise errors.InvalidData(msg = "Survey data not found")
-            survey = self.mgr.mgr.addSurveyForSystemFromEtree(
-                self.system.system_id, surveyEtree)
-            return survey
-
-        def handleError(self, job, exc):
-            job.status_text = "Unknown exception, please check logs"
-            job.status_code = 500
-
     class ImageBuildCancellation(DescriptorJobHandler):
         __slots__ = [ 'image', ]
         jobType = models.EventType.IMAGE_CANCEL_BUILD
@@ -986,227 +886,6 @@ class JobHandlerRegistry(HandlerRegistry):
 
         def postCreateJob(self, job):
             self.mgr.mgr.cancelImageBuild(self.image, job)
-
-    class SystemUpdate(DescriptorJobHandler):
-        __slots__ = [ 'system', 'eventUuid', 'specs', 'dryRun']
-        jobType = models.EventType.SYSTEM_UPDATE
-        ResultsTag = 'preview'
-
-        def createRmakeJob(self, job):
-            user = usermodels.User.objects.get(pk=job.created_by_id)
-            self.extractDescriptorData(job) # Get .system onto self.
-            allowed = self.mgr.mgr.rbacMgr.userHasRbacPermission(user, self.system, MODMEMBERS)
-            if not allowed:
-                raise errors.InvalidData(msg = "Operation not allowed.")
-            return super(JobHandlerRegistry.SystemUpdate, self).createRmakeJob(job)
-
-        def getDescriptor(self, descriptorId):
-            match = self.splitResourceId(descriptorId)
-
-            systemId = int(match.kwargs['system_id'])
-            if str(systemId) != str(self.extraArgs.get('system_id')):
-                raise errors.InvalidData()
-            system = inventorymodels.System.objects.get(system_id=systemId)
-            self.system = system
-
-            return self.mgr.mgr.sysMgr.getSystemDescriptorForAction(systemId,
-                    match.kwargs['descriptor_type'])
-
-        def getRelatedResource(self, descriptor):
-            return self.system
-
-        def getRepeaterMethod(self, cli, job):
-            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
-            cimInterface = self.mgr.mgr.cimManagementInterface()
-            wmiInterface = self.mgr.mgr.wmiManagementInterface()
-            methodMap = {
-                cimInterface.management_interface_id : cli.update_cim,
-                wmiInterface.management_interface_id : cli.update_wmi,
-            }
-            method = methodMap.get(self.system.management_interface_id)
-            if method is None:
-                raise errors.InvalidData(msg="Unsupported management interface")
-            return method
-
-        def getRepeaterMethodArgs(self, cli, job):
-            self.eventUuid = uuid.uuid4()
-            nw = self.system.extractNetworkToUse(self.system)
-            if not nw:
-                raise errors.InvalidData(msg="No network available for system")
-            destination = nw.ip_address or nw.dns_name
-            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
-                self.system, destination, eventUuid=str(self.eventUuid),
-                requiredNetwork=None)
-
-            extra = dict(zone = self.system.managing_zone.name)
-            topLevelItems = self.descriptorData.getField('updates')
-            previewId = self.descriptorData.getField('preview_id')
-            topLevelGroup = self.descriptorData.getField('trove_label')
-            if self.system.latest_survey_id is not None and self.system.latest_survey.has_system_model:
-                # System model present, old-style invocation. Allow the
-                # preview but it will fail to apply later because there
-                # will be no previewId passed
-                if topLevelItems is None and topLevelGroup is not None:
-                    topLevelItems = [ topLevelGroup ]
-            if topLevelItems is not None:
-                # Convert top-level items to a system model
-                systemModel = self.mgr.systemModelForSystem(self.system,
-                        topLevelItems)
-                extra.update(systemModel = systemModel)
-            elif previewId is not None:
-                if previewId.startswith('http'):
-                    # Preview URL was passed. We need to extract the
-                    # preview ID, load the XML for it, then get the
-                    # preview ID as understood by CIM
-                    previewPath = urlparse.urlsplit(previewId).path
-                    match = self.splitResourceId(previewPath)
-                    preview = models.JobPreviewArtifact.objects.get(
-                            creation_id=match.kwargs.get('id'))
-                    doc = etree.fromstring(preview.preview)
-                    previewId = doc.attrib['id']
-                extra.update(previewId = previewId)
-            else:
-                extra.update(test = self.descriptorData.getField('dry_run'),
-                        sources = [ topLevelGroup ])
-
-            return (params, ), extra
-
-        def getRelatedThroughModel(self, descriptor):
-            return inventorymodels.SystemJob
-
-        def postprocessRelatedResource(self, job, model):
-            model.event_uuid = str(self.eventUuid)
-
-        def _updateDesiredInstalledSoftware(self, system, job, topLevelItems):
-            descriptorData = self.loadDescriptorData(job)
-            test = descriptorData.getField('dry_run')
-            sysModelTopLevelItems = descriptorData.getField('updates')
-            if test or (sysModelTopLevelItems is not None):
-                return
-            topLevelItems = set(topLevelItems)
-            self.mgr.mgr.sysMgr.setDesiredTopLevelItems(system, topLevelItems)
-
-        def _updateObservedInstalledSoftware(self, system, job, topLevelItems):
-            descriptorData = self.loadDescriptorData(job)
-            test = descriptorData.getField('dry_run')
-            topLevelItems = set(topLevelItems)
-            self.mgr.mgr.sysMgr.setObservedTopLevelItems(system, topLevelItems)
-
-        @staticmethod
-        def _scrubTroveTupNode(node):
-            if not node.text:
-                node.text = None
-                return ''
-            val = trovetup.TroveTuple(node.text.strip())
-            node.text = val.asString(withTimestamp=True)
-            return node.text
-
-        def _processXml(self, job):
-            observed = [ self._scrubTroveTupNode(x)
-                    for x in self.results.iterchildren('observed') ]
-            desired= [ self._scrubTroveTupNode(x)
-                    for x in self.results.iterchildren('desired') ]
-            return modellib.Etree.tostring(self.results), observed, desired
-
-        def _processJobResults(self, job):
-            xml, observed, desired = self._processXml(job)
-            system = job.systems.all()[0].system
-            preview = models.JobPreviewArtifact(job=job, preview=xml, system=system)
-            preview.save()
-            # both of these are only relevant to non-dry run and have meanings more overloaded than their names
-            # so no reason to set desired prior to attempting the command
-            self._updateDesiredInstalledSoftware(system, job, desired)
-            self._updateObservedInstalledSoftware(system, job, observed)
-            return preview
-
-    class SystemConfigure(DescriptorJobHandler):
-        # TODO: reduce boilerplate by making a system job handler base class
-        # and combine with other system jobs.  This should only be a few lines
-        # per job type if the job is reasonably basic
-
-        __slots__ = [ 'system', 'eventUuid' ]
-        jobType = models.EventType.SYSTEM_CONFIGURE
-        ResultsTag = 'system'
-
-        def getDescriptor(self, descriptorId):
-            match = self.splitResourceId(descriptorId)
-            systemId = int(match.kwargs['system_id'])
-            if str(systemId) != str(self.extraArgs.get('system_id')):
-                raise errors.InvalidData()
-            system = inventorymodels.System.objects.get(system_id=systemId)
-            self.system = system
-            return self.mgr.mgr.sysMgr.getDescriptorConfigure(systemId)
-
-        def getRelatedResource(self, descriptor):
-            return self.system
-
-        def postprocessRelatedResource(self, job, model):
-            model.event_uuid = str(self.eventUuid)
-
-        def getRepeaterMethod(self, cli, job):
-            self.descriptor, self.descriptorData = self.extractDescriptorData(job)
-            cimInterface = self.mgr.mgr.cimManagementInterface()
-            wmiInterface = self.mgr.mgr.wmiManagementInterface()
-            methodMap = {
-                cimInterface.management_interface_id : cli.configuration_cim,
-                wmiInterface.management_interface_id : cli.configuration_wmi,
-            }
-            method = methodMap.get(self.system.management_interface_id)
-            if method is None:
-                raise errors.InvalidData(msg="Unsupported management interface")
-            return method
-
-        def getRepeaterMethodArgs(self, cli, job):
-
-            self.eventUuid = uuid.uuid4()
-            nw = self.system.extractNetworkToUse(self.system)
-            if not nw:
-                raise errors.InvalidData(msg="No network available for system")
-            destination = nw.ip_address or nw.dns_name
-            params = self.mgr.mgr.sysMgr._computeDispatcherMethodParams(cli,
-                self.system, destination, eventUuid=str(self.eventUuid),
-                requiredNetwork=None)
-
-            configXml = self.system.configuration
-            return (params, ), dict(configuration=configXml, zone=self.system.managing_zone.name)
-
-        def getRelatedThroughModel(self, descriptor):
-            return inventorymodels.SystemJob
-
-        def postCreateJob(self, job):
-            # self.mgr.mgr.configureSystem(self.system, job)
-            pass
-
-        def _processJobResults(self, job):
-            # Configuration jobs presently have no real result but return a
-            # system with just UUIDs in it. Just return the current system
-            # object.
-            returnCode, stdout, stderr = 0, None, None
-            scriptOutput = self.results.find('scriptOutput')
-            if scriptOutput is not None:
-                returnCode = int(scriptOutput.find('returnCode').text)
-                stdout = scriptOutput.find('stdout').text
-                stderr = scriptOutput.find('stderr').text
-            if stdout is not None:
-                try:
-                    doc = etree.fromstring(str(stdout))
-                    status = doc.xpath('write_status/status/text()')
-                    if status and status[0].lower() == 'fail':
-                        returnCode = 400
-                except etree.Error:
-                    stdout = unicode(stdout)
-            if stderr is not None:
-                stderr = unicode(stderr)
-            system = job.systems.all()[0].system
-            job.status_detail = stdout
-            if returnCode == 0:
-                system.update(configuration_applied=True)
-            else:
-                jobState = self.mgr.getJobStateByName(models.JobState.FAILED)
-                job.job_state = jobState
-                job.status_code = 400
-                job.status_text = stderr
-            return system
 
     class TargetLaunchProfileHandler(_TargetDescriptorJobHandler):
         jobType = models.EventType.TARGET_CREATE_LAUNCH_PROFILE

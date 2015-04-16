@@ -1858,8 +1858,7 @@ ZcY7o9aU
         img = imgmodels.Image.objects.get(name=imgName, _image_type=buildtypes.VMWARE_ESX_IMAGE)
         self._testLaunchSystem(targets, img, zone=zone)
 
-    def _testLaunchSystem(self, targets, img, baseImg=None, configData=None,
-            expectedStatusCode=200, zone=None):
+    def _testLaunchSystem(self, targets, img, baseImg=None, expectedStatusCode=200, zone=None):
         self.mgr.targetsManager.recomputeTargetDeployableImages()
 
         # Post a job
@@ -1878,15 +1877,7 @@ ZcY7o9aU
         targetId = targets[0].target_id
         jobTypeId = self.mgr.sysMgr.eventType(jmodels.EventType.TARGET_LAUNCH_SYSTEM).job_type_id
 
-        if configData:
-            configDataXml = ('<system_configuration>%s</system_configuration>' %
-                ''.join("<%s>%s</%s>" % (k, v, k)
-                    for k, v in configData.items()))
-            edata = '<withConfiguration>true</withConfiguration>' + configDataXml
-        else:
-            configDataXml = None
-            edata = ''
-        descriptorData = "<descriptor_data><imageId>%s</imageId>%s</descriptor_data>" % (buildFileId, edata)
+        descriptorData = "<descriptor_data><imageId>%s</imageId></descriptor_data>" % (buildFileId,)
 
         jobXml = jobXmlTmpl % dict(
                 jobTypeId=jobTypeId,
@@ -1979,16 +1970,6 @@ ZcY7o9aU
         self.assertEquals(
                 [ j.system.managing_zone.name for j in artifacts ],
                 expZones)
-        if configDataXml is None:
-            self.assertEquals([j.system.configuration for j in artifacts],
-                [configDataXml] * len(artifacts))
-        else:
-            # Munge config since the launch descriptor calls it
-            # system_configuration
-            tgt = configDataXml.replace('system_configuration>',
-                'configuration>')
-            for j in artifacts:
-                self.assertXMLEquals(j.system.configuration, tgt)
 
         jobXml = """<job>
   <job_state>Completed</job_state>

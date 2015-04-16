@@ -181,22 +181,6 @@ class Credentials(modellib.XObjIdModel):
         self.id = self.get_absolute_url(request, parents=[self._system])
         return xobj.toxml(self)
 
-class ConfigurationDescriptor(modellib.XObjIdModel):
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'configuration_descriptor',
-                attributes = {'id':str})
-    objects = modellib.ConfigurationDescriptorManager()
-    view_name = 'SystemConfigurationDescriptor'
-
-    def __init__(self, system, *args, **kwargs):
-        self._system = system
-        modellib.XObjIdModel.__init__(self, *args, **kwargs)
-
-    def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, parents=[self._system])
-        return xobj.toxml(self)
 
 class SystemState(modellib.XObjIdModel):
 
@@ -393,7 +377,7 @@ class System(modellib.XObjIdModel):
     # XXX this is hopefully a temporary solution to not serialize the FK
     # part of a many-to-many relationship
     _xobj_hidden_accessors = set(['systemjob_set', 'target_credentials',
-        'managementnode', 'jobsystem_set', 'tags', 'surveys'])
+        'managementnode', 'jobsystem_set', 'tags'])
     _xobj_hidden_m2m = set(['jobs'])
     _xobj = xobj.XObjMetadata(
                 tag = 'system',
@@ -502,10 +486,6 @@ class System(modellib.XObjIdModel):
     project = D(APIReadOnly(modellib.DeferredForeignKey(Project, null=True,
         text_field='short_name', related_name="+", on_delete=models.SET_NULL)),
         "the project of the system")
-    configuration = APIReadOnly(XObjHidden(models.TextField(null=True, db_column='configuration_xml')))
-    configuration_descriptor = D(XObjHidden(modellib.SyntheticField()),
-        "the descriptor of available fields to set system configuration "
-        "parameters")
     network_address = D(NetworkAddress, "Network address for this system", short="System network address")
     actions = D(APIReadOnly(modellib.SyntheticField(jobmodels.Actions)),
         "actions available on the system")
@@ -522,10 +502,6 @@ class System(modellib.XObjIdModel):
         short="System last modified by")
     modified_date = D(modellib.DateTimeUtcField(null=True),
         "the date the system was last modified", short="System modified date")
-    latest_survey = modellib.DeferredForeignKey('inventory.Survey',
-        null=True, related_name='+', on_delete=models.SET_NULL)
-    survey = D(XObjHidden(modellib.SyntheticField(modellib.EtreeField)),
-        "survey specified at registration time")
 
     # Note the camel-case here. It is intentional, this is a field sent
     # only by catalog-service via rmake, to simplify creation of system
@@ -540,10 +516,6 @@ class System(modellib.XObjIdModel):
     # call updateDerivedData() to recalculate
     has_running_jobs = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has running jobs', short="System running jobs")
     has_active_jobs = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has active (queued/unqueud) jobs', short='System active jobs')
-    out_of_date  = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether the system has pending updates', short='System out of date')
-
-    configuration_applied = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether any configuraiton has been applied for this system', short='System configuration applied')
-    configuration_set = D(APIReadOnly(models.BooleanField(default=False, null=False)), 'whether any configuration has been saved (but not necc. applied) for this system', short='System configuration saved')
 
     # FIXME: OUT OF DATE -- installed software no longer used, can purge some of this?
     # We need to distinguish between an <installed_software> node not being
@@ -746,31 +718,7 @@ class System(modellib.XObjIdModel):
 
         self.has_active_jobs  = self.areJobsActive(jobs)
         self.has_running_jobs = self.areJobsRunning(jobs)
-        self.out_of_date      = self.isOutOfDate()
         self.save()
-
-    def isOutOfDate(self):
-
-        # this will eventually walk the survey instead
-        # and compare the unfrozen element to the Trove.version.full fields
-        # until then, disabled
-        if self.latest_survey is None:
-            # this should only happen to legacy systems that have NOT been surveyed or launched from Goad-p1
-            return False
-        cps = self.latest_survey.conary_packages.all()
-        for cp in cps:
-             unfrozen = cp.conary_package_info.unfrozen
-             if unfrozen is None or unfrozen == '':
-                 # legacy survey, never stored this info, so we can't really tell if it's out of date
-                 continue
-             troves = Trove.objects.filter(name=cp.conary_package_info.name, version__full=unfrozen)
-             ood = [ t for t in troves if t.out_of_date ]
-             if len(troves) == 0:
-                 continue
-             if len(ood) > 0:
-                 return True
-        # no conary packages is super-unlikely :)
-        return False
 
     def serialize(self, request=None, **kwargs):
 
@@ -781,41 +729,10 @@ class System(modellib.XObjIdModel):
         etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
 
         if request:
-            class ConfigurationHref(object):
-                _xobj = xobj.XObjMetadata(
-                            tag='configuration',
-                            attributes={'id':str})
-
-                def __init__(self, href):
-                    self.id = href
-
-            class ConfigurationDescriptorHref(object):
-                _xobj = xobj.XObjMetadata(
-                            tag='configuration_descriptor',
-                            attributes={'id':str})
-
-                def __init__(self, href):
-                    self.id = href
-
-            class SurveysHref(object):
-                _xobj = xobj.XObjMetadata(
-                            tag='surveys',
-                            attributes={'id':str})
-
-                def __init__(self, href):
-                    self.id = href
-
-
             if not summarize:
                 absUrl = self.get_absolute_url(request)
                 etreeModel.append(etreeModel.makeelement('credentials',
                     id='%s/credentials' % absUrl))
-                etreeModel.append(etreeModel.makeelement('configuration',
-                    id='%s/configuration' % absUrl))
-                etreeModel.append(etreeModel.makeelement('configuration_descriptor',
-                    id='%s/configuration_descriptor' % absUrl))
-                etreeModel.append(etreeModel.makeelement('surveys',
-                    id='%s/surveys' % absUrl))
 
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
@@ -917,73 +834,8 @@ class System(modellib.XObjIdModel):
 
     def _computeActions(self):
         '''What actions are available on the system?'''
-
         self.actions = actions = jobmodels.Actions()
         actions.action = []
-        scanEnabled = bool(self.management_interface_id and
-            self.management_interface.name in ('cim', 'wmi'))
-        configureEnabled = False
-
-        # Note that you must be able to update systems that don't have a survey
-        # in the case of adding a windows system with no software installed.
-        updateEnabled = bool(self.latest_survey is None or
-            self.latest_survey.has_system_model)
-        noSystemModelUpdateEnabled = bool(self.latest_survey is not None and
-                not self.latest_survey.has_system_model)
-
-        # Disable config action if no config is saved, or if the system
-        # is based on a system model
-        if self.latest_survey is not None:
-            configureEnabled = bool((self.configuration is not None) and \
-                not self.latest_survey.has_system_model)
-        else:
-            # no survey taken, legacy system in inventory, don't disable
-            # the action because it would be confusing, next registration will
-            # survey it.
-            configureEnabled = bool(self.configuration is not None)
-
-        actions.action.extend([
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_SCAN,
-                actionName="System scan",
-                descriptorModel=self,
-                descriptorHref="descriptors/survey_scan",
-                enabled=scanEnabled,
-            ),
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_UPDATE,
-                actionName="Update Software",
-                descriptorModel=self,
-                descriptorHref="descriptors/update",
-                enabled=noSystemModelUpdateEnabled,
-            ),
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_UPDATE,
-                actionKey="system_preview_software_update",
-                actionName="Preview Software Update",
-                actionDescription="Preview software update",
-                descriptorModel=self,
-                descriptorHref="descriptors/preview",
-                enabled=updateEnabled,
-            ),
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_UPDATE,
-                actionKey="system_apply_update_software",
-                actionName="Apply Software Update",
-                actionDescription="Apply software update",
-                descriptorModel=self,
-                descriptorHref="descriptors/apply_update",
-                enabled=False,
-            ),
-            jobmodels.EventType.makeAction(
-                jobmodels.EventType.SYSTEM_CONFIGURE,
-                actionName="Apply system configuration",
-                descriptorModel=self,
-                descriptorHref="descriptors/configure",
-                enabled=configureEnabled,
-            ),
-        ])
-
         return actions
 
     def hasSourceImage(self):
@@ -991,66 +843,6 @@ class System(modellib.XObjIdModel):
 
 # ABSTRACT
 
-def topLevelItemsComputeSyntheticFields(self):
-    if self.trove_spec is None or self.trove_spec == '':
-        # survey didn't populate this yet?
-        return
-
-    rev = None
-    try:
-        spec = TroveTuple(self.trove_spec)
-        rev = spec.version
-    except (ValueError, ParseError):
-        spec = TroveSpec(self.trove_spec)
-        rev = versions.VersionFromString(spec.version)
-        self.revision = rev.trailingRevision().asString()
-
-class DesiredTopLevelItem(modellib.XObjModel):
-    class Meta:
-        abstract = True
-
-    trove_spec = D(models.TextField(null=False), "Desired trove spec", short="System Desired Trove Spec")
-    created_date = D(modellib.DateTimeUtcField(null=False, auto_now_add=True), "the date the entry was created")
-    revision = D(modellib.SyntheticField(), "Desired trove revision", short="System Desired Trove Revision")
-
-    # trailingRevision in computeSyntheticFields method
-    def computeSyntheticFields(self, sender, **kwargs):
-        ''' Compute non-database fields.'''
-        if self.trove_spec is None or self.trove_spec == '':
-            # survey didn't populate this yet?
-            return
-        rev = None
-        try:
-            spec = TroveTuple(self.trove_spec)
-            rev = spec.version
-        except (ValueError, ParseError):
-            spec = TroveSpec(self.trove_spec)
-            try:
-                rev = versions.VersionFromString(spec.version)
-            except ParseError:
-                # should only get here in the tests...
-                log.error("invalid version=%s" % self.trove_spec)
-
-        if rev is not None:
-            self.revision = rev.trailingRevision().asString()
-
-class SystemDesiredTopLevelItem(DesiredTopLevelItem):
-    class Meta:
-        db_table = 'inventory_system_desired_top_level_item'
-        unique_together = [ ('system', 'trove_spec') ]
-        ordering = [ 'id' ]
-
-    _xobj = xobj.XObjMetadata(tag = 'desired_top_level_item')
-    system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'desired_top_level_items'))
-
-class SystemObservedTopLevelItem(DesiredTopLevelItem):
-    class Meta:
-        db_table = 'inventory_system_observed_top_level_item'
-        unique_together = [ ('system', 'trove_spec') ]
-        ordering = [ 'id' ]
-
-    _xobj = xobj.XObjMetadata(tag = 'observed_top_level_item')
-    system = XObjHidden(modellib.ForeignKey(System, null=False, related_name = 'observed_top_level_items'))
 
 class ManagementNode(System):
 
@@ -1239,11 +1031,6 @@ class Trove(modellib.XObjIdModel):
     version = modellib.SerializedForeignKey('Version')
     flavor = models.TextField()
     is_top_level = models.BooleanField()
-    last_available_update_refresh = modellib.DateTimeUtcField(
-        null=True)
-    available_updates = models.ManyToManyField('Version',
-        related_name='available_updates')
-    out_of_date = models.NullBooleanField()
 
     load_fields = [ name, version, flavor ]
 
@@ -1391,22 +1178,6 @@ class ErrorResponse(modellib.XObjModel):
     message = models.TextField()
     traceback = models.TextField()
     product_code = models.TextField()
-
-class Update(modellib.XObjIdModel):
-
-    class Meta:
-        db_table = 'inventory_update'
-
-    view_name = 'Update'
-
-    update_id = D(models.AutoField(primary_key=True),
-                  'the update ID for the system', short='Update ID')
-    system    = modellib.DeferredForeignKey('inventory.System',
-                                            related_name='updates+', db_column='system_id')
-    dry_run      = models.BooleanField(default=False)
-    specs        = models.TextField()
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True),
-        'the date the update was created (UTC)')
 
 # ------------------------
 # this stays at the bottom!

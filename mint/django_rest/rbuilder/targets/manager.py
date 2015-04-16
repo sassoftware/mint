@@ -369,8 +369,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
         imageData = self.mgr.imagesManager.getImageData(img)
         descr = self._getDescriptorFromCatalogService(targetId, buildFileId,
             'systemLaunchDescriptor', extraArgs=dict(imageData=imageData))
-        cdesc = self.getConfigDescriptorForImage(img)
-        self.concatenateDescriptors(descr, cdesc)
         return descr
 
     @exposed
@@ -387,38 +385,6 @@ class TargetsManager(basemanager.BaseManager, CatalogServiceHelper):
             if val == self.EnumTypeTargetDefault:
                 continue
             field.default = [ val ]
-        return descr
-
-    @exposed
-    def getConfigDescriptorForImage(self, img):
-        trvName = img.trove_name
-        trvVersion = img.trove_version
-        trvFlavor = img.trove_flavor
-        if not trvName or not trvVersion:
-            return None
-        trvTup = self.mgr.troveTupleFactory(trvName, trvVersion, trvFlavor,
-            withFrozenFlavor=True)
-        cdesc = self.mgr.versionMgr.getConfigurationDescriptorFromTrove(trvTup)
-        if cdesc is None:
-            return None
-        descr = cdesc.__class__()
-        descr.setRootElement('descriptor_data')
-        descr.addDataField('withConfiguration', type='bool',
-            descriptions="Configuration",
-            required=True, default=False)
-        descr.addDataField('system_configuration',
-            type=descr.CompoundType(cdesc),
-            required=True, descriptions="System Configuration",
-            conditional=descr.Conditional('withConfiguration', 'true'))
-        return descr
-
-    @exposed
-    def concatenateDescriptors(self, descr, *others):
-        for other in others:
-            if other is None:
-                continue
-            for field in other.getDataFields():
-                descr.addDataFieldRaw(field)
         return descr
 
     @exposed

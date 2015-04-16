@@ -221,8 +221,7 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
                 'registration_date', 'modified_date', 'last_login_date',
                 'created_by', 'modified_by', 'updated_by', 'published_by',
                 'full_name', 'user_name', 'is_public', 'is_static', 'time_mirrored',
-                'time_published', 'latest_survey', 'current_state', 'desired_top_level_items',
-                'observed_top_level_items'
+                'time_published', 'current_state',
             ]
 
         # contend with database False (sqlite only) vs synthetic false casing

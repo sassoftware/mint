@@ -4,7 +4,6 @@ import os
 import random
 from xobj import xobj
 from lxml import etree
-from datetime import datetime, timedelta
 
 from smartform import descriptor
 
@@ -17,12 +16,10 @@ from mint.django_rest.rbuilder import modellib
 from mint.django_rest.rbuilder.manager import rbuildermanager
 from mint.django_rest.rbuilder.users import models as usersmodels
 from mint.django_rest.rbuilder.inventory import models
-from mint.django_rest.rbuilder.inventory import survey_models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
 from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
 from mint.django_rest.rbuilder.inventory import testsxml
-from mint.django_rest.rbuilder.inventory import testsxml2
 from mint.lib import x509
 
 # Suppress all non critical msg's from output
@@ -73,495 +70,6 @@ class AuthTests(XMLTestCase):
         self.assertEquals(response.status_code, 200)
 
         self.assertEquals(authClient.args, [('test-rce1341', password)])
-
-
-class SurveyTests(XMLTestCase):
-    fixtures = ['targetusers']
-
-    def setUp(self):
-        XMLTestCase.setUp(self)
-
-    def _makeSurvey(self, system=None, created_date=None, removable=True):
-        if system is None:
-            system = self._makeSystem()
-
-        uuid = str(self.uuid4())
-        user = usersmodels.User.objects.get(user_name='JeanValjean1')
-        survey = survey_models.Survey(
-            name='x', uuid=uuid, system=system, created_by=user,
-            modified_by=user, removable=removable)
-        survey.save()
-
-        if created_date is not None:
-            survey.created_date = created_date
-            survey.save()
-
-        return survey
-
-    def _makeSystem(self):
-        zone = self._saveZone()
-        sys = self.newSystem(name="blinky", description="ghost")
-        sys.managing_zone=zone
-        sys.save()
-        return sys
-
-    def _hiturl(self, url):
-        response = self._get(url,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-    def test_survey_serialization(self):
-        survey = self._makeSurvey()
-        tag1 = survey_models.SurveyTag(
-            survey = survey,
-            name = 'needs_review'
-        )
-        tag1.save()
-        rpm_package = survey_models.RpmPackageInfo(
-            name = 'asdf', epoch = 0, version = '5',
-            release = '6', architecture = 'x86_64',
-            description = 'enterprise middleware abstraction layer',
-            signature = 'X'
-        )
-        rpm_package.save()
-        conary_package = survey_models.ConaryPackageInfo(
-            name = 'jkl', version = '/cny.tv@lnx:1/1234.5:7-1-1', flavor = 'orange',
-            description = 'Type-R', revision = '8',
-            architecture = 'ia64', signature = 'X',
-            rpm_package_info = rpm_package
-        )
-        conary_package.save()
-        scp = survey_models.SurveyConaryPackage(
-            survey = survey,
-            conary_package_info = conary_package,
-            install_date=self.mgr.sysMgr.now(),
-        )
-        scp.save()
-        srp = survey_models.SurveyRpmPackage(
-            survey = survey, rpm_package_info = rpm_package,
-            install_date=self.mgr.sysMgr.now(),
-        )
-        srp.save()
-        service = survey_models.ServiceInfo(
-            name = 'httpd', autostart = True, runlevels = '3,4,5'
-        )
-        service.save()
-        iss = survey_models.SurveyService(
-            survey = survey, service_info = service,
-            status = 'is maybe doing stuff'
-        )
-        iss.save()
-        response = self._get("inventory/surveys/%s" % survey.uuid,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        # this is an incomplete test as the survey didn't actually post
-        # self.assertXMLEquals(response.content, testsxml.survey_output_xml, ignoreNodes=['created_date','install_date','modified_date'])
-
-        url = "inventory/systems/%s/surveys" % survey.system.pk
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.surveys_xml % {'uuid': survey.uuid})
-
-    def test_survey_serialization_windows(self):
-
-        survey = self._makeSurvey()
-        tag1 = survey_models.SurveyTag(
-            survey = survey,
-            name = 'needs_review'
-        )
-        tag1.save()
-        windows_package = survey_models.WindowsPackageInfo(
-            publisher    = 'konami',
-            product_code = 'up-up-down-down',
-            package_code = 'left-right-right-left',
-            product_name = 'contra',
-            type         = 'msi',
-            upgrade_code = 'B-A-B-A select-start',
-            version      = '1.0'
-        )
-        windows_package.save()
-
-        windows_patch = survey_models.WindowsPatchInfo(
-            display_name  = 'Add Internet Multiplayer',
-            uninstallable = True,
-            patch_code    = 'up-c-down-c-left-c-right-c',
-            product_code  = 'up-a-down-a-left-a-right-a',
-            transforms    = 'bubblebee,starscream'
-        )
-
-        windows_patch.save()
-        windows_patch_info = survey_models.WindowsPatchInfo.objects.get(display_name='Add Internet Multiplayer')
-        windows_package_info = survey_models.WindowsPackageInfo.objects.get(product_name='contra')
-        windows_patch_info.save()
-        windows_patch_link = survey_models.SurveyWindowsPatchPackageLink(
-            windows_patch_info   = windows_patch_info,
-            windows_package_info = windows_package_info
-        )
-        windows_patch_link.save()
-        spackage = survey_models.SurveyWindowsPackage(
-            survey = survey,
-            windows_package_info = windows_package_info,
-            install_source='e:/path/to/stuff',
-            local_package='c:/path/to/stuff',
-            install_date=self.mgr.sysMgr.now(),
-        )
-        spackage.save()
-        spatch = survey_models.SurveyWindowsPatch(
-            survey = survey,
-            windows_patch_info = windows_patch_info,
-            local_package='d:/path/to/stuff',
-            is_installed=True,
-            install_date=self.mgr.sysMgr.now(),
-        )
-        spatch.save()
-        service = survey_models.WindowsServiceInfo(
-            name = 'minesweeper',
-            display_name='minesweeper',
-            type = 'AcmeService32',
-            handle = 'AcmeServiceHandle',
-            _required_services = 'solitaire',
-        )
-        service.save()
-        service2 = survey_models.WindowsServiceInfo(
-            name = 'solitaire',
-            display_name='solitare',
-            type = 'AcmeService32',
-            handle = 'AcmeServiceHandle',
-            _required_services = '',
-        )
-        service2.save()
-        iss = survey_models.SurveyWindowsService(
-            survey = survey, windows_service_info = service,
-            status = 'running',
-        )
-        iss.save()
-        iss2 = survey_models.SurveyWindowsService(
-            survey = survey, windows_service_info = service2,
-            status = 'stopped',
-        )
-        iss2.save()
-        response = self._get("inventory/surveys/%s" % survey.uuid,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-    def test_survey_post(self):
-        # make sure we can post a survey and it mostly looks
-        # like the model saved version above -- much of the
-        # data posted is not required for input (like hrefs)
-        sys = self._makeSystem()
-        # No top leve items initially
-        self.assertEquals(sys.desired_top_level_items.count(), 0)
-        url = "inventory/systems/%s/surveys" % sys.pk
-
-        response = self._post(url,
-            data = testsxml.survey_input_xml % {'uuid': str(self.uuid4())},
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        # Make sure the system has a system model
-        system = models.System.objects.get(system_id=sys.system_id)
-        self.assertEquals(system.latest_survey.has_system_model, True)
-        self.assertEquals(system.latest_survey.system_model, """\
-search group-haystack=haystack.rpath.com@rpath:haystack-1/1-1-1
-install group-haystack
-install needle
-""")
-        self.assertEquals(str(system.latest_survey.system_model_modified_date),
-            "2009-02-13 23:31:30+00:00")
-
-        # We should have top level items
-        self.assertEquals(sorted(x.trove_spec
-            for x in sys.desired_top_level_items.all()),
-            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
-
-        # Config and Update actions should be disabled
-        system_url = url = "inventory/systems/%s" % system.system_id
-        response = self._get(url,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        tree = etree.fromstring(response.content)
-        actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
-        self.assertEqual([x.text for x in actionsStatus], [ 'false' ])
-        updateStatus = tree.xpath('/system/actions/action[name="Update Software"]/enabled')
-        self.assertEqual([x.text for x in updateStatus], [ 'false' ])
-
-        # Hack last survey to pretend it doesn't have a system model
-        survey_models.Survey.objects.filter(survey_id=system.latest_survey.survey_id).update(has_system_model=False, system_model=None, system_model_modified_date=None)
-        system.__class__.objects.filter(system_id=system.system_id).update(configuration="<foo>value</foo>")
-
-        # Config and Update actions should now be enabled
-        response = self._get(url,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        tree = etree.fromstring(response.content)
-        actionsStatus = tree.xpath('/system/actions/action[name="Apply system configuration"]/enabled')
-        self.assertEqual([x.text for x in actionsStatus], [ 'true' ])
-        updateStatus = tree.xpath('/system/actions/action[name="Update Software"]/enabled')
-        self.assertEqual([x.text for x in updateStatus], [ 'true' ])
-
-        response = self._get(url,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        url = "inventory/surveys/1234"
-        response = self._get(url,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        # self.assertXMLEquals(response.content, testsxml.survey_output_xml)
-        # make sure inline urls work
-        self._hiturl("inventory/survey_tags/1")
-        self._hiturl("inventory/survey_rpm_packages/1")
-        self._hiturl("inventory/survey_conary_packages/1")
-        self._hiturl("inventory/survey_services/1")
-        self._hiturl("inventory/rpm_package_info/1")
-        self._hiturl("inventory/conary_package_info/1")
-        self._hiturl("inventory/service_info/1")
-
-        url = "inventory/surveys/1234"
-        response = self._put(url,
-            data = testsxml.survey_mod_xml,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        surv = survey_models.Survey.objects.get(uuid='1234')
-        self.assertEqual(surv.removable, True) # Bug 2209
-
-        # post a second survey to verify that updating the latest survey
-        # info still works and see if the latest survey date matches
-        response = self._put("inventory/surveys/1234",
-            data = testsxml.survey_input_xml % {'uuid': str(self.uuid4())},
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        sys = models.System.objects.get(pk=sys.pk)
-        self.assertTrue(sys.latest_survey.created_date is not None)
-
-        # not included yet only because IDs don't line up?
-        #self.assertXMLEquals(response.content, testsxml.survey_output_xml2)
-
-        # post an alternate survey, primarily for checking config and compliance diffs
-        # other parts of diffs will be checked in other tests, this one just has
-        # all the config parts populated so it makes sense here
-        response = self._post("inventory/systems/%s/surveys" % sys.pk,
-            data = testsxml.survey_input_xml_alt.replace('jkl', 'group-klm'),
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
- 
-        # Top-level item should not have changed
-        topLevelItemMgr = models.SystemDesiredTopLevelItem.objects
-        self.assertEquals(sorted(x.trove_spec
-                for x in topLevelItemMgr.filter(system=sys)),
-            ['jkl=/cny.tv@lnx:1/1234.5:7-1-1[orange]'])
-
-        response = self._get("inventory/surveys/1234/diffs/99999",
-            username = 'admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        # delete the system, make sure nothing explodes
-        response = self._delete("inventory/systems/%s" % sys.pk,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 204)
-
-    def test_survey_post_long(self):
-        sys = self._makeSystem()
-        url = "inventory/systems/%s/surveys" % sys.pk
-        response = self._post(url,
-            data = testsxml2.very_long_survey,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-    def test_survey_post_windows(self):
-        sys = self._makeSystem()
-        url = "inventory/systems/%s/surveys" % sys.pk
-        response = self._post(url,
-            data = testsxml2.windows_upload_survey_xml,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        # Post survey again, should not fail (RCE-1765)
-        surveyXml = testsxml2.windows_upload_survey_xml.replace(
-                '123456789', '0xdeadbeef').replace(
-                        '<fix_comments></fix_comments>',
-                        '<fix_comments>really fixed</fix_comments>')
-        response = self._post(url,
-            data = surveyXml,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        self._hiturl('inventory/survey_windows_patches/1')
-        self._hiturl('inventory/survey_windows_os_patches/1')
-        self._hiturl('inventory/windows_patch_info/1')
-        self._hiturl('inventory/windows_package_info/1')
-        self._hiturl('inventory/survey_windows_packages/1')
-        self._hiturl('inventory/survey_windows_services/2')
-        self._hiturl('inventory/windows_service_info/1')
-
-        response = self._post(url,
-            data = testsxml2.windows_upload_survey_xml2,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        
-        # BOOKMARK
-        # test complex query against surveys
-        search = '/api/v1/inventory/systems;filter_by=EQUAL(latest_survey.windows_packages.windows_package_info.publisher,konami)'
-        response = self._get(search, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-       
-
-
-        url = "inventory/surveys/%s/diffs/%s" % ('123456789', '987654321')
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        url = "inventory/systems/%s/surveys" % sys.pk
-        response = self._post(url,
-            data = testsxml2.windows_upload_survey_xml3,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        url = "inventory/surveys/%s/diffs/%s" % ('123456789', '555')
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-    def test_survey_diff_linux_heavy(self):
-
-        sys = self._makeSystem()
-        url = "inventory/systems/%s/surveys" % sys.pk
-
-        surveys = [ testsxml2.one, testsxml2.two, testsxml2.three,
-            testsxml2.four, testsxml2.five ]
-
-        for x in surveys:
-            response = self._post(url,
-                data = x,
-                username='admin', password='password')
-            self.assertEqual(response.status_code, 200)
-
-        url = "inventory/surveys/%s/diffs/%s" % ('504', '505')
-        # TODO: time this
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        # hit it again to test cached diff logic
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-
-        url = "inventory/surveys/%s/diffs/%s" % ('503', '501')
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        sys = models.System.objects.get(pk=sys.pk)
-        key1 = sys.latest_survey.pk
-
-        # verify we can delete the survey
-        url = "inventory/surveys/%s" % '505'
-        response = self._delete(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 204)
-        # verify system did not cascade
-        # and that since we deleted teh latest survey there is still a latest
-        # survey
-        surl = "inventory/systems/%s" % sys.pk
-        response = self._get(surl, username='admin', password='password')
-        self.assertEqual(response.status_code, 200)
-        sys = models.System.objects.get(pk=sys.pk)
-        key2 = sys.latest_survey.pk
-        self.assertTrue(key1 != key2)
-
-        # verify delete stuck
-        response = self._get(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 404)
-        # check 404 support for survey not existing, second delete
-        response = self._delete(url, username='admin', password='password')
-        self.assertEqual(response.status_code, 404)
-
-        # delete the system, make sure nothing explodes
-        response = self._delete("inventory/systems/%s" % sys.pk,
-            username='admin', password='password')
-        self.assertEqual(response.status_code, 204)
-
-    def testPostSystemWithSurvey(self):
-        """
-        Make sure a system can provide a survey at registration time
-        """
-        models.System.objects.all().delete()
-        system_xml = testsxml.system_post_xml.replace("</system>",
-            testsxml2.two + "\n</system>")
-        response = self._post('inventory/systems/', data=system_xml)
-        self.assertEquals(response.status_code, 200)
-        doc = etree.fromstring(response.content)
-        systemId = doc.find('system_id').text
-        # Make sure we got a survey
-        system = models.System.objects.get(system_id=systemId)
-        self.assertEquals(system.surveys.count(), 1)
-
-    def testSurveysAreRemovableByDefault(self):
-        survey = self._makeSurvey()
-        self.assertTrue(survey.removable)
-
-    def testDoNotPurgeLatestOrUnremovableSurveys(self):
-        sys = self._makeSystem()
-        unremovable1 = self._makeSurvey(removable=False, system=sys)
-        unremovable2 = self._makeSurvey(removable=False, system=sys)
-        latest = self._makeSurvey(removable=True, system=sys)
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=0)
-        remaining = survey_models.Survey.objects.all()
-        self.assertEqual(0, len(deleted))
-        self.assertEqual(3, len(remaining))
-        self.assertIn(unremovable1, remaining)
-        self.assertIn(unremovable2, remaining)
-        self.assertIn(latest, remaining)
-
-    def testDoNotPurgeRecentSurveys(self):
-        sys = self._makeSystem()
-        removable1 = self._makeSurvey(system=sys)
-        removable2 = self._makeSurvey(system=sys)
-        removable3 = self._makeSurvey(system=sys)
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
-        remaining = survey_models.Survey.objects.all()
-        self.assertEqual(0, len(deleted))
-        self.assertEqual(3, len(remaining))
-        self.assertIn(removable1, remaining)
-        self.assertIn(removable2, remaining)
-        self.assertIn(removable3, remaining)
-
-    def testPurgeAllOldRemovableSurveysUnlessLatestForSystem(self):
-        present = datetime.now()
-        past = present - timedelta(days=60)
-
-        sys1 = self._makeSystem()
-        old_unremovable1 = self._makeSurvey(system=sys1, created_date=past,
-                                            removable=False)
-        old_removable1 = self._makeSurvey(system=sys1, created_date=past)
-        recent_removable1 = self._makeSurvey(system=sys1, created_date=present)
-        latest_removable1 = self._makeSurvey(system=sys1, created_date=present)
-
-        sys2 = self._makeSystem()
-        old_removable2a = self._makeSurvey(system=sys2, created_date=past)
-        old_removable2b = self._makeSurvey(system=sys2, created_date=past)
-        latest_unremovable2 = self._makeSurvey(system=sys2,
-                                               created_date=present,
-                                               removable=False)
-
-        deleted = self.mgr.deleteRemovableSurveys(olderThanDays=30)
-        self.assertEqual(3, len(deleted))
-        self.assertIn(old_removable1, deleted)
-        self.assertIn(old_removable2a, deleted)
-        self.assertIn(old_removable2b, deleted)
-
-        remaining = survey_models.Survey.objects.all()
-        self.assertEqual(4, len(remaining))
-        self.assertIn(old_unremovable1, remaining)
-        self.assertIn(recent_removable1, remaining)
-        self.assertIn(latest_removable1, remaining)
-        self.assertIn(latest_unremovable2, remaining)
-
-    def testSurveyForPackageWithoutSignature(self):
-        # RCE-1608
-        system_xml = testsxml.system_post_xml.replace("</system>",
-            testsxml2.two + "\n</system>")
-        doc = etree.fromstring(system_xml)
-        for cp in doc.find('survey').find('conary_packages').iterchildren('conary_package'):
-            cpi = cp.find('conary_package_info')
-            cpi.find('signature').text = ''
-        system_xml = etree.tostring(doc)
-        response = self._post('inventory/systems/', data=system_xml)
-        self.assertEquals(response.status_code, 200)
 
 
 class InventoryTestCase(XMLTestCase):
@@ -660,7 +168,7 @@ class ZonesTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.zone_xml % (zone.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
+            ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', ])
 
     def testAddZoneNodeNull(self):
 
@@ -777,7 +285,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
+            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', ])
 
     def testGetManagementInterfacesAuth(self):
         """
@@ -798,7 +306,7 @@ class ManagementInterfacesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', 'latest_survey' ])
+            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', ])
 
     def testPutManagementInterfaceAuth(self):
         """
@@ -850,7 +358,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'latest_survey' ])
+            testsxml.system_types_xml, ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', ])
 
     def testGetSystemTypesAuth(self):
         """
@@ -875,7 +383,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
-            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', 'latest_survey' ])
+            testsxml.system_type_xml, ignoreNodes = [ 'created_date', 'created_by', 'modified_by', 'modified_date', ])
 
     def testGetSystemTypeSystems(self):
         system = self._saveSystem()
@@ -884,7 +392,7 @@ class SystemTypesTestCase(XMLTestCase):
             username="testuser", password="password")
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_type_systems_xml,
-            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date', 'latest_survey'])
+            ignoreNodes = [ 'created_date', 'actions',  'created_by', 'modified_by', 'modified_date'])
 
     def testPutSystemTypeAuth(self):
         """
@@ -973,51 +481,6 @@ class SystemTypesTestCase(XMLTestCase):
         assert(buildNodes is not None)
         assert(len(buildNodes) == 0)
 
-class WindowsBuildServiceTestCase(XMLTestCase, test_utils.RepeaterMixIn):
-    def setUp(self):
-        XMLTestCase.setUp(self)
-        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
-
-    def testRwbsRegistration(self):
-        # RCE-1565
-        class Cli(object):
-            class repos(object):
-                _troves = []
-                _invocation = []
-                @classmethod
-                def findTrove(cls, *args):
-                    cls._invocation.append(args)
-                    return cls._troves
-        from conary import versions
-        Cli.repos._troves.append(('group-rwbs-appliance',
-            versions.ThawVersion('/example.com@rpl:2/12345.67:1-1-1'), None))
-        from mint.db import repository as reposdbmgr
-        self.mock(reposdbmgr.RepomanMixin, 'getAdminClient', lambda *args, **kwargs: Cli())
-
-        url = "inventory/systems"
-        response = self._post(url, data=testsxml.rwbs_registration_xml)
-        self.assertEquals(response.status_code, 200)
-        doc = etree.fromstring(response.content)
-        systemId = doc.find('system_id').text
-        self.assertEquals(systemId, '3')
-        system = models.System.objects.get(system_id=systemId)
-        # Fetch all jobs associated with this system
-        self.assertEquals(
-            [ x.job_type.name for x in system.jobs.all() ],
-            [ 'system update software' ])
-        job = system.jobs.all()[0]
-        descr = descriptor.ConfigurationDescriptor(fromStream=job._descriptor)
-        self.assertEquals(descr.getDisplayName(), 'Update Software')
-        self.assertEquals(descr.getDescriptions(), {None: 'Update your system'})
-        self.assertEquals([ x.name for x in descr.getDataFields() ],
-                ['trove_label', 'dry_run'])
-        ddata = descriptor.DescriptorData(fromStream=job._descriptor_data,
-                descriptor=descr)
-        self.assertEquals(
-                [ (x.getName(), x.getValue()) for x in ddata.getFields() ],
-                [
-                    ('trove_label', 'group-rwbs-appliance=/example.com@rpl:2/1-1-1'),
-                    ('dry_run', False) ])
 
 class SystemStatesTestCase(XMLTestCase):
 
@@ -2067,7 +1530,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.systems_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by' ])
+            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by' ])
         response = self._get('inventory/systems', username='testuser', password='password')
         self.assertEquals(response.status_code, 403)
 
@@ -2191,7 +1654,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content,
             testsxml.system_xml % (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
 
     def testDeleteSystemDoesNotExist(self):
         # deleting a system that doesn't exist should be a 404, not an error
@@ -2216,7 +1679,7 @@ class SystemsTestCase(XMLTestCase):
         self.assertEquals(response.status_code, 200)
         self.assertXMLEquals(response.content, testsxml.system_target_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'latest_survey', 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
+            ignoreNodes = [ 'created_date', 'modified_date', 'created_by', 'modified_by', 'time_created', 'time_updated' ])
 
     def testPostSystemAuth(self):
         """
@@ -2251,7 +1714,7 @@ class SystemsTestCase(XMLTestCase):
                             'time_created', 'time_updated',
                             'registration_date', 'actions',
                             'created_by', 'modified_by',
-                            'created_date', 'modified_date', 'latest_survey'])
+                            'created_date', 'modified_date'])
 
     def testPostSystemThroughManagementNode(self):
         # Send the identity of the management node
@@ -2392,87 +1855,6 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(response.content,
             testsxml.credentials_wmi_put_resp_xml)
 
-    def testSystemConfiguration(self):
-        system = self._saveSystem()
-        url = 'inventory/systems/%s/configuration' % system.pk
-
-        response = self._post(url,
-            data=testsxml.configuration_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.configuration_post_xml)
-
-        response = self._get(url,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.configuration_post_xml)
-
-        response = self._put(url,
-            data=testsxml.configuration_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.configuration_put_xml)
-
-        self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
-
-        # Now some good data
-        configurationXml = """\
-<configuration>
-  <vhosts>
-    <vhost>
-      <serverName>aaa</serverName>
-      <documentRoot>aaa</documentRoot>
-    </vhost>
-  </vhosts>
-  <ignored-1/>
-  <ignored-2/>
-</configuration>
-"""
-
-        response = self._put(url,
-            data=configurationXml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-
-        system = system.__class__.objects.get(system_id=system.system_id)
-        configurationXmlFixed = configurationXml
-        self.assertXMLEquals(system.configuration, configurationXmlFixed)
-
-        # now also test the configuration job
-        # test failing because of no network interface...
-        #response = self._post('inventory/systems/%s/jobs' % system.pk,
-        #    data = testsxml.system_configuration_xml % system.pk,
-        #    username='admin', password='password')
-        #self.assertEquals(response.status_code, 200)
-        #self.assertXMLEquals(response.content, '<wrong></wrong>')
-
-
-    def _getSystemConfigurationDescriptor(self, system_id):
-        return self.mgr.getSystemConfigurationDescriptor(system_id)
-
-    def testSystemConfigurationDescriptor(self):
-        system = self._saveSystem()
-
-        response = self._get('inventory/systems/%s/configuration_descriptor' % \
-            system.pk,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, '<configuration/>')
-
-        self.mgr.sysMgr.setObservedTopLevelItems(system,
-            set([ 'group-foo=/blah@rpl:1/12345.67:1-1-1[is: x86_64]' ]))
-
-        response = self._get('inventory/systems/%s/configuration_descriptor' % \
-            system.pk,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-
-        descr = descriptor.ConfigurationDescriptor(fromStream=response.content)
-
     def testGetSystemLogAuth(self):
         """
         Ensure requires auth but not admin
@@ -2566,8 +1948,7 @@ class SystemsTestCase(XMLTestCase):
             [ jobId, system2.pk ])
 
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            bootUuid=bootUuid, targetSystemId=targetSystemId,
-            survey=testsxml.survey_input_xml)
+            bootUuid=bootUuid, targetSystemId=targetSystemId)
 
         xml = """\
 <system>
@@ -2575,7 +1956,6 @@ class SystemsTestCase(XMLTestCase):
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <boot_uuid>%(bootUuid)s</boot_uuid>
   <target_system_id>%(targetSystemId)s</target_system_id>
-  %(survey)s
 </system>
 """ % params
         etreeModel = etree.fromstring(xml)
@@ -2586,12 +1966,9 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(model.pk, system.pk)
         self.failUnlessEqual(model.target_system_id, targetSystemId)
 
-        # Fetch system, make sure we have a survey for it
+        # FIXME: this used to look at surveys to confirm deduplication but
+        # surveys were deleted
         system = self.mgr.addSystem(model)
-        self.failUnlessEqual(
-            [ x.uuid for x in system.surveys.all() ],
-            [ '1234', ])
-        self.failUnlessEqual(system.latest_survey.uuid, '1234')
 
     def testLoadFromObjectEventUuid(self):
         localUuid = 'localuuid001'
@@ -2618,15 +1995,13 @@ class SystemsTestCase(XMLTestCase):
         generatedUuid = 'generateduuid001'
         eventUuid = 'eventuuid001'
         params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            eventUuid=eventUuid, zoneId=self.localZone.zone_id,
-            survey=testsxml.survey_input_xml)
+            eventUuid=eventUuid, zoneId=self.localZone.zone_id)
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
   <event_uuid>%(eventUuid)s</event_uuid>
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
-  %(survey)s
 </system>
 """ % params
 
@@ -2654,12 +2029,7 @@ class SystemsTestCase(XMLTestCase):
         # unicode (xobj types confuse database drivers)
         self.failUnlessEqual(type(model.event_uuid), str)
 
-        # Fetch system, make sure we have a survey for it
         system = self.mgr.addSystem(model)
-        self.assertEquals(
-            [ x.uuid for x in system.surveys.all() ],
-            [ '1234', ])
-        self.assertEquals(system.latest_survey.uuid, '1234')
 
     def testDedupByEventUuidWithRemoval1(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=False)
@@ -2679,12 +2049,7 @@ class SystemsTestCase(XMLTestCase):
         response = self._put(url, data=xml, headers=headers)
         self.assertEquals(response.status_code, 200)
 
-        # Make sure survey got saved
         system = system.__class__.objects.get(system_id=system.system_id)
-        self.assertEquals(
-            [ x.uuid for x in system.surveys.all() ],
-            [ '1234', ])
-        self.assertEquals(system.latest_survey.uuid, '1234')
 
     def testDedupByEventUuidWithRemoval2(self):
         system, systemRemoved = self._testDedupByEventUuidWithRemoval(targetSystemFirst=True)
@@ -3108,25 +2473,6 @@ class SystemsTestCase(XMLTestCase):
         self.assertXMLEquals(creds.to_xml(),
             '<credentials id="/api/v1/inventory/systems/%s/credentials"/>' %
                 system.pk)
-
-    def testGetConfiguration(self):
-        system = self.newSystem(name="blah")
-        system.configuration = configuration = "<configuration><a>a</a><b>b</b></configuration>"
-        system.save()
-        url = "inventory/systems/%s/configuration" % system.pk
-        response = self._get(url,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, configuration)
-
-        config = self.mgr.getSystemConfiguration(system.pk)
-        self.assertXMLEquals(config, configuration)
-
-    def testGetConfigurationWhenMissing(self):
-        system = self.newSystem(name="blah")
-        system.save()
-        config = self.mgr.getSystemConfiguration(system.pk)
-        self.assertXMLEquals(config, '<configuration/>')
 
     def testMarkSystemShutdown(self):
         p = dict(local_uuid="abc", generated_uuid="def")
@@ -3702,48 +3048,6 @@ class SystemEventTestCase(XMLTestCase):
     #    system_event = models.SystemEvent.objects.get(pk=1)
     #    # TODO: looser checking of XML returns
 
-    def testIncompatibleEvents(self):
-        def mock__dispatchSystemEvent(self, event):
-            system = event.system
-            job_uuid = str(random.random())
-            job = jobmodels.Job(job_uuid=job_uuid, job_token=job_uuid*2,
-                job_state=jobmodels.JobState.objects.get(name='Running'),
-                job_type=event.event_type)
-            job.save()
-            systemJob = models.SystemJob(job=job, system=system,
-                event_uuid=str(random.random()))
-            systemJob.save()
-
-        rbuildermanager.SystemManager._dispatchSystemEvent = mock__dispatchSystemEvent
-
-        # Clear system events
-        [j.delete() for j in self.system.systemjob_set.all()]
-
-        url = 'inventory/systems/%d/system_events/' % self.system.system_id
-
-        # Schedule an update, should succeed
-        response = self._post(url,
-            data=testsxml.system_event_update_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue('<fault>' not in response.content)
-
-        # Schedule a shutdown, should fail
-        response = self._post(url,
-            data=testsxml.system_event_immediate_shutdown_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 409)
-        self.assertTrue('<fault>' in response.content)
-
-        # Clear system events
-        [j.delete() for j in self.system.systemjob_set.all()]
-
-        # Schedule a registration, should succeed
-        response = self._post(url,
-            data=testsxml.system_event_immediate_registration_post_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue('<fault>' not in response.content)
 
 class SystemEventProcessingTestCase(XMLTestCase):
 
@@ -4067,100 +3371,6 @@ class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
             [])
 
-    def testDispatchConfigurationCim(self):
-        pass
-        #self._mockUuid()
-        #cimInt = models.Cache.get(models.ManagementInterface,
-        #    name=models.ManagementInterface.CIM)
-        #self.system2.management_interface = cimInt
-        #configDict = dict(a='1', b='2')
-        #self.system2.configuration = self.mgr.sysMgr.marshalCredentials(
-        #    configDict)
-        #self.system2.save()
-        #self.mgr.sysMgr.scheduleSystemConfigurationEvent(self.system2)
-        #transaction.commit()
-
-        #repClient = self.mgr.repeaterMgr.repeaterClient
-        #cimParams = repClient.CimParams
-        #resLoc = repClient.ResultsLocation
-
-        #eventUuid = models.SystemJob.objects.all()[0].event_uuid
-
-        # possibly need to fix results -- TBD -- otherwise too low level of a test?
-
-        #self.failUnlessEqual(repClient.getCallList(),
-        #    [
-        #        ('configuration_cim',
-        #            (
-        #                cimParams(host='3.3.3.3',
-        #                    port=None,
-        #                    eventUuid=eventUuid,
-        #                    clientKey=testsxml.pkey_pem,
-        #                    clientCert=testsxml.x509_pem,
-        #                    requiredNetwork='3.3.3.3',
-        #                    targetName=None,
-        #                    targetType=None,
-        #                    instanceId=None,
-        #                    launchWaitTime=1200),
-        #            ),
-        #            dict(
-        #                zone='Local rBuilder',
-        #                configuration='<configuration><a>1</a><b>2</b></configuration>',
-        #                uuid='really-unique-uuid-002',
-        #                resultsLocation=resLoc(
-        #                    path='/api/v1/inventory/systems/%s' % self.system2.pk,
-        #                    port=80),
-        #            ),
-        #        ),
-        #    ])
-
-    def testPostSystemWmiManagementInterface(self):
-
-        # Register a WMI-managed system, and don't post credentials.
-        # Make sure the system is in the proper state
-        # (NON_RESPONSIVE_CREDENTIALS) and no jobs are pending.
-        xmlTempl = """\
-<system>
-  <network_address>
-    <address>172.16.175.240</address>
-    <pinned>false</pinned>
-  </network_address>
-  <name>WmiSystem</name>
-  <management_interface href="/api/v1/inventory/management_interfaces/%(mgmtInterfaceId)s"/>
-  <managing_zone href="/api/v1/inventory/zones/1"/>
-</system>
-"""
-        mgmtIface = self.mgr.wmiManagementInterface()
-        data = xmlTempl % dict(localUuid="aaa", generatedUuid="bbb",
-            mgmtInterfaceId=mgmtIface.management_interface_id)
-        response = self._post('inventory/systems/', data=data)
-        self.failUnlessEqual(response.status_code, 200)
-        doc = xobj.parse(response.content)
-        systemId = int(doc.system.system_id)
-        system = models.System.objects.get(system_id=systemId)
-        self.failUnlessEqual(system.current_state.name, 'unmanaged-credentials')
-        # No jobs
-        self.failUnlessEqual(len(system.systemjob_set.all()), 0)
-
-        self.disablePostCommitActions()
-
-        # Now set credentials
-        url = "inventory/systems/%d/credentials" % system.system_id
-        response = self._post(url,
-            data=testsxml.credentials_xml,
-            username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-
-        system = models.System.objects.get(system_id=system.system_id)
-
-        # We want a queued registration job
-        self.failUnlessEqual(
-            [x.job.job_state.name for x in system.systemjob_set.all()],
-            ['Queued'])
-
-        self.failUnlessEqual(len(self.devNullList), 1)
-        self.failUnlessEqual(system.current_state.name, 'unmanaged')
-
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
     fixtures = ['targetusers', 'targets']
@@ -4459,7 +3669,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         self.failUnlessEqual(system.description, params['description'])
 
     def testAddLaunchedSystem2(self):
-        systemConfiguration = "<system_configuration><a>1</a><b>2</b></system_configuration>"
         user2 = usersmodels.User.objects.get(user_name='JeanValjean2')
         self.mgr.user = user2
         params = dict(
@@ -4480,14 +3689,11 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         system = self.mgr.addLaunchedSystem(system,
             targetName=self.tgt2.name,
             targetType=self.tgt2.target_type,
-            configurationData=systemConfiguration,
             )
         for k, v in params.items():
             self.failUnlessEqual(getattr(system, k), v)
 
         savedsystem = models.System.objects.get(pk=system.pk)
-        self.assertXMLEquals(savedsystem.configuration, systemConfiguration)
-        self.assertEquals(bool(savedsystem.configuration_set), True)
 
         # System registers and passes a boot uuid
         params = dict(localUuid=str(self.uuid4()),
@@ -4512,10 +3718,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         url = "inventory/systems"
         response = self._post(url, data=xml)
         self.assertEquals(response.status_code, 200)
-
-        # We should have a job
-        self.assertEquals([ j.job_type.name for j in savedsystem.jobs.all() ],
-            ['system apply configuration'])
 
 
 class CollectionTest(XMLTestCase):
@@ -4600,93 +3802,6 @@ class CollectionTest(XMLTestCase):
         self.assertEquals(systems.next_page,
             'http://testserver/api/v1/query_sets/5/all;start_index=10;limit=10;order_by=-name')
         self.assertEquals(systems.order_by, '-name')
-
-    def testQueryTree(self):
-        from mint.django_rest.rbuilder.modellib import collections
-        q = collections.AndOperator(
-               # port=8080 for a given type of configurator
-               collections.AndOperator(
-                   collections.EqualOperator('latest_survey.survey_config.type', '0'),
-                   collections.EqualOperator('latest_survey.survey_config.value', '8080'),
-                   collections.LikeOperator('latest_survey.survey_config.key', '/port'),
-               ),
-               # name has substring either a or not e (super arbitrary) 
-               collections.OrOperator(
-                   collections.LikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'a'),
-                   collections.NotLikeOperator('latest_survey.rpm_packages.rpm_package_info.name', 'e'),
-               )
-        )
-
-        # shorter form!
-        q2 = collections.AndOperator(
-               collections.ContainsOperator('latest_survey.survey_config', collections.AndOperator(
-                   collections.EqualOperator('type', '0'),
-                   collections.EqualOperator('value', '8080'),
-                   collections.LikeOperator('key', '/port'),
-               )),
-               collections.ContainsOperator('latest_survey.rpm_packages.rpm_package_info', collections.OrOperator(
-                   collections.LikeOperator('name', 'a'),
-                   collections.NotLikeOperator('name', 'e'),
-               ))
-        )
-
-        test1 = 'AND(AND(EQUAL(latest_survey.survey_config.type,0),EQUAL(latest_survey.survey_config.value,8080),LIKE(latest_survey.survey_config.key,/port)),OR(LIKE(latest_survey.rpm_packages.rpm_package_info.name,a),NOT_LIKE(latest_survey.rpm_packages.rpm_package_info.name,e)))'
-        test2 = 'AND(CONTAINS(latest_survey.survey_config,AND(EQUAL(type,0),EQUAL(value,8080),LIKE(key,/port))),CONTAINS(latest_survey.rpm_packages.rpm_package_info,OR(LIKE(name,a),NOT_LIKE(name,e))))'
-        self.assertEquals(q.asString(), test1)
-        self.assertEquals(q2.asString(), test2)
-
-        # test the queryset/SQL builder engine
-        djQs = collections.filterTree(models.System.objects.all(), q).query
-        djQs2 = collections.filterTree(models.System.objects.all(), q2).query
-        self.assertEquals(str(djQs),str(djQs2))
-
-        # Lexer...
-        lexer = collections.Lexer()
-        tree = lexer.scan(test1)
-        self.assertEquals(tree.asString(), test1)
-        self.assertEquals(tree, q)
-
-        # Simpler tests
-        tests = [
-            (collections.EqualOperator('key', 'port'), 'EQUAL(key,port)'),
-            (collections.EqualOperator('key', r'a "quoted" value'),
-                r'EQUAL(key,"a \"quoted\" value")'),
-            (collections.EqualOperator('key', r'Extra ( and ), backslash \ stray \n\r and "'),
-                r'EQUAL(key,"Extra ( and ), backslash \\ stray \\n\\r and \"")'),
-            # No need to add quotes around a word with \ in it
-            (collections.EqualOperator('key', r'with \ within'),
-                r'EQUAL(key,with \\ within)'),
-        ]
-        for q, strrepr in tests:
-            tree = lexer.scan(strrepr)
-            self.assertEquals(tree, q)
-            self.assertEquals(q.asString(), strrepr)
-            self.assertEquals(tree.asString(), strrepr)
-
-        # One-way tests - extra quotes that get stripped out etc
-        tests = [
-            (collections.EqualOperator('key', r'with \ within'),
-                r'EQUAL(key,"with \\ within")'),
-            (collections.EqualOperator('key', 'port'), 'EQUAL(key,"port")'),
-            (collections.EqualOperator('key', ' value with spaces '),
-                ' EQUAL ( key ,  " value with spaces "  )'),
-        ]
-        for q, strrepr in tests:
-            tree = lexer.scan(strrepr)
-            self.assertEquals(tree, q)
-
-        # Errors
-        tests = [
-            ('EQUAL(key,"port)', 'Closing quote not found'),
-            ('abc', 'Unable to parse abc'),
-            ('FOO(key,"port)', 'Unknown operator FOO'),
-            ('EQUAL(key,port)junk', "Garbage found at the end of the expression: 'junk'"),
-            ('EQUAL(key,port', 'Unable to parse EQUAL(key,port'),
-        ]
-        InvalidData = collections.errors.InvalidData
-        for strrepr, err in tests:
-            e = self.assertRaises(InvalidData, lexer.scan, strrepr)
-            self.assertEquals(e.msg, err)
 
     def testFilterBy(self):
         systems = self.xobjResponse(
