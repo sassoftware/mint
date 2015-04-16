@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import constants
-from mint import searcher
 from urllib import quote
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay

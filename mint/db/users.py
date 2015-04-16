@@ -11,7 +11,6 @@ from conary.lib.digestlib import md5
 from conary.repository.netrepos.netauth import nameCharacterSet
 from conary.repository.netrepos.auth_tokens import ValidPasswordToken
 
-from mint import searcher
 from mint import userlisting
 from mint.mint_error import (DuplicateItem, InvalidUsername,
         IllegalUsername, UserAlreadyExists, ItemNotFound)
@@ -171,44 +170,6 @@ class UsersTable(database.KeyedTable):
         else:
             self.db.commit()
         return userId
-
-    def search(self, terms, limit, offset, includeInactive=False):
-        """
-        Returns a list of users matching L{terms} of length L{limit}
-        starting with item L{offset}.
-        @param terms: Search terms
-        @param offset: Count at which to begin listing
-        @param limit:  Number of items to return
-        @param includeInactive: set True to include users needing confirmations
-        @return:       a list of the requested items.
-                       each entry will contain eight bits of data:
-                        The userId for use in drilling down,
-                        The user name,
-                        The user's name
-                        the display e-mail
-                        the user's blurb
-                        time created
-                        time last accessed
-                        account active flag
-        """
-        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb',
-                   'timeCreated', 'timeAccessed', 'active']
-        searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
-
-        if includeInactive:
-            whereClause = searcher.Searcher.where(terms, searchcols)
-        else:
-            whereClause = searcher.Searcher.where(terms, searchcols, "AND active=1")
-
-        ids, count =  database.KeyedTable.search( \
-            self, columns, 'Users', whereClause,
-            searcher.Searcher.order(terms, searchcols, 'userName'), None,
-            limit, offset)
-        for i, x in enumerate(ids[:]):
-            ids[i] = list(x)
-            ids[i][4] = searcher.Searcher.truncate(x[4], terms)
-
-        return ids, count
 
     def getUsersWithEmail(self):
         """
