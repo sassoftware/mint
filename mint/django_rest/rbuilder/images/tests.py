@@ -521,8 +521,6 @@ class ImagesTestCase(RbacEngine):
     <target_system_id>long-id-1</target_system_id>
     <target_system_name>target-system-name-1</target_system_name>
     <target_system_description>target-system-description-1</target_system_description>
-    <ssl_client_certificate>ssl-client-certificate-1</ssl_client_certificate>
-    <ssl_client_key>ssl-client-key-1</ssl_client_key>
     <targetType>vmware</targetType>
     <targetName>tgtname</targetName>
     <dnsName>1.2.3.4</dnsName>
@@ -531,8 +529,6 @@ class ImagesTestCase(RbacEngine):
     <target_system_id>long-id-2</target_system_id>
     <target_system_name>target-system-name-2</target_system_name>
     <target_system_description>target-system-description-2</target_system_description>
-    <ssl_client_certificate>ssl-client-certificate-2</ssl_client_certificate>
-    <ssl_client_key>ssl-client-key-2</ssl_client_key>
     <targetType>vmware</targetType>
     <targetName>tgtname</targetName>
     <dnsName>1.2.3.5</dnsName>
@@ -553,8 +549,6 @@ class ImagesTestCase(RbacEngine):
         systemIds = [ x.system_id for x in systems ]
         expNetworks = [ '1.2.3.4', '1.2.3.5', ]
 
-        trvSpec = 'troveName0=/cydonia.eng.rpath.com@rpath:cydonia-1-devel/1317221453.365:1-0-1[~!xen is: x86(i486,i586,i686)]'
-
         for i, (systemId, expNetwork) in enumerate(zip(systemIds, expNetworks)):
             system = invmodels.System.objects.get(system_id=systemId)
             network = system.networks.all()[0]
@@ -563,16 +557,6 @@ class ImagesTestCase(RbacEngine):
             self.failUnlessEqual(system.project_id, img.project_id)
             self.failUnlessEqual(system.project_branch_id, img.project_branch_id)
             self.failUnlessEqual(system.project_branch_stage_id, img.project_branch_stage_id)
-            self.failUnlessEqual(
-                [ x.trove_spec for x in system.desired_top_level_items.all() ],
-                [ trvSpec ])
-            self.failUnlessEqual(
-                [ x.trove_spec for x in system.observed_top_level_items.all() ],
-                [ trvSpec ])
-            self.failUnlessEqual(system._ssl_client_certificate,
-                'ssl-client-certificate-%s' % (i+1))
-            self.failUnlessEqual(system._ssl_client_key,
-                'ssl-client-key-%s' % (i+1))
 
         # Make sure the systems were associated with the job
         self.assertEquals(sorted(x.system.target_system_id

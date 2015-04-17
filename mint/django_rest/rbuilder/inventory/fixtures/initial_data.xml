@@ -50,9 +50,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid"><None></None></field>
         <field type="CharField" name="local_uuid"><None></None></field>
-        <field type="CharField" name="_ssl_client_certificate"><None></None></field>
-        <field type="CharField" name="_ssl_client_key"><None></None></field>
-        <field type="CharField" name="ssl_server_certificate"><None></None></field>
         <field to="users.User" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>

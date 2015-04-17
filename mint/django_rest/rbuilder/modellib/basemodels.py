@@ -22,8 +22,6 @@ from django.db.utils import IntegrityError
 from django.core import exceptions
 from django.core import urlresolvers 
 
-from copy import deepcopy
-
 from mint.django_rest import timeutils
 from mint.django_rest.rbuilder import errors
 from mint.lib import mintutils
@@ -955,9 +953,6 @@ class SystemsManager(StubManager):
     pass
 
 class ManagementNodesManager(SystemsManager):
-    pass
-
-class InstalledSoftwareManager(SystemsManager):
     pass
 
 class ProductsManager(BaseManager):

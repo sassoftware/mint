@@ -462,14 +462,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.description = 'testsystemdescription'
         system.local_uuid = 'testsystemlocaluuid'
         system.generated_uuid = 'testsystemgenerateduuid'
-        system._ssl_client_certificate = 'testsystemsslclientcertificate'
-        system._ssl_client_key = 'testsystemsslclientkey'
-        system.ssl_server_certificate = 'testsystemsslservercertificate'
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
             invmodels.SystemState.REGISTERED)
         system.managing_zone = self.localZone
-        system.management_interface = invmodels.ManagementInterface.objects.get(pk=1)
         system.system_type = invmodels.SystemType.objects.get(pk=1)
         system.save()
 
@@ -500,14 +496,10 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         management_node.description = 'test management node desc' + suffix
         management_node.local_uuid = 'test management node luuid' + suffix
         management_node.generated_uuid = 'test management node guuid' + suffix
-        management_node._ssl_client_certificate = 'test management node client cert' + suffix
-        management_node._ssl_client_key = 'test management node client key' + suffix
-        management_node.ssl_server_certificate = 'test management node server cert' + suffix
         management_node.registered = True
         management_node.current_state = self.mgr.sysMgr.systemState(
             invmodels.SystemState.REGISTERED)
         management_node.local = True
-        management_node.management_interface = invmodels.ManagementInterface.objects.get(pk=1)
         management_node.type = invmodels.SystemType.objects.get(pk=2)
         management_node.node_jid = nodeJid
         management_node.save()
@@ -529,9 +521,6 @@ class XMLTestCase(TestCase, testcase.MockMixIn):
         system.description = 'testsystemdescription2'
         system.local_uuid = 'testsystemlocaluuid2'
         system.generated_uuid = 'testsystemgenerateduuid2'
-        system._ssl_client_certificate = 'testsystemsslclientcertificate2'
-        system._ssl_client_key = 'testsystemsslclientkey2'
-        system.ssl_server_certificate = 'testsystemsslservercertificate2'
         system.registered = True
         system.current_state = self.mgr.sysMgr.systemState(
             invmodels.SystemState.REGISTERED)

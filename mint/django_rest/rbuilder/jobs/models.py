@@ -367,20 +367,6 @@ class EventType(modellib.XObjIdModel):
     priority = D(models.SmallIntegerField(db_index=True), "the event type priority where > priority wins")
     resource_type = D(models.TextField(), "the resource type for the job")
 
-    @property
-    def requiresManagementInterface(self):
-        if self.name in \
-            [self.SYSTEM_REGISTRATION,
-             self.SYSTEM_SHUTDOWN,
-             self.SYSTEM_SHUTDOWN_IMMEDIATE,
-             self.SYSTEM_UPDATE,
-             self.SYSTEM_ASSIMILATE,
-             self.SYSTEM_CONFIGURE
-            ]:
-            return True
-        else:
-            return False
-
     @classmethod
     def makeAction(cls, jobTypeName, actionName=None, actionDescription=None,
             actionKey=None,

@@ -161,9 +161,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-210-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-210-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-210-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-210-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-210-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -192,9 +189,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-211-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-211-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-211-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-211-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-211-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -223,9 +217,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-212-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-212-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-212-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-212-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-212-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -254,9 +245,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-213-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-213-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-213-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-213-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-213-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -285,9 +273,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-214-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-214-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-214-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-214-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-214-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -316,9 +301,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-215-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-215-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-215-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-215-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-215-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -347,9 +329,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-216-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-216-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-216-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-216-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-216-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>
@@ -378,9 +357,6 @@
         <field type="DateTimeField" name="registration_date"><None></None></field>
         <field type="CharField" name="generated_uuid">system-217-generated-uuid</field>
         <field type="CharField" name="local_uuid">system-217-local-uuid</field>
-        <field type="CharField" name="_ssl_client_certificate">system-217-ssl-client-certificate</field>
-        <field type="CharField" name="_ssl_client_key">system-217-ssl-client-key</field>
-        <field type="CharField" name="ssl_server_certificate">system-217-ssl-server-certificate</field>
         <field to="users.users" name="launching_user" rel="ManyToOneRel"><None></None></field>
         <field to="inventory.systemstate" name="current_state" rel="ManyToOneRel">1</field>
         <field to="inventory.zone" name="managing_zone" rel="ManyToOneRel">1</field>

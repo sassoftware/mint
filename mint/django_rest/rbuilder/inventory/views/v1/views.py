@@ -208,41 +208,7 @@ class InventoryManagementNodeService(BaseInventoryService):
     #     self.mgr.synchronizeZones(management_nodes)
     #     return self.mgr.getManagementNodes()
 
-class InventoryManagementInterfacesService(BaseInventoryService):
-    
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request):
-        return self.get()
-    
-    def get(self):
-        return self.mgr.getManagementInterfaces()
 
-class InventoryManagementInterfaceService(BaseInventoryService):
-
-    @access.anonymous
-    @return_xml
-    def rest_GET(self, request, management_interface_id):
-        return self.get(management_interface_id)
-
-    def get(self, management_interface_id):
-        return self.mgr.getManagementInterface(management_interface_id)
-        
-    # FIXME: consider removing support
-    # this may be useful for tests but will likely break your
-    # rBuilder, so we shouldn't allow it, right?
-    @access.admin
-    @requires('management_interface')
-    @return_xml
-    def rest_PUT(self, request, management_interface_id, management_interface):
-        old = self.get(management_interface_id)
-        if not old:
-            return HttpResponseNotFound()
-        if int(management_interface_id) != management_interface.pk:
-            return HttpResponseNotFound()
-        self.mgr.updateManagementInterface(management_interface)
-        return self.get(management_interface_id)
-    
 class InventorySystemTypesService(BaseInventoryService):
 
     @access.anonymous
@@ -538,37 +504,7 @@ class InventorySystemEventService(BaseInventoryService):
     def get(self, system_event_id):
         return self.mgr.getSystemEvent(system_event_id)
 
-class InventorySystemCredentialsServices(BaseInventoryService):
 
-    # TODO -- is this too permissive for reading credentials?
-    @rbac(rbac_can_read_system_id)
-    @return_xml
-    def rest_GET(self, request, system_id):
-        return self.get(system_id)
-
-    @rbac(rbac_can_write_system_id)
-    @return_xml
-    @requires('credentials')
-    def rest_PUT(self, request, system_id, credentials):
-        credsDict = {}
-        for k, v in credentials.__dict__.items():
-            if not k.startswith('_'):
-                credsDict[k] = v
-        return self.mgr.addSystemCredentials(system_id, credsDict)
-
-    @rbac(rbac_can_write_system_id)
-    @return_xml
-    @requires('credentials')
-    def rest_POST(self, request, system_id, credentials):
-        credsDict = {}
-        for k, v in credentials.__dict__.items():
-            if not k.startswith('_'):
-                credsDict[k] = v
-        return self.mgr.addSystemCredentials(system_id, credsDict)
-
-    def get(self, system_id):
-        return self.mgr.getSystemCredentials(system_id)
-    
 class InventorySystemConfigurationServices(BaseInventoryService):
 
     @rbac(rbac_can_read_system_id)

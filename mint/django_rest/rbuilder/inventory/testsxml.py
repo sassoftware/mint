@@ -9,7 +9,6 @@ inventory_xml = """\
   <log id="http://testserver/api/v1/inventory/log"/>
   <zones id="http://testserver/api/v1/inventory/zones"/>
   <management_nodes id="http://testserver/api/v1/inventory/management_nodes"/>
-  <management_interfaces id="http://testserver/api/v1/inventory/management_interfaces"/>
   <system_types id="http://testserver/api/v1/inventory/system_types"/>
   <systems id="http://testserver/api/v1/inventory/systems"/>
   <system_states id="http://testserver/api/v1/inventory/system_states"/>
@@ -337,46 +336,6 @@ zone_put_xml = """\
 </zone>
 """
 
-management_interfaces_xml="""\
-<?xml version="1.0"?>
-<management_interfaces>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/4">
-    <description>bar</description>
-    <management_interface_id>4</management_interface_id>
-    <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-    <credentials_descriptor><foo/></credentials_descriptor>
-    <port>8000</port>
-    <name>foo</name>
-    <credentials_readonly/>
-  </management_interface>
-</management_interfaces>
-"""
-
-management_interface_xml="""\
-<?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/4">
-  <description>bar</description>
-  <management_interface_id>4</management_interface_id>
-  <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-  <credentials_descriptor><foo/></credentials_descriptor>
-  <port>8000</port>
-  <name>foo</name>
-  <credentials_readonly/>
-</management_interface>
-"""
-
-management_interface_put_xml="""\
-<?xml version="1.0"?>
-<management_interface id="http://testserver/api/v1/inventory/management_interfaces/4/">
-  <systems/>
-  <description>bar</description>
-  <management_interface_id>4</management_interface_id>
-  <created_date>2010-10-06T00:11:27.828160+00:00</created_date>
-  <credentials_descriptor><foo/></credentials_descriptor>
-  <port>123</port>
-  <name>thisnameshouldnotstick</name>
-</management_interface>
-"""
 
 system_types_xml="""\
 <?xml version="1.0"?>
@@ -421,9 +380,7 @@ system_type_systems_xml="""
 <systems count="1" end_index="0" filter_by="" full_collection="http://testserver/api/v1/inventory/systems" id="http://testserver/api/v1/inventory/systems;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/3">
     <source_image/>
-    <agent_port>5989</agent_port>
     <project/>
-    <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <description>Registered</description>
       <name>registered</name>
@@ -444,7 +401,6 @@ system_type_systems_xml="""
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
     <project_branch/>
-    <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
     <network_address>
@@ -466,8 +422,6 @@ system_type_systems_xml="""
       </network>
     </networks>
     <registration_date/>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-    <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
@@ -637,9 +591,7 @@ management_nodes_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_nodes>
   <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-    <agent_port>5989</agent_port>
     <project/>
-    <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <registration_date/>
     <generated_uuid>test management node guuid</generated_uuid>
@@ -665,8 +617,6 @@ management_nodes_xml = """\
       </network>
     </networks>
     <node_jid>superduperjid2@rbuilder.rpath</node_jid>
-    <ssl_client_certificate>test management node client cert</ssl_client_certificate>
-    <ssl_server_certificate>test management node server cert</ssl_server_certificate>
     <project_branch_stage/>
     <managing_zone id="http://testserver/api/v1/inventory/zones/2">Local Zone</managing_zone>
     <hostname/>
@@ -693,7 +643,6 @@ management_nodes_xml = """\
     <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
     <local_uuid>test management node luuid</local_uuid>
     <project_branch/>
-    <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
       <created_date>%s</created_date>
       <description>Registered</description>
@@ -709,9 +658,7 @@ management_nodes_xml = """\
 management_node_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <agent_port>5989</agent_port> 
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -737,8 +684,6 @@ management_node_xml = """\
     </network>
   </networks>
   <node_jid>superduperjid2@rbuilder.rpath</node_jid>
-  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
-  <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/2">Local Zone</managing_zone>
   <hostname/>
@@ -765,7 +710,6 @@ management_node_xml = """\
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Registered</description>
@@ -779,7 +723,6 @@ management_node_xml = """\
 management_node_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
-  <ssl_client_key>test management node client key</ssl_client_key>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -796,8 +739,6 @@ management_node_post_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
-  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
-  <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <project_branch_stage/>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1"/>
@@ -806,19 +747,15 @@ management_node_post_xml = """\
   <system_id>1</system_id>
   <launching_user/>
   <local>true</local>
-  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <local_uuid>test management node luuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
 </management_node>"""
 
 management_node_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <agent_port>5989</agent_port> 
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -845,8 +782,6 @@ management_node_post_response_xml = """\
   </networks>
   <zone id="http://testserver/api/v1/inventory/zones/1"/>
   <node_jid>abcd</node_jid>
-  <ssl_client_certificate/>
-  <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
@@ -872,7 +807,6 @@ management_node_post_response_xml = """\
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Registered</description>
@@ -886,7 +820,6 @@ management_node_post_response_xml = """\
 management_node_zone_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node>
-  <ssl_client_key>test management node client key</ssl_client_key>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
   <networks>
@@ -903,29 +836,23 @@ management_node_zone_post_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
-  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
-  <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <project_branch_stage/>
   <hostname>myhostname</hostname>
   <name>test management node</name>
   <system_id>1</system_id>
   <launching_user/>
   <local>true</local>
-  <ssl_client_certificate>test management node client cert</ssl_client_certificate>
   <description>test management node desc</description>
   <zone id="http://testserver/api/v1/inventory/zones/2"/>
   <local_uuid>test management node luuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1"/>
 </management_node>"""
 
 management_node_zone_post_response_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <management_node id="http://testserver/api/v1/inventory/management_nodes/3">
-  <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/management_nodes/3/credentials"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <registration_date/>
   <generated_uuid>test management node guuid</generated_uuid>
@@ -951,8 +878,6 @@ management_node_zone_post_response_xml = """\
     </network>
   </networks>
   <node_jid>abcd</node_jid>
-  <ssl_client_certificate/>
-  <ssl_server_certificate>test management node server cert</ssl_server_certificate>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname>myhostname</hostname>
@@ -979,7 +904,6 @@ management_node_zone_post_response_xml = """\
   <system_ptr id="http://testserver/api/v1/inventory/systems/3"/>
   <local_uuid>test management node luuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <created_date>%s</created_date>
     <description>Registered</description>
@@ -1000,9 +924,7 @@ systems_xml = """\
 <systems count="2" end_index="1" filter_by="" full_collection="http://testserver/api/v1/query_sets/5/all" id="http://testserver/api/v1/query_sets/5/all;start_index=0;limit=10" limit="10" next_page="" num_pages="1" order_by="" per_page="10" previous_page="" start_index="0">
   <system id="http://testserver/api/v1/inventory/systems/2">
     <actions/>
-    <agent_port/>
     <project/>
-    <credentials id="http://testserver/api/v1/inventory/systems/2/credentials"/>
     <registration_date/>
     <created_date>2010-08-18T22:28:26+00:00</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/1">
@@ -1025,7 +947,6 @@ systems_xml = """\
     <launching_user/>
     <local_uuid/>
     <project_branch/>
-    <management_interface/>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>rPath Update Service</name>
     <network_address>
@@ -1047,8 +968,6 @@ systems_xml = """\
         <pinned/>
       </network>
     </networks>
-    <ssl_client_certificate/>
-    <ssl_server_certificate/>
     <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
     <system_id>2</system_id>
@@ -1063,9 +982,7 @@ systems_xml = """\
   </system>
   <system id="http://testserver/api/v1/inventory/systems/3">
     <actions/>
-    <agent_port>5989</agent_port>
     <project/>
-    <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
     <registration_date/>
     <created_date>%s</created_date>
     <current_state id="http://testserver/api/v1/inventory/system_states/3">
@@ -1088,7 +1005,6 @@ systems_xml = """\
     <launching_user/>
     <local_uuid>testsystemlocaluuid</local_uuid>
     <project_branch/>
-    <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>testsystemname</name>
     <network_address>
@@ -1110,8 +1026,6 @@ systems_xml = """\
         <pinned/>
       </network>
     </networks>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-    <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <project_branch_stage/>
     <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
     <system_id>3</system_id>
@@ -1131,7 +1045,6 @@ systems_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <systems>
   <system id="http://testserver/api/v1/inventory/systems/1">
-    <ssl_client_key>testsystemsslclientkey</ssl_client_key>
     <registration_date/>
     <generated_uuid>testsystemgenerateduuid</generated_uuid>
     <networks>
@@ -1147,11 +1060,8 @@ systems_put_xml = """\
         <pinned/>
       </network>
     </networks>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-    <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <project_branch_stage/>
     <launch_date/>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
     <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
     <target_system_id/>
@@ -1163,7 +1073,6 @@ systems_put_xml = """\
     <name>testsystemname</name>
     <local_uuid>testsystemlocaluuid</local_uuid>
     <project_branch/>
-    <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/2">
       <description>Registered</description>
       <name>registered</name>
@@ -1173,7 +1082,6 @@ systems_put_xml = """\
     <source_image/>
   </system>
   <system id="http://testserver/api/v1/inventory/systems/2">
-    <ssl_client_key>testsystemsslclientkey</ssl_client_key>
     <registration_date/>
     <generated_uuid>testsystem2generateduuid</generated_uuid>
     <networks>
@@ -1189,11 +1097,8 @@ systems_put_xml = """\
         <pinned/>
       </network>
     </networks>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-    <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
     <project_branch_stage/>
     <launch_date/>
-    <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
     <description>testsystemdescription</description>
     <system_log id="http://testserver/api/v1/inventory/systems/2/system_log"/>
     <target_system_id/>
@@ -1205,7 +1110,6 @@ systems_put_xml = """\
     <name>testsystemname</name>
     <local_uuid>testsystem2localuuid</local_uuid>
     <project_branch/>
-    <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
     <current_state id="http://testserver/api/v1/inventory/system_states/2">
       <description>Registered</description>
       <name>registered</name>
@@ -1216,56 +1120,11 @@ systems_put_xml = """\
   </system>
 </systems>"""
 
-systems_put_mothball_xml = """\
-<?xml version="1.0" encoding="UTF-8"?>
-<system id="http://testserver/api/v1/inventory/systems/3">
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
-  <registration_date/>
-  <generated_uuid>testsystemgenerateduuid</generated_uuid>
-  <networks>
-    <network id="http://testserver/api/v1/inventory/networks/2">
-      <active/>
-      <device_name>eth0</device_name>
-      <dns_name>testnetwork.example.com</dns_name>
-      <ip_address>1.1.1.1</ip_address>
-      <ipv6_address/>
-      <netmask>255.255.255.0</netmask>
-      <network_id>1</network_id>
-      <port_type>lan</port_type>
-      <pinned/>
-    </network>
-  </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
-  <project_branch_stage/>
-  <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <description>testsystemdescription</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
-  <target_system_id/>
-  <target_system_name/>
-  <target_system_description/>
-  <target_system_state/>
-  <system_events id="http://testserver/api/v1/inventory/systems/1/system_events"/>
-  <name>testsystemname</name>
-  <local_uuid>testsystemlocaluuid</local_uuid>
-  <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
-  <current_state id="http://testserver/api/v1/inventory/system_states/12">
-    <description>Retired</description>
-    <name>mothballed</name>
-    <system_state_id>12</system_state_id>
-  </current_state>
-  <source_image/>
-</system>"""
-
 system_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
   <actions/>
-  <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
     <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
@@ -1297,8 +1156,6 @@ system_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <system_id>3</system_id>
   <launching_user/>
@@ -1315,7 +1172,6 @@ system_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Registered</description>
     <name>registered</name>
@@ -1329,7 +1185,6 @@ system_post_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1344,11 +1199,8 @@ system_post_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1358,7 +1210,6 @@ system_post_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <source_image/>
 </system>"""
 
@@ -1366,7 +1217,6 @@ system_post_xml_bad_network = """
 <system>
     <current_state />
     <description>exampleNewDescription</description>
-    <management_interface />
     <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
     <name>exampleNewSystem</name>
     <network_address>
@@ -1386,7 +1236,6 @@ system_mgmt_interface_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1401,11 +1250,8 @@ system_mgmt_interface_put_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1415,7 +1261,6 @@ system_mgmt_interface_put_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/2">Windows Management Instrumentation (WMI)</management_interface>
   <source_image/>
 </system>"""
 
@@ -1423,7 +1268,6 @@ system_delete_mgmt_interface_put_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1438,11 +1282,8 @@ system_delete_mgmt_interface_put_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1453,16 +1294,13 @@ system_delete_mgmt_interface_put_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface/>
   <source_image/>
 </system>"""
 
 system_post_xml_response = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1487,8 +1325,6 @@ system_post_xml_response = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
@@ -1512,7 +1348,6 @@ system_post_xml_response = """\
   <target/>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/4">
     <description>Online</description>
     <name>responsive</name>
@@ -1560,7 +1395,6 @@ system_post_xml_dup = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -1575,11 +1409,8 @@ system_post_xml_dup = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -1589,7 +1420,6 @@ system_post_xml_dup = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <source_image/>
 </system>"""
 
@@ -1601,9 +1431,7 @@ system_target_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
   <actions/>
-  <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
@@ -1628,8 +1456,6 @@ system_target_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
@@ -1653,7 +1479,6 @@ system_target_xml = """\
   <target id="http://testserver/api/v1/targets/4">testtargetname</target>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Registered</description>
     <name>registered</name>
@@ -1805,9 +1630,7 @@ systems_log_xml = """\
 system_version_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <system id="http://testserver/api/v1/inventory/systems/3">
-  <agent_port>5989</agent_port>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
   %s
   <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
     <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
@@ -1839,8 +1662,6 @@ system_version_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <system_id>3</system_id>
   <launching_user/>
@@ -1857,7 +1678,6 @@ system_version_xml = """\
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/3">
     <description>Registered</description>
     <name>registered</name>
@@ -1884,7 +1704,6 @@ system_version_put_response_xml = """\
   %s
   <system_events id="http://testserver/api/v1/inventory/systems/2/system_events"/>
   <registered>True</registered>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <managing_zone/>
@@ -1902,13 +1721,10 @@ system_version_put_response_xml = """\
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <system_id>2</system_id>
   <launching_user/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/2/system_log"/>
   <target_system_id/>
@@ -1920,7 +1736,6 @@ system_version_put_response_xml = """\
   <name/>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/1">Common Information Model (CIM)</management_interface>
   <current_state id="http://testserver/api/v1/inventory/system_states/2">
     <description>Registered</description>
     <name>registered</name>
@@ -2002,14 +1817,12 @@ system_with_target = """\
       <ip_address/>
     </network>
   </networks>
-  <ssl_server_certificate/>
   <project_branch_stage/>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
   <hostname/>
   <system_id>4</system_id>
   <launching_user/>
   <launch_date/>
-  <ssl_client_certificate/>
   <registration_date/>
   <jobs id="http://testserver/api/v1/inventory/systems/4/jobs">
     <queued_jobs id="http://testserver/api/v1/inventory/systems/4/job_states/1/jobs"/>
@@ -2023,9 +1836,7 @@ system_with_target = """\
   <target_system_name/>
   <has_active_jobs>false</has_active_jobs>
   <has_running_jobs>false</has_running_jobs>
-  <agent_port/>
   <project/>
-  <credentials id="http://testserver/api/v1/inventory/systems/4/credentials"/>
   <target id="http://testserver/api/v1/targets/1">vsphere1.eng.rpath.com</target>
   <name>vsphere1 002</name>
   <network_address>
@@ -2034,7 +1845,6 @@ system_with_target = """\
   </network_address>
   <local_uuid/>
   <project_branch/>
-  <management_interface/>
   <target_system_state/>
   <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
   <current_state id="http://testserver/api/v1/inventory/system_states/1">
@@ -2049,85 +1859,9 @@ system_with_target = """\
 </system>
 """
 
-credentials_xml = """\
-<?xml version="1.0"?>
-<credentials>
-  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>newsslclientkey</ssl_client_key>
-</credentials>
-"""
-
-ssh_credentials_xml = """\
-<?xml version="1.0"?>
-<credentials>
-  <key>sshKeyContentsGoesHere</key>
-  <password>osOrUnlockPassword</password>
-</credentials>
-"""
-credentials_put_xml = """\
-<?xml version="1.0"?>
-<credentials>
-  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>updatedsslclientkey</ssl_client_key>
-</credentials>
-"""
-
-credentials_wmi_xml = """\
-<?xml version="1.0"?>
-<credentials>
-  <domain>testDomain</domain>
-  <user>testUser</user>
-  <password>testPassword</password>
-</credentials>
-"""
-
-credentials_wmi_put_xml = """\
-<?xml version="1.0"?>
-<credentials>
-  <domain>testDomainChanged</domain>
-  <user>testUserChanged</user>
-  <password>testPasswordChanged</password>
-</credentials>
-"""
-
-credentials_resp_xml = """\
-<?xml version="1.0"?>
-<credentials id="http://testserver/api/v1/inventory/systems/3/credentials">
-  <ssl_client_certificate>newsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>newsslclientkey</ssl_client_key>
-</credentials>
-"""
-
-credentials_put_resp_xml = """\
-<?xml version="1.0"?>
-<credentials id="http://testserver/api/v1/inventory/systems/3/credentials">
-  <ssl_client_certificate>updatedsslclientcertificate</ssl_client_certificate>
-  <ssl_client_key>updatedsslclientkey</ssl_client_key>
-</credentials>
-"""
-
-credentials_wmi_resp_xml = """\
-<?xml version="1.0"?>
-<credentials id="http://testserver/api/v1/inventory/systems/3/credentials">
-  <domain>testDomain</domain>
-  <user>testUser</user>
-  <password>testPassword</password>
-</credentials>
-"""
-
-credentials_wmi_put_resp_xml = """\
-<?xml version="1.0"?>
-<credentials id="http://testserver/api/v1/inventory/systems/3/credentials">
-  <domain>testDomainChanged</domain>
-  <user>testUserChanged</user>
-  <password>testPasswordChanged</password>
-</credentials>
-"""
-
 system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
 <system>
   <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <ssl_client_key>testsystemsslclientkey</ssl_client_key>
   <registration_date/>
   <generated_uuid>testsystemgenerateduuid</generated_uuid>
   <networks>
@@ -2142,11 +1876,8 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
       <pinned/>
     </network>
   </networks>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
-  <ssl_server_certificate>testsystemsslservercertificate</ssl_server_certificate>
   <project_branch_stage/>
   <launch_date/>
-  <ssl_client_certificate>testsystemsslclientcertificate</ssl_client_certificate>
   <description>testsystemdescription</description>
   <system_log id="http://testserver/api/v1/inventory/systems/1/system_log"/>
   <target_system_id/>
@@ -2156,58 +1887,5 @@ system_post_forge_object = """<?xml version="1.0" encoding="UTF-8"?>
   <name>testsystemname</name>
   <local_uuid>testsystemlocaluuid</local_uuid>
   <project_branch/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/9999">Should Not Exist</management_interface>
   <source_image/>
 </system>"""
-
-retirement_xml = """
-<system id="http://testserver/api/v1/inventory/systems/3">
-  <networks/>
-  <management_interface id="http://testserver/api/v1/inventory/management_interfaces/3">Secure Shell (SSH)</management_interface>
-  <system_events id="http://testserver/api/v1/inventory/systems/3/system_events"/>
-  <actions/>
-  <has_running_jobs>false</has_running_jobs>
-  <system_type id="http://testserver/api/v1/inventory/system_types/1">Inventory</system_type>
-  <generated_uuid></generated_uuid>
-  <modified_date></modified_date>
-  <modified_by></modified_by>
-  <ssl_server_certificate></ssl_server_certificate>
-  <managing_zone id="http://testserver/api/v1/inventory/zones/1">Local rBuilder</managing_zone>
-  <hostname></hostname>
-  <created_by></created_by>
-  <agent_port>22</agent_port>
-  <project_branch_stage></project_branch_stage>
-  <system_id>3</system_id>
-  <launching_user></launching_user>
-  <launch_date></launch_date>
-  <ssl_client_certificate></ssl_client_certificate>
-  <registration_date></registration_date>
-  <project_branch></project_branch>
-  <description>ghost</description>
-  <system_log id="http://testserver/api/v1/inventory/systems/3/system_log"/>
-  <target_system_id></target_system_id>
-  <has_active_jobs>false</has_active_jobs>
-  <target_system_name></target_system_name>
-  <jobs id="http://testserver/api/v1/inventory/systems/3/jobs">
-    <queued_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/1/jobs"/>
-    <completed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/3/jobs"/>
-    <running_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/2/jobs"/>
-    <failed_jobs id="http://testserver/api/v1/inventory/systems/3/job_states/4/jobs"/>
-  </jobs>
-  <credentials id="http://testserver/api/v1/inventory/systems/3/credentials"/>
-  <source_image></source_image>
-  <name>blinky</name>
-  <target></target>
-  <local_uuid></local_uuid>
-  <target_system_state></target_system_state>
-  <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <current_state>
-    <description>Retired</description>
-    <name>mothballed</name>
-    <system_state_id>12</system_state_id>
-  </current_state>
-  <project></project>
-  <created_date>2011-11-17T18:47:49.469749+00:00</created_date>
-  <target_system_description></target_system_description>
-</system>
-"""

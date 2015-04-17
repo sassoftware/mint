@@ -276,77 +276,6 @@ class ZonesTestCase(XMLTestCase):
         except zmodels.Zone.DoesNotExist:
             pass # what we expect
 
-class ManagementInterfacesTestCase(XMLTestCase):
-    def testGetManagementInterfaces(self):
-        models.ManagementInterface.objects.all().delete()
-        mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
-        mi.save()
-        response = self._get('inventory/management_interfaces/',
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.management_interfaces_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', ])
-
-    def testGetManagementInterfacesAuth(self):
-        """
-        Don't require auth or admin
-        """
-        response = self._get('inventory/management_interfaces/')
-        self.assertEquals(response.status_code, 200)
-
-        response = self._get('inventory/management_interfaces/',
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
-
-    def testGetManagementInterface(self):
-        models.ManagementInterface.objects.all().delete()
-        mi = models.ManagementInterface(name="foo", description="bar", port=8000, credentials_descriptor="<foo/>")
-        mi.save()
-        response = self._get('inventory/management_interfaces/%s/' % mi.pk,
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.management_interface_xml, ignoreNodes = [ 'created_date', 'modified_by', 'created_by', 'modified_date', ])
-
-    def testPutManagementInterfaceAuth(self):
-        """
-        Ensure we require admin to put
-        """
-        response = self._put('inventory/management_interfaces/1/',
-            data=testsxml.management_interface_put_xml)
-        self.assertEquals(response.status_code, 401)
-
-        response = self._put('inventory/management_interfaces/1/',
-            data=testsxml.management_interface_put_xml,
-            username="testuser", password="password")
-        self.assertEquals(response.status_code, 403)
-
-    def testPutManagementInterfaceNotFound(self):
-        """
-        Ensure we return 404 if we update one that doesn't exist
-        """
-        try:
-            response = self._put('inventory/management_interfaces/1zcvxzvzgvsdzfewrew4t4tga34/',
-                data=testsxml.management_interface_put_xml,
-                username="admin", password="password")
-            self.assertEquals(response.status_code, 404)
-        except TemplateDoesNotExist, e:
-            # might not have template, so check for 404 in error
-            self.assertTrue("404" in str(e))
-
-    def testPutManagementInterface(self):
-        models.ManagementInterface.objects.all().delete()
-        mi = models.ManagementInterface(name="foo2", description="bar", port=8000, credentials_descriptor="<foo/>")
-        mi.save()
-        self.assertTrue('<name>thisnameshouldnotstick</name>' in testsxml.management_interface_put_xml)
-        response = self._put('inventory/management_interfaces/4',
-            data=testsxml.management_interface_put_xml, username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        mi = models.ManagementInterface.objects.get(pk=mi.pk)
-        # name is read only, should not get changed
-        self.assertTrue(mi.name != "thisnameshouldnotstick")
-        self.failUnlessEqual(mi.port, 123)
-        self.failUnlessEqual(mi.credentials_descriptor, "<foo/>")
 
 class SystemTypesTestCase(XMLTestCase):
 
@@ -423,63 +352,6 @@ class SystemTypesTestCase(XMLTestCase):
         # name is read only, should not get changed
         self.assertTrue(si.name != "thisnameshouldnotstick")
         self.assertTrue(si.infrastructure == True)
-
-    def testAddWindowsBuildService(self):
-        system = self.mgr.sysMgr.addWindowsBuildService("myname", "mydesc", "1.1.1.1")
-        network = self.mgr.sysMgr.extractNetworkToUse(system)
-        assert(system.name =="myname")
-        assert(system.description == "mydesc")
-        assert(system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
-        assert(network.dns_name == "1.1.1.1")
-
-    def testGetWindowsBuildServiceNodes(self):
-        models.SystemType.objects.all().delete()
-        models.SystemType.objects.all().delete()
-        st = models.SystemType(name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE,
-            description=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC, infrastructure=True,
-            creation_descriptor="<foo></foo>")
-        st.save()
-        system = models.System()
-        system.name = 'testsystemname'
-        system.description = 'testsystemdescription'
-        system.managing_zone = self.localZone
-        system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.system_type = st
-        system.save()
-
-        network = models.Network()
-        network.ip_address = '1.1.1.1'
-        network.device_name = 'eth0'
-        network.dns_name = 'testnetwork.example.com'
-        network.netmask = '255.255.255.0'
-        network.port_type = 'lan'
-        network.system = system
-        network.save()
-
-        st2 = models.SystemType(name=models.SystemType.INVENTORY,
-            description=models.SystemType.INVENTORY_DESC, infrastructure=True,
-            creation_descriptor="<foo></foo>")
-        st2.save()
-
-        system2 = models.System()
-        system2.name = 'testsystemname2'
-        system2.description = 'testsystemdescription2'
-        system2.managing_zone = self.localZone
-        system2.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system2.st = st2
-        system2.save()
-
-        buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
-        assert(len(buildNodes) == 1)
-        assert(buildNodes[0].system_id == system.system_id)
-
-    def testGetWindowsBuildServiceNodesEmpty(self):
-        models.SystemType.objects.all().delete()
-        models.SystemType.objects.all().delete()
-
-        buildNodes = self.mgr.sysMgr.getWindowsBuildServiceNodes()
-        assert(buildNodes is not None)
-        assert(len(buildNodes) == 0)
 
 
 class SystemStatesTestCase(XMLTestCase):
@@ -944,25 +816,14 @@ class SystemsTestCase(XMLTestCase):
 
     def setUp(self):
         XMLTestCase.setUp(self)
-        self.mock_scheduleSystemRegistrationEvent_called = False
         self.mockGetRmakeJob_called = False
-        self.mock_scheduleSystemDetectMgmtInterfaceEvent_called = False
-        self.mgr.sysMgr.scheduleSystemRegistrationEvent = self.mock_scheduleSystemRegistrationEvent
-        self.mgr.sysMgr.scheduleSystemDetectMgmtInterfaceEvent = \
-            self.mock_scheduleSystemDetectMgmtInterfaceEvent
         jobmodels.Job.getRmakeJob = self.mockGetRmakeJob
 
     def tearDown(self):
         XMLTestCase.tearDown(self)
 
-    def mock_scheduleSystemRegistrationEvent(self, system):
-        self.mock_scheduleSystemRegistrationEvent_called = True
-
     def mockGetRmakeJob(self):
         self.mockGetRmakeJob_called = True
-
-    def mock_scheduleSystemDetectMgmtInterfaceEvent(self, system):
-        self.mock_scheduleSystemDetectMgmtInterfaceEvent_called = True
 
     def testSystemPutAuth(self):
         localUuid = 'localuuid001'
@@ -1028,43 +889,6 @@ class SystemsTestCase(XMLTestCase):
             headers = { 'X-rBuilder-Event-UUID' : eventUuid + '-bogus' })
         self.failUnlessEqual(response.status_code, 401)
 
-    def testSystemMothballAuth(self):
-        """
-        Ensure admin users can mothball systems https://issues.rpath.com/browse/RBL-7170
-        """
-
-        # TODO:  This test will fail until https://issues.rpath.com/browse/RBL-7172
-        # is fixed, please to do remove it!
-
-        models.System.objects.all().delete()
-        system = self._saveSystem()
-
-        # fail if anon
-        response = self._put('inventory/systems/%d/' % system.system_id,
-            data=testsxml.systems_put_mothball_xml)
-        self.failUnlessEqual(response.status_code, 401)
-
-        # fail if regular user
-        response = self._put('inventory/systems/%d/' % system.system_id,
-            data=testsxml.systems_put_mothball_xml,
-            username="testuser", password="password")
-        self.failUnlessEqual(response.status_code, 401)
-
-    def testSystemMothball(self):
-        """
-        Ensure admin users can mothball systems https://issues.rpath.com/browse/RBL-7170
-        """
-        models.System.objects.all().delete()
-        system = self._saveSystem()
-        # work if admin
-        response = self._put('inventory/systems/%d/' % system.system_id,
-            data=testsxml.systems_put_mothball_xml,
-            username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        system = models.System.objects.get(pk=system.system_id)
-        self.assertTrue(system.current_state.name == models.SystemState.MOTHBALLED)
-        self.assertTrue(system.current_state.description == models.SystemState.MOTHBALLED_DESC)
-
     def testBulkSystemAdd(self):
         xmlTempl = """\
   <system>
@@ -1126,24 +950,6 @@ class SystemsTestCase(XMLTestCase):
         system.save()
         self.failUnlessEqual(system.name, "mgoblue")
 
-    def testSystemSaveAgentPort(self):
-        # make sure state gets set to unmanaged
-        system = self.newSystem(name="mgoblue",
-            description="best appliance ever")
-        self.assertTrue(system.agent_port is None)
-        system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.save()
-        self.assertTrue(system.agent_port == system.management_interface.port)
-
-        system.agent_port = 897
-        system.save()
-        self.assertTrue(system.agent_port == 897)
-
-        system = self.newSystem(name="mgoblue2",
-            description="best appliance ever")
-        system.save()
-        self.assertTrue(system.agent_port is None)
-
     def testAddSystem(self):
         # create the system
         system = self.newSystem(name="mgoblue",
@@ -1152,9 +958,6 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.UNMANAGED)
-
-        # make sure we scheduled our registration event
-        assert(self.mock_scheduleSystemDetectMgmtInterfaceEvent_called)
 
     def testAddRegisteredSystem(self):
         # create the system
@@ -1165,10 +968,6 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.RESPONSIVE)
-
-        # make sure we did not schedule registration
-        self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
-            False)
 
     def testAddRegisteredManagementNodeSystem(self):
         zone = self._saveZone()
@@ -1184,10 +983,6 @@ class SystemsTestCase(XMLTestCase):
         assert(new_system is not None)
         self.failUnlessEqual(new_system.current_state.name,
             models.SystemState.RESPONSIVE)
-
-        # make sure we did not schedule registration
-        self.failUnlessEqual(self.mock_scheduleSystemRegistrationEvent_called,
-            False)
 
     def testAddSystemNull(self):
 
@@ -1710,7 +1505,7 @@ class SystemsTestCase(XMLTestCase):
             (system.registration_date.isoformat()))
         self.assertXMLEquals(response.content, system_xml % \
             (system.networks.all()[0].created_date.isoformat(), system.created_date.isoformat()),
-            ignoreNodes = [ 'created_date', 'ssl_client_certificate',
+            ignoreNodes = [ 'created_date',
                             'time_created', 'time_updated',
                             'registration_date', 'actions',
                             'created_by', 'modified_by',
@@ -1738,122 +1533,6 @@ class SystemsTestCase(XMLTestCase):
             headers={ 'X-rPath-Management-Zone' : zoneName },
             username="admin", password="password")
         self.failUnlessEqual(response.status_code, 200)
-
-    def testPostSystemDupUuid(self):
-        # add the first system
-        models.System.objects.all().delete()
-        system_xml = testsxml.system_post_xml_dup
-        response = self._post('inventory/systems/',
-            data=system_xml, username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=3)
-        self.failUnlessEqual(system.name, "testsystemname")
-
-        # add it with same uuids but with different name to make sure
-        # we get back same system with updated prop
-        system_xml = testsxml.system_post_xml_dup2
-        response = self._post('inventory/systems/',
-            data=system_xml, username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        this_system = models.System.objects.get(pk=3)
-        self.failUnlessEqual(this_system.name, "testsystemnameChanged")
-
-    def testPutSystemManagementInterface(self):
-        system = self._saveSystem()
-
-        # Test that a mgmt interface can be changed.
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_mgmt_interface_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=system.pk)
-        self.assertEquals(system.management_interface.name, 'wmi')
-        self.assertEquals(system.management_interface.pk, 2)
-
-        # Test that a mgmt interface can be added.
-        system.management_interface = None
-        system.save()
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_mgmt_interface_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=system.pk)
-        self.assertEquals(system.management_interface.name, 'wmi')
-        self.assertEquals(system.management_interface.pk, 2)
-
-        # Test that mgmt interface can be deleted
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=testsxml.system_delete_mgmt_interface_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        system = models.System.objects.get(pk=system.pk)
-        self.assertEquals(system.management_interface, None)
-
-    def testSystemCredentials(self):
-        system = self._saveSystem()
-        response = self._post('inventory/systems/%s/credentials' % \
-            system.pk,
-            data=testsxml.credentials_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.credentials_resp_xml)
-
-        response = self._get('inventory/systems/%s/credentials' % \
-            system.pk,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content, testsxml.credentials_resp_xml)
-
-        response = self._put('inventory/systems/%s/credentials' % \
-            system.pk,
-            data=testsxml.credentials_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.credentials_put_resp_xml)
-
-        system = models.System.objects.get(pk=system.pk)
-
-        creds = system.credentials
-        # Do a simple PUT on systems
-        xml = """\
-<system>
-  <credentials>blahblah</credentials>
-</system>
-"""
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=xml,
-            username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        system = models.System.objects.get(pk=system.pk)
-        self.failUnlessEqual(system.credentials, creds)
-
-    def testSystemWmiCredentials(self):
-        system = self._saveSystem()
-        system.management_interface = models.ManagementInterface.objects.get(name='wmi')
-        system.save()
-        response = self._post('inventory/systems/%s/credentials' % \
-            system.pk,
-            data=testsxml.credentials_wmi_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.credentials_wmi_resp_xml)
-
-        response = self._get('inventory/systems/%s/credentials' % \
-            system.pk,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.credentials_wmi_resp_xml)
-
-        response = self._put('inventory/systems/%s/credentials' % \
-            system.pk,
-            data=testsxml.credentials_wmi_put_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        self.assertXMLEquals(response.content,
-            testsxml.credentials_wmi_put_resp_xml)
 
     def testGetSystemLogAuth(self):
         """
@@ -2151,36 +1830,6 @@ class SystemsTestCase(XMLTestCase):
 
         return system, systemRemoved
 
-    def testCurrentStateUpdateApi(self):
-        # Make sure current state can be updated via the API.  This allows
-        # users to mothball systems at any point in time, etc.
-        localUuid = 'localuuid001'
-        generatedUuid = 'generateduuid001'
-
-        system = self.newSystem(name='blippy', local_uuid=localUuid,
-            generated_uuid=generatedUuid)
-        system.save()
-
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            zoneId=self.localZone.zone_id)
-        xml = """\
-<system>
-  <local_uuid>%(localUuid)s</local_uuid>
-  <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <current_state>
-    <description>Retired</description>
-    <name>mothballed</name>
-    <system_state_id>10</system_state_id>
-  </current_state>
-  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
-</system>
-""" % params
-
-        etreeModel = etree.fromstring(xml)
-        model = models.System.objects.load_from_object(etreeModel, request=None)
-        self.failUnlessEqual(model.pk, system.pk)
-        self.failUnlessEqual(model.current_state.name, "mothballed")
-
     def testUpdateCurrentState(self):
         localUuid = 'localuuid001'
         generatedUuid = 'generateduuid001'
@@ -2312,17 +1961,13 @@ class SystemsTestCase(XMLTestCase):
             zoneId=self.localZone.zone_id)
 
         system = self.newSystem(name='blippy', local_uuid=localUuid,
-            generated_uuid=generatedUuid,
-            _ssl_client_certificate=sslClientCert,
-            _ssl_client_key=sslClientKey)
+            generated_uuid=generatedUuid)
         system.save()
 
         xml = """\
 <system>
   <local_uuid>%(localUuid)s</local_uuid>
   <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <ssl_client_certificate>thou shalt not change me</ssl_client_certificate>
-  <ssl_client_key>thou shalt not change me</ssl_client_key>
   <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
 </system>
 """ % params
@@ -2330,8 +1975,6 @@ class SystemsTestCase(XMLTestCase):
         model = models.System.objects.load_from_object(etreeModel, request=None)
         self.failUnlessEqual(model.local_uuid, localUuid)
         self.failUnlessEqual(model.generated_uuid, generatedUuid)
-        self.failUnlessEqual(model._ssl_client_certificate, sslClientCert)
-        self.failUnlessEqual(model._ssl_client_key, sslClientKey)
 
     def testBooleanFieldSerialization(self):
         # XML schema sez lowercase true or false for boolean fields
@@ -2343,27 +1986,6 @@ class SystemsTestCase(XMLTestCase):
         xml = network.to_xml()
         self.failUnlessIn("<active>false</active>", xml)
         self.failUnlessIn("<pinned>true</pinned>", xml)
-
-    def testAgentPort(self):
-        # RBL-7150
-        localUuid = 'localuuid001'
-        generatedUuid = 'generateduuid001'
-        agentPort = 12345
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            agentPort=agentPort, zoneId=self.localZone.zone_id)
-        xml = """\
-<system>
-  <local_uuid>%(localUuid)s</local_uuid>
-  <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <agent_port>%(agentPort)s</agent_port>
-  <managing_zone href="http://testserver/api/v1/inventory/zones/%(zoneId)s"/>
-</system>
-""" % params
-        etreeModel = etree.fromstring(xml)
-        model = models.System.objects.load_from_object(etreeModel, request=None)
-        self.failUnlessEqual(model.agent_port, agentPort)
-        self.failUnlessIn("<agent_port>%s</agent_port>" % agentPort,
-            model.to_xml())
 
     def testSetSystemState(self):
         # RBL-6795
@@ -2424,55 +2046,6 @@ class SystemsTestCase(XMLTestCase):
         self.failUnlessEqual(system.local_uuid, localUuid)
         self.failUnlessEqual(system.generated_uuid, generatedUuid)
         self.failUnlessEqual(system.current_state.name, systemState)
-
-    def testSetSystemManagementInterface(self):
-        localUuid = 'localuuid001'
-        generatedUuid = 'generateduuid001'
-        agentPort = 8675309
-
-        managementInterface = models.Cache.get(models.ManagementInterface,
-            name="wmi")
-        managementInterfaceId = managementInterface.pk
-
-        system = self.newSystem(name='blah', local_uuid=localUuid,
-            generated_uuid=generatedUuid)
-        system.save()
-
-        self.failUnlessEqual(system.management_interface_id, None)
-
-        params = dict(localUuid=localUuid, generatedUuid=generatedUuid,
-            agentPort=agentPort,
-            managementInterfaceId=managementInterfaceId)
-        xml = """\
-<system>
-  <local_uuid>%(localUuid)s</local_uuid>
-  <generated_uuid>%(generatedUuid)s</generated_uuid>
-  <management_interface href="/api/v1/inventory/management_interfaces/%(managementInterfaceId)s"/>
-  <agent_port>%(agentPort)s</agent_port>
-</system>
-""" % params
-
-        """
-  <management_interface>
-    <name>%(managementInterfaceName)s</name>
-  </management_interface>
-        """
-
-        response = self._put('inventory/systems/%s' % system.pk,
-            data=xml, username="admin", password="password")
-        self.failUnlessEqual(response.status_code, 200)
-        system = models.System.objects.get(pk=system.pk)
-        self.failUnlessEqual(system.management_interface_id,
-            managementInterfaceId)
-        self.failUnlessEqual(system.agent_port, agentPort)
-
-    def testGetCredentialsWhenMissing(self):
-        system = self.newSystem(name="blah")
-        system.save()
-        creds = self.mgr.getSystemCredentials(system.pk)
-        self.assertXMLEquals(creds.to_xml(),
-            '<credentials id="/api/v1/inventory/systems/%s/credentials"/>' %
-                system.pk)
 
     def testMarkSystemShutdown(self):
         p = dict(local_uuid="abc", generated_uuid="def")
@@ -2536,97 +2109,6 @@ class SystemsTestCase(XMLTestCase):
         ]
         self.failUnlessEqual(actual,desired)
 
-    def testPostSystemLineBreaksAroundManagementInterfaceName(self):
-        # RCE-1564
-        models.System.objects.all().delete()
-        doc = etree.fromstring(testsxml.system_post_xml)
-        node = doc.find('management_interface')
-        # Clear management interface ID
-        node.attrib.clear()
-        etree.SubElement(node, 'name').text = 'cim'
-        # Add whitespaces to trigger the bug
-        node.text = '\n    '
-        node.tail = '\n   \n\n'
-        system_xml = etree.tostring(doc)
-        response = self._post('inventory/systems/',
-            data=system_xml, username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        doc = etree.fromstring(response.content)
-        node = doc.find('management_interface')
-        self.assertEquals(node.attrib['id'],
-                'http://testserver/api/v1/inventory/management_interfaces/1')
-        self.assertEquals(node.text,
-                'Common Information Model (CIM)')
-
-    def testPostSystemWithCredentials(self):
-        # RCE-1610
-        models.System.objects.all().delete()
-        doc = etree.fromstring(testsxml.system_post_xml)
-        creds = etree.SubElement(doc, 'credentials')
-        credentials = dict(username='jerry', password='seinfeld')
-        for k, v in credentials.items():
-            etree.SubElement(creds, k).text = v
-        # Change management interface to WMI
-        node = doc.find('management_interface')
-        # Clear management interface ID
-        node.attrib.clear()
-        etree.SubElement(node, 'name').text = 'wmi'
-
-        system_xml = etree.tostring(doc)
-        response = self._post('inventory/systems/',
-            data=system_xml, username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-        doc = etree.fromstring(response.content)
-        node = doc.find('management_interface')
-        self.assertEquals(node.attrib['id'],
-                'http://testserver/api/v1/inventory/management_interfaces/2')
-        self.assertEquals(node.text,
-                'Windows Management Instrumentation (WMI)')
-        system = models.System.objects.get(system_id=doc.find('system_id').text)
-        self.assertEquals(
-                self.mgr.sysMgr.unmarshalCredentials(system.credentials),
-                credentials)
-
-
-class SystemCertificateTestCase(XMLTestCase):
-    def testGenerateSystemCertificates(self):
-        system = self.newSystem(local_uuid="localuuid001",
-            generated_uuid="generateduuid001")
-        system.save()
-        self.failUnlessEqual(system._ssl_client_certificate, None)
-        self.failUnlessEqual(system._ssl_client_key, None)
-        self.mgr.sysMgr.generateSystemCertificates(system)
-
-        clientCert = system._ssl_client_certificate
-        clientKey = system._ssl_client_key
-
-        crt = x509.X509(None, None)
-        crt.load_from_strings(clientCert, clientKey)
-        self.failUnlessEqual(crt.x509.get_subject().as_text(),
-            'O=rPath rBuilder, OU=http://rpath.com, CN=local_uuid:localuuid001 generated_uuid:generateduuid001 serial:0')
-        # Make sure the cert is signed with the low grade CA
-        issuer = 'O=rBuilder Low-Grade Certificate Authority, OU=Created at 2010-09-02 11:18:53-0400'
-        # We're using self-signed certs
-        issuer = 'O=rPath rBuilder, OU=http://rpath.com, CN=local_uuid:localuuid001 generated_uuid:generateduuid001 serial:0'
-
-        self.failUnlessEqual(crt.x509.get_issuer().as_text(), issuer)
-        # Test some of the other functions, while we're at it
-        fingerprint = crt.fingerprint
-        self.failUnlessEqual(len(fingerprint), 40)
-
-        certHash = crt.hash
-        # This always changes, so no point in comparing anything other than
-        # length
-        self.failUnlessEqual(len(certHash), 8)
-
-        # The issuer hash is always known, since it's our LG CA
-        #self.failUnlessEqual(crt.hash_issuer, '6d8bb0a1')
-        self.failUnlessEqual(crt.hash_issuer, certHash)
-
-        # Try again, we should not re-generate the cert
-        self.mgr.sysMgr.generateSystemCertificates(system)
-        self.failUnlessEqual(system._ssl_client_certificate, clientCert)
-        self.failUnlessEqual(system._ssl_client_key, clientKey)
 
 class SystemStateTestCase(XMLTestCase):
     def setUp(self):
@@ -2736,7 +2218,6 @@ class SystemStateTestCase(XMLTestCase):
         NONRESPONSIVE_SUSPENDED = models.SystemState.NONRESPONSIVE_SUSPENDED
         NONRESPONSIVE_CREDENTIALS = models.SystemState.NONRESPONSIVE_CREDENTIALS
         DEAD = models.SystemState.DEAD
-        MOTHBALLED = models.SystemState.MOTHBALLED
 
         tests = [
             (job1, stateCompleted, UNMANAGED, RESPONSIVE),
@@ -2750,7 +2231,6 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateCompleted, NONRESPONSIVE_CREDENTIALS, None),
             (job1, stateCompleted, NONRESPONSIVE, None),
             (job1, stateCompleted, DEAD, None),
-            (job1, stateCompleted, MOTHBALLED, None),
 
             (job1, stateFailed, UNMANAGED, None),
             (job1, stateFailed, UNMANAGED_CREDENTIALS_REQUIRED, None),
@@ -2763,14 +2243,13 @@ class SystemStateTestCase(XMLTestCase):
             (job1, stateFailed, NONRESPONSIVE_CREDENTIALS, None),
             (job1, stateFailed, NONRESPONSIVE, None),
             (job1, stateFailed, DEAD, None),
-            (job1, stateFailed, MOTHBALLED, None),
         ]
         transitionsCompleted = []
         for oldState in [UNMANAGED, UNMANAGED_CREDENTIALS_REQUIRED,
                 REGISTERED, RESPONSIVE,
                 NONRESPONSIVE_HOST, NONRESPONSIVE_NET, NONRESPONSIVE_SHUTDOWN,
                 NONRESPONSIVE_SUSPENDED, NONRESPONSIVE,
-                NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
+                NONRESPONSIVE_CREDENTIALS, DEAD]:
             transitionsCompleted.append((oldState, RESPONSIVE))
         transitionsFailed = [
             (REGISTERED, NONRESPONSIVE),
@@ -2779,7 +2258,7 @@ class SystemStateTestCase(XMLTestCase):
         for oldState in [UNMANAGED, UNMANAGED_CREDENTIALS_REQUIRED,
                 NONRESPONSIVE_HOST, NONRESPONSIVE_NET,
                 NONRESPONSIVE_SHUTDOWN, NONRESPONSIVE_SUSPENDED,
-                NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD, MOTHBALLED]:
+                NONRESPONSIVE, NONRESPONSIVE_CREDENTIALS, DEAD]:
             transitionsFailed.append((oldState, None))
 
         # Failed auth tests`
@@ -2793,7 +2272,7 @@ class SystemStateTestCase(XMLTestCase):
                     NONRESPONSIVE_SUSPENDED, DEAD]:
                 tests.append((job, stateFailed, oldState,
                     NONRESPONSIVE_CREDENTIALS))
-            for oldState in [NONRESPONSIVE_CREDENTIALS, MOTHBALLED]:
+            for oldState in [NONRESPONSIVE_CREDENTIALS]:
                 tests.append((job, stateFailed, oldState, None))
 
 
@@ -2871,8 +2350,7 @@ class SystemEventTestCase(XMLTestCase):
         # need a system
         network = models.Network(ip_address='1.1.1.1')
         self.system = self.newSystem(name="mgoblue",
-            description="best appliance ever",
-            management_interface=models.ManagementInterface.objects.get(name='cim'))
+            description="best appliance ever")
         self.system.save()
         network.system = self.system
         self.system.networks.add(network)
@@ -2988,21 +2466,6 @@ class SystemEventTestCase(XMLTestCase):
         event2.save()
         # make sure we honor priority if set
         assert(event2.priority == 1)
-
-    def testScheduleSystemRegistrationEvent(self):
-        # registration events are no longer dispatched immediately (RBL-8851)
-        self.mgr.scheduleSystemRegistrationEvent(self.system)
-
-        registration_event = self.mgr.sysMgr.eventType(jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE)
-        event = models.SystemEvent.objects.filter(system=self.system,event_type=registration_event).get()
-        assert(event is not None)
-        # should have been enabled immediately
-        assert(event.time_enabled <= timeutils.now())
-
-        # make sure we have our log event
-        log = models.SystemLog.objects.filter(system=self.system).get()
-        sys_registered_entries = log.system_log_entries.all()
-        assert(len(sys_registered_entries) == 1)
 
     def testAddSystemEventNull(self):
 
@@ -3137,239 +2600,6 @@ class SystemEventProcessingTestCase(XMLTestCase):
         transaction.commit()
 
         self.failUnlessEqual(event.system_event_id, None)
-
-class SystemEventProcessing2TestCase(XMLTestCase, test_utils.RepeaterMixIn):
-    # do not load other fixtures for this test case as it is very data order dependent
-    fixtures = ['system_event_processing']
-
-    def setUp(self):
-        XMLTestCase.setUp(self)
-        test_utils.RepeaterMixIn.setUpRepeaterClient(self)
-        self.system2 = system = self.newSystem(name="hey")
-        system.save()
-        network2 = models.Network(ip_address="2.2.2.2", active=True)
-        network3 = models.Network(ip_address="3.3.3.3", pinned=True)
-        system.networks.add(network2)
-        system.networks.add(network3)
-        system.save()
-        self._uuid = 0
-
-    def _setupEvent(self, eventType, eventData=None):
-        self.system2.agent_port = 12345
-        self.system2.save()
-        eventType = self.mgr.sysMgr.eventType(eventType)
-        # Remove all networks
-        for net in self.system2.networks.all():
-            net.delete()
-        network = models.Network(dns_name = 'superduper.com')
-        network.system = self.system2
-        network.save()
-        # sanity check dispatching poll event
-        event = models.SystemEvent(system=self.system2,
-            event_type=eventType, priority=eventType.priority)
-        if eventData:
-            if isinstance(eventData, basestring):
-                event.event_data = eventData
-            else:
-                event.event_data = cPickle.dumps(eventData)
-        event.save()
-        return event
-
-    def _mockUuid(self):
-        def mockedUuid4():
-            self._uuid += 1
-            return "really-unique-uuid-%03d" % self._uuid
-        import uuid
-        self.mock(uuid, 'uuid4', mockedUuid4)
-
-    def _dispatchEvent(self, event):
-        self._mockUuid()
-        self.mgr.sysMgr.dispatchSystemEvent(event)
-
-
-    def testDispatchActivateSystemEvent(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE)
-        self._dispatchEvent(event)
-        transaction.commit()
-
-        cimParams = self.mgr.repeaterMgr.repeaterClient.CimParams
-        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
-
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [
-                ('register_cim',
-                    (
-                        cimParams(host='superduper.com',
-                            port=12345,
-                            eventUuid = 'really-unique-uuid-001',
-                            clientKey=testsxml.pkey_pem,
-                            clientCert=testsxml.x509_pem,
-                            requiredNetwork=None,
-                            targetName=None,
-                            targetType=None,
-                            instanceId=None,
-                            launchWaitTime=1200),
-                    ),
-                    dict(
-                        zone='Local rBuilder',
-                        jobToken='really-unique-uuid-002',
-                        uuid='really-unique-uuid-003',
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/4',
-                            port=80),
-                    ),
-                ),
-            ])
-        system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.jobs.all()
-        self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['really-unique-uuid-003'])
-        # XXX find a better way to extract the additional field from the
-        # many-to-many table
-        self.failUnlessEqual(
-            [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
-            [ 'really-unique-uuid-001' ])
-
-    def testDispatchManagementInterfaceEvent(self):
-        event = self._setupEvent(jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE)
-        self._dispatchEvent(event)
-        transaction.commit()
-
-        mgmtIfaceParams = self.mgr.repeaterMgr.repeaterClient.ManagementInterfaceParams
-        resLoc = self.mgr.repeaterMgr.repeaterClient.ResultsLocation
-
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [
-                ('detectMgmtInterface',
-                    (
-                        mgmtIfaceParams(host='superduper.com',
-                            eventUuid = 'really-unique-uuid-001',
-                            interfacesList=[
-                                {
-                                    'port': 135,
-                                    'interfaceHref':
-                                      '/api/v1/inventory/management_interfaces/2',
-                                },
-                                {
-                                    'port': 5989,
-                                    'interfaceHref':
-                                      '/api/v1/inventory/management_interfaces/1',
-                                },
-                                {
-                                    'port': 22,
-                                    'interfaceHref':
-                                      '/api/v1/inventory/management_interfaces/3',
-                                }
-                                ]
-                        ),
-                    ),
-                    dict(
-                        zone='Local rBuilder',
-                        jobToken='really-unique-uuid-002',
-                        uuid='really-unique-uuid-003',
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/4',
-                            port=80),
-                    ),
-                ),
-            ])
-        system = self.mgr.getSystem(self.system2.system_id)
-        jobs = system.jobs.all()
-        self.failUnlessEqual([ x.job_uuid for x in jobs ],
-            ['really-unique-uuid-003'])
-        # XXX find a better way to extract the additional field from the
-        # many-to-many table
-        self.failUnlessEqual(
-            [ x.event_uuid for x in models.SystemJob.objects.filter(system__system_id = system.system_id) ],
-            [ 'really-unique-uuid-001' ])
-
-    def testInterfaceDetection(self):
-        self._mockUuid()
-
-        eventUuid1 = "eventUuid1"
-        jobUuid1 = "jobUuid1"
-        eventUuid2 = "eventUuid2"
-        jobUuid2 = "jobUuid2"
-
-        CIM = models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.CIM)
-        WMI = models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.WMI)
-
-        systemCim = self.newSystem(name="blah cim",
-            management_interface=CIM)
-        systemCim.save()
-        network = models.Network(dns_name="blah cim", ip_address="1.2.3.4",
-            system=systemCim)
-        network.save()
-        systemWmi = self.newSystem(name="blah wmi",
-            management_interface=WMI)
-        systemWmi.save()
-        network = models.Network(dns_name="blah wmi", ip_address="1.2.3.4",
-            system=systemWmi)
-
-        jobCim = self._newSystemJob(systemCim, eventUuid1, jobUuid1,
-            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-            jobState=jobmodels.JobState.COMPLETED)
-        jobWmi = self._newSystemJob(systemWmi, eventUuid2, jobUuid2,
-            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-            jobState=jobmodels.JobState.COMPLETED)
-
-        repClient = self.mgr.repeaterMgr.repeaterClient
-        cimParams = repClient.CimParams
-        resLoc = repClient.ResultsLocation
-
-        # Clear out the system events table
-        models.SystemEvent.objects.all().delete()
-        transaction.commit()
-        transaction.enter_transaction_management()
-        connection.managed(True)
-
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [])
-
-        newState = self.mgr.sysMgr.getNextSystemState(systemCim, jobCim)
-        self.failUnlessEqual(newState, None)
-        # Nothing in the call stack yet
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [])
-
-        # Force commit, this is normally done by the middleware
-        transaction.commit()
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [
-                ('register_cim',
-                    (
-                        cimParams(host='1.2.3.4',
-                            port=5989,
-                            eventUuid='really-unique-uuid-001',
-                            clientKey=testsxml.pkey_pem,
-                            clientCert=testsxml.x509_pem,
-                            requiredNetwork=None,
-                            targetName=None,
-                            targetType=None,
-                            instanceId=None,
-                            launchWaitTime=1200),
-                    ),
-                    dict(zone='Local rBuilder',
-                        jobToken='really-unique-uuid-002',
-                        uuid='really-unique-uuid-003',
-                        resultsLocation=resLoc(
-                            path='/api/v1/inventory/systems/%s' % systemCim.pk,
-                            port=80),
-                    ),
-                ),
-            ])
-
-        # Clean the deck
-        self.mgr.repeaterMgr.repeaterClient.reset()
-
-        newState = self.mgr.sysMgr.getNextSystemState(systemWmi, jobWmi)
-        self.failUnlessEqual(newState,
-            models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
-        # Being a WMI system, we need credentials
-        self.failUnlessEqual(self.mgr.repeaterMgr.repeaterClient.getCallList(),
-            [])
 
 
 class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
@@ -3557,8 +2787,6 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
         system = self.newSystem(**params)
 
         system.boot_uuid = bootUuid = str(self.uuid4())
-        system.ssl_client_certificate = "ssl client certificate 001"
-        system.ssl_client_key = "ssl client key 001"
         # To mimic the workflow from target, we initially add the target
         # system with no networking info
         system = self.mgr.addLaunchedSystem(system,
@@ -3677,14 +2905,10 @@ class TargetSystemImportTest(XMLTestCase, test_utils.RepeaterMixIn):
             target_system_description = "target-system-description 001",
             target_system_state = "Frisbulating",
             created_by = user2,
-            management_interface = models.Cache.get(models.ManagementInterface,
-                name=models.ManagementInterface.CIM),
         )
         system = self.newSystem(**params)
 
         system.boot_uuid = bootUuid = str(self.uuid4())
-        system.ssl_client_certificate = "ssl client certificate 001"
-        system.ssl_client_key = "ssl client key 001"
 
         system = self.mgr.addLaunchedSystem(system,
             targetName=self.tgt2.name,
@@ -3950,121 +3174,6 @@ refProductDefintion1 = """\
   <searchPaths/>
 </productDefinition>
 """
-
-class Retirement(XMLTestCase):
-    '''
-    Some tests above attempt to test retirement in the model, this is an API
-    test.
-    '''
-    def setUp(self):
-        # make a new system
-        XMLTestCase.setUp(self)
-        self.system = self.newSystem(name="blinky", description="ghost")
-        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(self.system)
-
-    def testRetire(self):
-        generatedUuid = 'generateduuid001'
-        localUuid = 'localuuid001'
-
-        system = self.newSystem(name='blippy', local_uuid=localUuid,
-             generated_uuid=generatedUuid)
-        system.current_state = self.mgr.sysMgr.systemState(
-            models.SystemState.RESPONSIVE)
-        system.save()
-
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-
-        response = self._post('inventory/systems/%s/credentials' % \
-            self.system.pk,
-            data=testsxml.credentials_xml,
-            username="admin", password="password")
-        self.assertEquals(response.status_code, 200)
-
-        params = dict(
-            localUuid=localUuid,
-            generatedUuid=generatedUuid,
-            zoneId=self.localZone.zone_id
-        )
-        xml = testsxml.retirement_xml % params
-
-        # response from put indicates same state as subsequent get
-        response = self._put("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password', data=testsxml.retirement_xml)
-        self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        xObjModel = obj.system
-        self.failUnlessEqual(obj.system.current_state.name, "mothballed")
-
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        obj = xobj.parse(response.content)
-        xObjModel = obj.system
-        self.failUnlessEqual(obj.system.current_state.name, "mothballed")
-
-
-class AntiRecursiveSaving(XMLTestCase):
-    '''
-       Generalized xobj test.  Make sure that when saving an object with child members,
-    in this case a system & a management interface, and we go to EDIT
-    that system, we can't CREATE a new, non-existant management interface OR
-    rename an existing management interface.   This, if present, would
-    allow for priveledge escalation.
-    '''
-    def setUp(self):
-        # make a new system
-        XMLTestCase.setUp(self)
-        self.system = self.newSystem(name="blinky", description="ghost")
-        self.system.management_interface = models.ManagementInterface.objects.get(name='ssh')
-        self.mgr.addSystem(self.system)
-
-    def testCannotModifySubObjects(self):
-        # make sure that fields in foreign key relationships, when saved,
-        # do not allow editing the object represented by the FK.
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        xml = response.content
-        self.assertEquals(response.status_code, 200)
-        xml2 = xml.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
-        response = self._put("inventory/systems/%s" % self.system.pk,
-            data=xml2, username='admin', password='password')
-        # this raised a 400 because one of the objects we tried to save
-        # did not exist, bad input.
-        self.assertEquals(response.status_code, 400)
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(response.content.find("Hacker Interface") == -1)
-
-    def testCannotCreateNewSubObjects(self):
-        # make sure we do not allow creating new sub objects on a put.
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        xml = response.content
-        xml2 = xml.replace("management_interfaces/3", "management_interfaces/9999")
-        xml2 = xml2.replace("Secure Shell (SSH)", "Special Hacker Interface (SHI)")
-        response = self._put("inventory/systems/%s" % self.system.pk,
-            data=xml2, username='admin', password='password')
-        self.assertTrue(response.status_code, 200)
-        response = self._get("inventory/systems/%s" % self.system.pk,
-            username='admin', password='password')
-        self.assertEquals(response.status_code, 200)
-        self.assertTrue(response.content.find("Hacker Interface") == -1)
-        self.assertTrue(response.content.find("management_interfaces/4") == -1)
-
-    def testPostShouldNotInjectNewSubObjects(self):
-        # make sure we do not allow saving new sub objects on a post...
-        response = self._post("inventory/systems",
-            username='admin', password='password',
-            data=testsxml.system_post_forge_object)
-        # sub object didn't exist, so causes a 400, bad input
-        self.assertEquals(response.status_code, 400)
-        interfaces = list(models.ManagementInterface.objects.all())
-        self.assertEquals(len(interfaces), 3, 'no interfaces added')
-
 
 class ModuleHooksTest(XMLTestCase):
     """

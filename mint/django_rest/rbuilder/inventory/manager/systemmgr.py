@@ -7,13 +7,11 @@
 import cPickle
 import logging
 import sys
-import random
 import time
 import traceback
 import uuid
 from conary import versions as cny_versions
 from conary.deps import deps as cny_deps
-from conary import trovetup
 from lxml import etree
 
 from django.db import connection
@@ -22,10 +20,7 @@ from django.contrib.redirects import models as redirectmodels
 from django.contrib.sites import models as sitemodels
 from django.core.exceptions import ObjectDoesNotExist
 
-from mint.lib import x509
-from mint.lib import data as mintdata
 from mint.django_rest import signals, timeutils
-from mint.django_rest.rbuilder import models as rbuildermodels
 from mint.django_rest.rbuilder.inventory import errors
 from mint.django_rest.rbuilder.inventory import models
 from mint.django_rest.rbuilder.inventory import zones as zmodels
@@ -33,7 +28,6 @@ from mint.django_rest.rbuilder.targets import models as targetmodels
 from mint.django_rest.rbuilder.manager import basemanager
 from mint.django_rest.rbuilder.querysets import models as querysetmodels
 from mint.django_rest.rbuilder.jobs import models as jobmodels
-from mint.django_rest.rbuilder.projects import models as projectmodels
 from mint.rest import errors as mint_rest_errors
 
 log = logging.getLogger(__name__)
@@ -41,26 +35,9 @@ exposed = basemanager.exposed
 
 
 class SystemManager(basemanager.BaseManager):
-    RegistrationEvents = set([
-        jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
-        jobmodels.EventType.SYSTEM_REGISTRATION,
-    ])
-    ShutdownEvents = set([
-        jobmodels.EventType.SYSTEM_SHUTDOWN,
-        jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE
-    ])
     LaunchWaitForNetworkEvents = set([
         jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK
     ])
-    ManagementInterfaceEvents = set([
-        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE,
-        jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE
-    ])
-
-    IncompatibleEvents = {
-    }
-
-    X509 = x509.X509
 
     NonresponsiveStates = set([
         models.SystemState.NONRESPONSIVE,
@@ -218,30 +195,6 @@ class SystemManager(basemanager.BaseManager):
         return systems
 
     @exposed
-    def getManagementInterface(self, management_interface_id):
-        managementInterface = models.Cache.get(models.ManagementInterface,
-                pk=int(management_interface_id))
-        return managementInterface
-
-    @exposed
-    def getManagementInterfaces(self):
-        ManagementInterfaces = models.ManagementInterfaces()
-        ManagementInterfaces.management_interface = models.Cache.all(
-            models.ManagementInterface)
-        return ManagementInterfaces
-
-    @exposed
-    def updateManagementInterface(self, management_interface):
-        """Update a management interface"""
-
-        if not management_interface:
-            return
-
-
-        management_interface.save()
-        return management_interface
-
-    @exposed
     def getManagementNode(self, management_node_id):
         managementNode = models.ManagementNode.objects.get(pk=management_node_id)
         return managementNode
@@ -340,70 +293,6 @@ class SystemManager(basemanager.BaseManager):
         return Systems
 
     @exposed
-    def getWindowsBuildServiceSystemType(self):
-        "Return the zone for this rBuilder"
-        return models.Cache.get(models.SystemType,
-            name=models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE)
-
-    @exposed
-    def wmiManagementInterface(self):
-        return models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.WMI)
-
-    @exposed
-    def cimManagementInterface(self):
-        return models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.CIM)
-
-    @exposed
-    def sshManagementInterface(self):
-        return models.Cache.get(models.ManagementInterface,
-            name=models.ManagementInterface.SSH)
-
-    @exposed
-    def getWindowsBuildServiceNodes(self):
-        nodes = []
-        try:
-            system_type = self.getWindowsBuildServiceSystemType()
-            systems = self.getSystemTypeSystems(system_type.system_type_id)
-            nodes = systems and systems.system or []
-        except ObjectDoesNotExist:
-            pass
-
-        return nodes
-
-    @exposed
-    def getWindowsBuildServiceDestination(self):
-        nodes = self.getWindowsBuildServiceNodes()
-        if not nodes:
-            return None
-        node = random.choice(nodes)
-        network = self.extractNetworkToUse(node)
-        if not network:
-            return None
-        r = network.ip_address or network.dns_name
-        dest = str(r.strip())
-        log.info("Selected Windows Build Service with network address %s", dest)
-        return dest
-
-    @exposed
-    def addWindowsBuildService(self, name, description, network_address):
-        log.info("Adding Windows Build Service with name '%s', description '%s', and network address '%s'" % (name, description, network_address))
-        system = models.System(name=name, description=description)
-        system.current_state = self.systemState(models.SystemState.UNMANAGED)
-        system.managing_zone = self.getLocalZone()
-        system.management_interface = models.ManagementInterface.objects.get(pk=1)
-        system.system_type = self.getWindowsBuildServiceSystemType()
-        system.save()
-
-        network = models.Network()
-        network.dns_name = network_address
-        network.system = system
-        network.save()
-
-        return system
-
-    @exposed
     def getSystemState(self, system_state_id):
         systemState = models.Cache.get(models.SystemState, pk=int(system_state_id))
         return systemState
@@ -454,8 +343,7 @@ class SystemManager(basemanager.BaseManager):
             self.addSystem(system, for_user=for_user)
 
     @exposed
-    def addSystem(self, system, generateCertificates=False,
-                  withManagementInterfaceDetection=True, for_user=None,
+    def addSystem(self, system, generateCertificates=False, for_user=None,
                   withRetagging=True):
         '''Add a new system to inventory'''
 
@@ -472,30 +360,13 @@ class SystemManager(basemanager.BaseManager):
             system.created_by = for_user
             system.modified_by = for_user
 
-        etreeModel = getattr(system, '_etreeModel', None)
-        if etreeModel is not None:
-            creds = etreeModel.find('credentials')
-            if creds is not None:
-                credsDict = dict((x.tag, x.text)
-                        for x in creds.iterchildren()
-                        if not x.tag.startswith('_')
-                        and bool(x.text))
-                if credsDict:
-                    self._addSystemCredentials(system, credsDict)
         # add the system
         system.save()
 
         # Verify potential duplicates here
         system = self.mergeSystems(system)
 
-        # setSystemState will generate a CIM call; if it's a new registration,
-        # it will be using the outbound certificate signed by the low-grade
-        # CA. The personalized pair is not stored on the disk yet
-        self.setSystemState(system,
-            withManagementInterfaceDetection=withManagementInterfaceDetection)
-
-        if generateCertificates:
-            self.generateSystemCertificates(system)
+        self.setSystemState(system)
 
         if system.event_uuid:
             self.postprocessEvent(system)
@@ -608,16 +479,13 @@ class SystemManager(basemanager.BaseManager):
         # removable legacy artifact given new jobs infrastructure?  Does anything call this?
         pass
 
-    def setSystemState(self, system, withManagementInterfaceDetection=True):
+    def setSystemState(self, system):
 
         if system.oldModel is None:
             self.log_system(system, models.SystemLogEntry.ADDED)
 
         registeredState = self.systemState(models.SystemState.REGISTERED)
         onlineState = self.systemState(models.SystemState.RESPONSIVE)
-        credentialsMissing = self.systemState(models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED)
-        winBuildNodeType = self.getWindowsBuildServiceSystemType()
-        wmiIfaceId = self.wmiManagementInterface().management_interface_id
 
         if system.isNewRegistration:
             system.update(registration_date=self.now(),
@@ -626,13 +494,6 @@ class SystemManager(basemanager.BaseManager):
                 # We really see this system the first time with its proper
                 # uuids. We'll assume it's been registered with rpath-register
                 self.log_system(system, models.SystemLogEntry.REGISTERED)
-            if (system.management_interface_id == wmiIfaceId and not system.credentials):
-                # No credentials, nothing to do here
-                system.update(current_state=credentialsMissing)
-            else:
-                if (system.management_interface_id == wmiIfaceId and
-                        system.system_type.name == models.SystemType.INFRASTRUCTURE_WINDOWS_BUILD_NODE):
-                    self._scheduleRwbsInstallation(system)
         elif system.isRegistered:
             # See if a new poll is required
             if (system.current_state_id in self.NonresponsiveStates):
@@ -653,12 +514,6 @@ class SystemManager(basemanager.BaseManager):
                 return None
         elif system.isRegistrationIncomplete:
             self.log_system(system, "Incomplete registration: missing local_uuid. Possible cause: dmidecode malfunctioning")
-        elif (system.management_interface_id == wmiIfaceId and not system.credentials):
-                # No credentials, nothing to do here
-                system.update(current_state=credentialsMissing)
-        elif withManagementInterfaceDetection:
-            # Need to dectect the management interface on the system
-            self.scheduleSystemDetectMgmtInterfaceEvent(system)
         # so that a transition between Inactive and Active systems will make the system
         # move between querysets.  Note, not retagging, would be grossly inefficient
         # with lots of system activity
@@ -673,56 +528,12 @@ class SystemManager(basemanager.BaseManager):
             return ret[0]
         return None
 
-    def generateSystemCertificates(self, system):
-        if system._ssl_client_certificate is not None and \
-                system._ssl_client_key is not None:
-            # Certs are already generated. We may want to re-generate them at
-            # some point, but not now
-            return
-        if system.local_uuid is None or system.generated_uuid is None:
-            # No point in trying to generate certificates if the system hasn't
-            # registered yet
-            return
-        # We won't sign the certificate, because validation requires
-        # that the lgca is present, and that totally defeats the purpose
-        # of locking down security. We'll go with self-signed certs for now
-        if 0:
-            # Grab the low grade cert
-            lg_cas = rbuildermodels.PkiCertificates.objects.filter(
-                purpose="lg_ca").order_by('-time_issued')
-            if not lg_cas:
-                raise Exception("Unable to find suitable low-grade CA")
-            lg_ca = lg_cas[0]
-            ca_crt = self.X509(None, None)
-            ca_crt.load_from_strings(lg_ca.x509_pem, lg_ca.pkey_pem)
-            issuer_x509 = ca_crt.x509
-            issuer_pkey = ca_crt.pkey
-        else:
-            issuer_pkey = issuer_x509 = None
-        # When we get around to re-generate certs, bump the serial here
-        serial = 0
-        rbuilderIdent = "http://%s" % (self.cfg.siteHost, )
-        cn = "local_uuid:%s generated_uuid:%s serial:%d" % (
-            system.local_uuid, system.generated_uuid, serial)
-        subject = self.X509.Subject(O="rPath rBuilder", OU=rbuilderIdent, CN=cn)
-        crt = self.X509.new(subject=subject, serial=serial,
-            issuer_x509=issuer_x509, issuer_pkey=issuer_pkey)
-        if 0:
-            del ca_crt
-        system._ssl_client_certificate = crt.x509.as_pem()
-        system._ssl_client_key = crt.pkey.as_pem(None)
-        system.save()
-
     @exposed
     def updateSystem(self, system, for_user=None):
-        if not system.event_uuid and self.checkAndApplyShutdown(system):
-            return
-        self.checkInstalledSoftware(system)
         last_job = getattr(system, 'lastJob', None)
         if last_job and last_job.job_state.name == jobmodels.JobState.COMPLETED:
             # This will update the system state as a side-effect
             self.addSystem(system, generateCertificates=False,
-                withManagementInterfaceDetection=False,
                 withRetagging=False)
         self.setSystemStateFromJob(system)
         if for_user:
@@ -731,35 +542,6 @@ class SystemManager(basemanager.BaseManager):
         system.save()
         self.mgr.invalidateQuerySetsByType('system')
         return system
-
-    def checkInstalledSoftware(self, system):
-        # If there is an event_uuid set on system, assume we're just updating
-        # the DB with the results of a job, otherwise, update the actual
-        # installed software on the system.
-        if system.new_versions is None:
-            return
-        troveSpecs = ["%s=%s[%s]" % x.getNVF()
-            for x in system.new_versions ]
-        # This isn't technically needed anymore, but for now it will prevent
-        # clients from inadvertently overwriting the software if they still
-        # PUT a system model and expect that to trigger a software update
-        if not system.event_uuid:
-            return
-        if troveSpecs:
-            msg = "Setting installed software to: %s" % (
-                ', '.join(troveSpecs), )
-        else:
-            msg = "Deleting all installed software"
-        self.log_system(system, msg)
-        self.mgr.setInstalledSoftware(system, system.new_versions)
-
-    def checkAndApplyShutdown(self, system):
-        currentStateName = system.current_state.name
-        if currentStateName == models.SystemState.NONRESPONSIVE_SHUTDOWN:
-            self.scheduleSystemShutdownEvent(system)
-            return True
-        else:
-            return False
 
     def setSystemStateFromJob(self, system):
         job = system.lastJob
@@ -795,52 +577,14 @@ class SystemManager(basemanager.BaseManager):
         if jobStateName == jobmodels.JobState.COMPLETED:
             if eventTypeName in [ jobmodels.EventType.SYSTEM_REGISTRATION, jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE ]:
                 return models.SystemState.RESPONSIVE
-            if eventTypeName in self.ManagementInterfaceEvents:
-                # Management interface detection finished, need to schedule a
-                # registration event now.
-                wmiIfaceId = self.wmiManagementInterface().pk
-                # unless we are SSH, in which case, assimilation is the only
-                # way to upgrade to a interface type that can do something other
-                # than just assimilate
-                sshIfaceId = self.sshManagementInterface().pk
-
-                if system.management_interface_id == sshIfaceId:
-                    # if no credentials, then the system is not one we are
-                    # supposed to assimilate
-                    return None
-
-                if system.management_interface_id == wmiIfaceId:
-                    # windows layered images not supported
-                    # could spawn an update job here if we wanted
-                    #if system.credentials and system.hasSourceImage():
-                    #    pass
-                    if not system.credentials:
-                        # No credentials avaiable, prompt the user for them.
-                        return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
-                self.scheduleSystemRegistrationEvent(system)
-                return None
-            else:
-                # Add more processing here if needed
-                return None
+            return None
         if jobStateName == jobmodels.JobState.FAILED:
             currentStateName = system.current_state.name
             # Simple cases first.
             if job.status_code == 401:
-                # Authentication required
-                if currentStateName == models.SystemState.UNMANAGED:
-                    return models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED
-                # A mothballed system remains mothballed
-                if currentStateName in [models.SystemState.MOTHBALLED,
-                        models.SystemState.UNMANAGED_CREDENTIALS_REQUIRED,
-                        models.SystemState.NONRESPONSIVE_CREDENTIALS]:
-                    return None
                 return models.SystemState.NONRESPONSIVE_CREDENTIALS
-            if currentStateName == models.SystemState.MOTHBALLED:
-                return None
             timedelta = self.now() - system.state_change_date
             if currentStateName == models.SystemState.DEAD:
-                if timedelta.days >= self.cfg.mothballedStateTimeout:
-                    return models.SystemState.MOTHBALLED
                 return None
             if currentStateName in self.NonresponsiveStates:
                 if timedelta.days >= self.cfg.deadStateTimeout:
@@ -899,9 +643,6 @@ class SystemManager(basemanager.BaseManager):
             targetName=targetName)
         system.target = target
         system.source_image = sourceImage
-        # Copy incoming certs (otherwise read-only)
-        system._ssl_client_certificate = system.ssl_client_certificate
-        system._ssl_client_key = system.ssl_client_key
         if sourceImage is not None:
             system.project_id = sourceImage.project_id
             system.project_branch_id = sourceImage.project_branch_id
@@ -954,8 +695,7 @@ class SystemManager(basemanager.BaseManager):
         self.log_system(system, "System launched in target %s (%s)" %
             (target.name, target.target_type.name))
         system.system_state = self.systemState(models.SystemState.UNMANAGED)
-        self.addSystem(system, for_user=for_user,
-            withManagementInterfaceDetection=False)
+        self.addSystem(system, for_user=for_user)
         # Add target system
         # get_or_create needs the defaults arg to do this properly (#1631)
         defaults=dict(
@@ -1029,12 +769,10 @@ class SystemManager(basemanager.BaseManager):
     def matchSystem(self, system):
         matchingIPs = models.network_information.objects.filter(
                         ip_address=system.ip_address)
-        for matchingIP in matchingIPs:
-            sslCert = open(matchingIP.managed_system.ssl_client_certificate).read()
-            if sslCert == system.ssl_client_certificate:
-                return matchingIP.managed_system
-
-        return None
+        if matchingIPs:
+            return matchingIPs[0].managed_system
+        else:
+            return None
 
     def isManageable(self, managedSystem):
         if managedSystem.launching_user.user_id == self.user.user_id:
@@ -1066,73 +804,6 @@ class SystemManager(basemanager.BaseManager):
         systemLog = self.getSystemLog(system)
         logEntries = systemLog.system_log_entries.order_by('-entry_date')
         return logEntries
-
-    def _getCredentialsModel(self, system, credsDict):
-        credentials = models.Credentials(system)
-        for k, v in credsDict.items():
-            setattr(credentials, k, v)
-        return credentials
-
-    def unmarshalCredentials(self, credentialsString):
-        creds = mintdata.unmarshalCredentials(self.cfg, credentialsString)
-        # Keys should be strings, not unicode
-        creds = dict((str(k), v) for (k, v) in creds.iteritems())
-        return creds
-
-    def marshalCredentials(self, credentialsDict):
-        return mintdata.marshalCredentials(self.cfg, credentialsDict)
-
-    def _systemOrId(self, system_or_id):
-        '''Allow input of systems or system ids'''
-        if type(system_or_id) != models.System:
-            return models.System.objects.get(pk=system_or_id)
-        else:
-            return system_or_id
-
-    @exposed
-    def getSystemCredentials(self, system):
-        '''
-        Get the credentials assigned to the management interface, which
-        differs by type (SSH, WMI, CIM...), as an xobj model
-        '''
-        system = self._systemOrId(system)
-        systemCreds = {}
-        if system.management_interface:
-            if system.management_interface.name in [ 'wmi', 'ssh' ]:
-                if system.credentials is None:
-                    systemCreds = {}
-                else:
-                    systemCreds = self.unmarshalCredentials(system.credentials)
-            else:
-                systemCreds = dict(
-                    ssl_client_certificate=system._ssl_client_certificate,
-                    ssl_client_key=system._ssl_client_key)
-
-        return self._getCredentialsModel(system, systemCreds)
-
-    @exposed
-    def addSystemCredentials(self, system_id, credentials):
-        system = models.System.objects.get(pk=system_id)
-        self._addSystemCredentials(system, credentials)
-        # We assume the system is unmanaged, and kick a registration
-        system.current_state = self.systemState(models.SystemState.UNMANAGED)
-        system.save()
-        # Schedule a system registration event after adding/updating
-        # credentials.
-        self.scheduleSystemRegistrationEvent(system)
-        return self._getCredentialsModel(system, credentials)
-
-    def _addSystemCredentials(self, system, credentials):
-        if system.management_interface:
-            if system.management_interface.name in [ 'wmi', 'ssh' ]:
-                systemCreds = self.marshalCredentials(credentials)
-                system.credentials = systemCreds
-            elif system.management_interface.name == 'cim':
-                if credentials.has_key('ssl_client_certificate'):
-                    system._ssl_client_certificate = \
-                        credentials['ssl_client_certificate']
-                if credentials.has_key('ssl_client_key'):
-                    system._ssl_client_key = credentials['ssl_client_key']
 
     @exposed
     def getSystemEvent(self, event_id):
@@ -1171,23 +842,6 @@ class SystemManager(basemanager.BaseManager):
             return
 
         system = models.System.objects.get(pk=system_id)
-
-        # If this systemEvent requires that a management interface be set on
-        # the system and one is not, instead schedule an event to detect the
-        # interface.
-        if systemEvent.event_type.requiresManagementInterface:
-            if not system.management_interface:
-                if self.getSystemHasHostInfo(system):
-                    return self.scheduleSystemDetectMgmtInterfaceEvent(system)
-                else:
-                    log.info("Event cannot be created for system id %s '%s' "
-                        "because there is no host information" % \
-                        (system.pk, systemEvent.event_type.description))
-                    self.log_system(system,
-                        "Unable to create event '%s': no networking information" %
-                            systemEvent.event_type.description)
-                    raise errors.InvalidNetworkInformation
-
         systemEvent.system = system
         systemEvent.save()
 
@@ -1237,16 +891,6 @@ class SystemManager(basemanager.BaseManager):
         if event.event_type.name in runningEventTypes:
             raise errors.IncompatibleSameEvent(eventType=event.event_type.name)
 
-        # Check other incompatible event types
-        incompatibleEvents = self.IncompatibleEvents.get(
-            event.event_type.name, None)
-        if incompatibleEvents:
-            for runningEventType in runningEventTypes:
-                if runningEventType in incompatibleEvents:
-                    raise errors.IncompatibleEvents(
-                        firstEventType=runningEventType,
-                        secondEventType=event.event_type.name)
-
     def dispatchSystemEvent(self, event):
         # Check if the system has any active jobs before creating the event.
         if event.system.hasRunningJobs():
@@ -1270,31 +914,8 @@ class SystemManager(basemanager.BaseManager):
             if job is None:
                 self.cleanupSystemEvent(event)
 
-    @classmethod
-    @exposed
-    def getSystemManagementInterfaceName(cls, system):
-        if system.management_interface_id is None:
-            # Assume CIM
-            return models.ManagementInterface.CIM
-        return system.management_interface.name
-
-    def _computeDispatcherMethodParams(self, repClient, system, destination, eventUuid, requiredNetwork):
-        methodMap = {
-            models.ManagementInterface.CIM : self._cimParams,
-            models.ManagementInterface.WMI : self._wmiParams,
-            # this may have to change if the SSH interface starts to do more
-            # than just assimilation
-            models.ManagementInterface.SSH : None
-        }
-        mgmtInterfaceName = self.getSystemManagementInterfaceName(system)
-        if mgmtInterfaceName == models.ManagementInterface.SSH:
-            # there will be no following events, no need to do this.
-            return None
-        else:
-            method = methodMap[mgmtInterfaceName]
-        return method(repClient, system, destination, eventUuid, requiredNetwork)
-
     def _cimParams(self, repClient, system, destination, eventUuid, requiredNetwork):
+        # CIM is dead; this is just here for LaunchWaitForNetworkEvents
         if system.target_id is not None:
             targetName = system.target.name
             targetType = system.target.target_type.name
@@ -1302,44 +923,17 @@ class SystemManager(basemanager.BaseManager):
             targetName = None
             targetType = None
         cimParams = repClient.CimParams(host=destination,
-            port=system.agent_port,
+            port=None,
             eventUuid=eventUuid,
-            clientCert=system._ssl_client_certificate,
-            clientKey=system._ssl_client_key,
+            clientCert=None,
+            clientKey=None,
             requiredNetwork=requiredNetwork,
             # XXX These three do not belong to cimParams
             instanceId=system.target_system_id,
             targetName=targetName,
             targetType=targetType,
             launchWaitTime=self.cfg.launchWaitTime)
-        if None in [cimParams.clientKey, cimParams.clientCert]:
-            # This is most likely a new system.
-            # Get a cert that is likely to work
-            outCerts = rbuildermodels.PkiCertificates.objects.filter(purpose="outbound").order_by('-time_issued')
-            if outCerts:
-                outCert = outCerts[0]
-                cimParams.clientCert = outCert.x509_pem
-                cimParams.clientKey = outCert.pkey_pem
         return cimParams
-
-    def _wmiParams(self, repClient, system, destination, eventUuid, requiredNetwork):
-        kwargs = {}
-        credentialsString = system.credentials
-        if credentialsString:
-            kwargs.update(self.unmarshalCredentials(credentialsString))
-            if not kwargs.get('domain'):
-                # Copy hostname or IP to domain field if not provided, to
-                # indicate that the credentials are for the local system
-                kwargs['domain'] = destination.upper()
-        kwargs.update(
-            host=destination,
-            port=system.agent_port,
-            eventUuid=eventUuid,
-            requiredNetwork=requiredNetwork)
-
-        # SlotCompare objects are smart enough to ignore unknown keywords
-        wmiParams = repClient.WmiParams(**kwargs)
-        return wmiParams
 
     def _dispatchSystemEvent(self, event):
         repClient = self.mgr.repeaterMgr.repeaterClient
@@ -1367,8 +961,8 @@ class SystemManager(basemanager.BaseManager):
 
         eventUuid = str(uuid.uuid4())
         zone = event.system.managing_zone.name
-        params = self._computeDispatcherMethodParams(repClient, event.system,
-            destination, eventUuid, requiredNetwork)
+        params = self._cimParams(repClient, event.system, destination,
+                eventUuid, requiredNetwork)
         if params is None:
             return
 
@@ -1376,52 +970,14 @@ class SystemManager(basemanager.BaseManager):
             path = "/api/v1/inventory/systems/%d" % event.system.pk,
             port = 80)
 
-        mgmtInterfaceName = self.getSystemManagementInterfaceName(event.system)
-
-        job = None
-        # TODO: refactor
-        if eventType in self.RegistrationEvents:
-            method = getattr(repClient, "register_" + mgmtInterfaceName)
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone)
-        elif eventType in self.ShutdownEvents:
-            method = getattr(repClient, "shutdown_" + mgmtInterfaceName)
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone)
-        elif eventType in self.LaunchWaitForNetworkEvents:
+        if eventType in self.LaunchWaitForNetworkEvents:
             method = repClient.launchWaitForNetwork
-            job = self._runSystemEvent(event, method, params, resultsLocation,
-                user=self.user, zone=zone)
-        elif eventType in self.ManagementInterfaceEvents:
-            params = self.getManagementInterfaceParams(repClient, destination)
-            params.eventUuid = eventUuid
-            method = repClient.detectMgmtInterface
             job = self._runSystemEvent(event, method, params, resultsLocation,
                 user=self.user, zone=zone)
         else:
             log.error("Unknown event type %s" % eventType)
             raise errors.UnknownEventType(eventType=eventType)
         return job
-
-    def getManagementInterfaceParams(self, repClient, destination):
-        # Enumerate all management interfaces
-        ifaces = models.Cache.all(models.ManagementInterface)
-        interfacesList = [ dict(interfaceHref=x.get_absolute_url(), port=x.port)
-            for x in ifaces ]
-        # Order the list so we detect wmi before cim (luckily we can sort by
-        # port number), but SSH should always come last.  This is a bit silly
-        # as we could just hardcode the list, though this may prevent suprises
-        # when we add the next one.
-        def interfaceSorter(x):
-            if x['port'] == 22:
-                return 99999   # SSH comes last
-            else:
-                return x['port']
-
-        interfacesList.sort(key=lambda x: interfaceSorter(x))
-        params = repClient.ManagementInterfaceParams(host=destination,
-            interfacesList=interfacesList)
-        return params
 
     @exposed
     def extractNetworkToUse(self, system):
@@ -1512,20 +1068,6 @@ class SystemManager(basemanager.BaseManager):
         return jobmodels.JobState.objects.get(name=name)
 
     @exposed
-    def scheduleSystemRegistrationEvent(self, system):
-        '''Schedule an event for the system to be registered'''
-        # registration events happen on demand, so enable now
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_REGISTRATION_IMMEDIATE,
-            enableTime=self.now())
-
-    @exposed
-    def scheduleSystemShutdownEvent(self, system):
-        '''Schedule an event to shutdown the system.'''
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_SHUTDOWN_IMMEDIATE)
-
-    @exposed
     def scheduleLaunchWaitForNetworkEvent(self, system):
         """
         Schedule an event that either waits for the system's IP address to
@@ -1534,16 +1076,6 @@ class SystemManager(basemanager.BaseManager):
         """
         return self._scheduleEvent(system,
             jobmodels.EventType.LAUNCH_WAIT_FOR_NETWORK,
-            enableTime=self.now())
-
-    @exposed
-    def scheduleSystemDetectMgmtInterfaceEvent(self, system):
-        """
-        Schedule an immediate event that detects the management interface
-        on the system.
-        """
-        return self._scheduleEvent(system,
-            jobmodels.EventType.SYSTEM_DETECT_MANAGEMENT_INTERFACE_IMMEDIATE,
             enableTime=self.now())
 
     def _scheduleEvent(self, system, eventType, enableTime=None,
@@ -1677,14 +1209,6 @@ class SystemManager(basemanager.BaseManager):
         system.target_system_state = targetSystem.state
         system.save()
         self._setSystemTargetCredentials(system, targetSystem)
-        if not existingSystems:
-            t1 = time.time()
-            try:
-                self.scheduleSystemDetectMgmtInterfaceEvent(system)
-                log.info("    Scheduling action completed in %.2f seconds" %
-                    (time.time() - t1, ))
-            except errors.InvalidNetworkInformation:
-                pass
         log.info("  Importing system %s (%s) completed in %.2f seconds" %
             (system.target_system_id, system.target_system_name,
                 time.time() - t0))

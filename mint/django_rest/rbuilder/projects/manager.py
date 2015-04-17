@@ -330,7 +330,7 @@ class ProjectManager(basemanager.BaseManager):
         try:
             projectVersion.save()
         except IntegrityError, e:
-            if 'duplicate key' in e.message:
+            if 'duplicate key' in str(e):
                 raise errors.Conflict(
                         msg='Conflict with an existing project branch')
             raise

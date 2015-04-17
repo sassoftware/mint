@@ -1946,9 +1946,7 @@ ZcY7o9aU
       <target_system_id>0c24c2d8-2fde-11d0-67ab-599b1d93616c</target_system_id>
       <description>misa-foobar-4</description>
       <target_system_state>Running</target_system_state>
-      <ssl_client_certificate>foo</ssl_client_certificate>
       <target_system_description>misa-foobar-4</target_system_description>
-      <ssl_client_key>foo</ssl_client_key>
       <target_system_name>misa-foobar-4</target_system_name>
       <dnsName>172.16.175.51</dnsName>
       <targetName>Target Name xen-enterprise</targetName>

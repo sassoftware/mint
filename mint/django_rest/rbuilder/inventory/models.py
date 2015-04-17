@@ -1,17 +1,8 @@
-
-# Copyright (c) 2010 rPath, Inc.
 #
-# All Rights Reserved
+# Copyright (c) SAS Institute Inc.
 #
 import sys
-import urllib
-import urlparse
 import re
-
-from conary import versions
-from conary.deps import deps
-from conary.trovetup import TroveTuple, TroveSpec
-from conary.errors import ParseError
 
 from django.db import models
 from django.db.backends import signals
@@ -75,7 +66,6 @@ class Inventory(modellib.XObjModel):
 
     zones = D(modellib.HrefField('zones'), "an entry point into the inventory management zones collection")
     management_nodes = D(modellib.HrefField('management_nodes'), "an entry point into the inventory management nodes collection (rPath Update Services)")
-    management_interfaces = D(modellib.HrefField('management_interfaces'), "an entry point into the collection of management interfaces (CIM, WMI, etc.)")
     system_types = D(modellib.HrefField('system_types'), "an entry point into the inventory system types collection")
     networks = D(modellib.HrefField('networks'), "an entry point into the inventory system networks collection")
     systems = D(modellib.HrefField('systems'), "an entry point into the collection of all systems (all systems in inventory_systems and infrastructure systems combined)")
@@ -159,28 +149,6 @@ class Networks(modellib.XObjModel):
 
     systems = D(modellib.HrefField('../systems'), "an entry point into system inventory")
 
-class Credentials(modellib.XObjIdModel):
-
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag = 'credentials',
-                attributes = {'id':str},
-                elements = [
-                    'ssl_client_certificate',
-                    'ssl_client_key',
-                ])
-    objects = modellib.CredentialsManager()
-    view_name = 'SystemCredentials'
-
-    def __init__(self, system, *args, **kwargs):
-        self._system = system
-        modellib.XObjIdModel.__init__(self, *args, **kwargs)
-
-    def to_xml(self, request=None, xobj_model=None):
-        self.id = self.get_absolute_url(request, parents=[self._system])
-        return xobj.toxml(self)
-
 
 class SystemState(modellib.XObjIdModel):
 
@@ -252,53 +220,6 @@ class SystemState(modellib.XObjIdModel):
 
     load_fields = [ name ]
 
-class ManagementInterfaces(modellib.XObjModel):
-
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag='management_interfaces',
-                elements=['management_interface'])
-    list_fields = ['management_interface']
-
-class ManagementInterface(modellib.XObjIdModel):
-
-    class Meta:
-        db_table = 'inventory_management_interface'
-
-    # Don't inline all the systems now.  Do not remove this code!
-    # See https://issues.rpath.com/browse/RBL-7883 for more info
-    _xobj_hidden_accessors = set(['systems',])
-
-    _xobj = xobj.XObjMetadata(
-                tag = 'management_interface',
-                attributes = {'id':str})
-
-    CIM = "cim"
-    CIM_DESC = "Common Information Model (CIM)"
-    CIM_PORT = 8443
-    WMI = "wmi"
-    WMI_PORT = 135
-    WMI_DESC = "Windows Management Instrumentation (WMI)"
-    SSH = "ssh"
-    SSH_PORT = 22
-    SSH_DESC = "Secure Shell (SSH)"
-
-    CHOICES = (
-        (CIM, CIM_DESC),
-        (WMI, WMI_DESC),
-        (SSH, SSH_DESC),
-    )
-
-    management_interface_id = D(models.AutoField(primary_key=True), "the database ID for the management interface")
-    name = D(APIReadOnly(models.CharField(max_length=8092, unique=True, choices=CHOICES)), "the name of the management interface")
-    description = D(models.CharField(max_length=8092), "the description of the management interface")
-    created_date = D(modellib.DateTimeUtcField(auto_now_add=True), "the date the management interface was added to inventory (UTC)")
-    port = D(models.IntegerField(null=False), "the port used by the management interface")
-    credentials_descriptor = D(modellib.XMLField(), "the descriptor of available fields to set credentials for the management interface")
-    credentials_readonly = D(models.NullBooleanField(), "whether or not the management interface has readonly credentials")
-
-    load_fields = [name]
 
 class SystemTypes(modellib.XObjModel):
 
@@ -325,13 +246,10 @@ class SystemType(modellib.XObjIdModel):
     INVENTORY_DESC = "Inventory"
     INFRASTRUCTURE_MANAGEMENT_NODE = "infrastructure-management-node"
     INFRASTRUCTURE_MANAGEMENT_NODE_DESC = "rPath Update Service (Infrastructure)"
-    INFRASTRUCTURE_WINDOWS_BUILD_NODE = "infrastructure-windows-build-node"
-    INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC = "rPath Windows Build Service (Infrastructure)"
 
     CHOICES = (
         (INVENTORY, INVENTORY_DESC),
         (INFRASTRUCTURE_MANAGEMENT_NODE, INFRASTRUCTURE_MANAGEMENT_NODE_DESC),
-        (INFRASTRUCTURE_WINDOWS_BUILD_NODE, INFRASTRUCTURE_WINDOWS_BUILD_NODE_DESC),
     )
 
     system_type_id = D(models.AutoField(primary_key=True), "the database ID for the system type")
@@ -436,18 +354,6 @@ class System(modellib.XObjIdModel):
         "a UUID that is randomly generated", short="System UUID")
     local_uuid = D(models.CharField(max_length=64, null=True),
         "a UUID created from the system hardware profile", short="System local UUID")
-    ssl_client_certificate = D(modellib.SyntheticField(),
-        "an x509 certificate of an authorized client that can use the "
-        "system's CIM broker")
-    _ssl_client_certificate = XObjHidden(APIReadOnly(models.CharField(
-        max_length=8092, null=True, db_column='ssl_client_certificate')))
-    ssl_client_key = D(XObjHidden(modellib.SyntheticField()),
-        "an x509 private key of an authorized client that can use the "
-        "system's CIM broker")
-    _ssl_client_key = XObjHidden(APIReadOnly(models.CharField(
-        max_length=8092, null=True, db_column='ssl_client_key')))
-    ssl_server_certificate = D(models.CharField(max_length=8092, null=True),
-        "an x509 public certificate of the system's CIM broker")
     launching_user = D(modellib.ForeignKey(usersmodels.User, null=True,
         text_field="user_name", on_delete=models.SET_NULL),
         "the user that deployed the system (only applies if system is on a "
@@ -459,18 +365,12 @@ class System(modellib.XObjIdModel):
             related_name='systems', text_field="name"),
         "a link to the management zone in which this system resides")
     jobs = models.ManyToManyField(jobmodels.Job, through="SystemJob") #, related_name='systems')
-    agent_port = D(models.IntegerField(null=True),
-          "the port used by the system's CIM broker", short="System agent port")
     state_change_date = XObjHidden(APIReadOnly(modellib.DateTimeUtcField(
         auto_now_add=True, default=timeutils.now())))
     event_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used to link system events with their returned responses")
     boot_uuid = D(XObjHidden(modellib.SyntheticField()),
         "a UUID used for tracking systems registering at startup time")
-    management_interface = D(modellib.ForeignKey(ManagementInterface,
-        null=True, related_name='systems', text_field="description"),
-        "the management interface used to communicate with the system")
-    credentials = APIReadOnly(XObjHidden(models.TextField(null=True)))
     system_type = D(modellib.ForeignKey(SystemType, null=False,
         related_name='systems', text_field='description'),
         "the type of the system",
@@ -530,8 +430,6 @@ class System(modellib.XObjIdModel):
                 name = SystemState.UNMANAGED)
         if not self.name:
             self.name = self.hostname and self.hostname or ''
-        if not self.agent_port and self.management_interface:
-            self.agent_port = self.management_interface.port
         if self.system_type_id is None:
             self.system_type = SystemType.objects.get(
                 name = SystemType.INVENTORY)
@@ -728,12 +626,6 @@ class System(modellib.XObjIdModel):
         self.network_address = self.__class__.extractNetworkAddress(self)
         etreeModel = modellib.XObjIdModel.serialize(self, request, **kwargs)
 
-        if request:
-            if not summarize:
-                absUrl = self.get_absolute_url(request)
-                etreeModel.append(etreeModel.makeelement('credentials',
-                    id='%s/credentials' % absUrl))
-
         class JobsHref(modellib.XObjIdModel):
             _xobj = xobj.XObjMetadata(tag='jobs',
                 elements = ['queued_jobs', 'completed_jobs',
@@ -830,7 +722,6 @@ class System(modellib.XObjIdModel):
     def computeSyntheticFields(self, sender, **kwargs):
         ''' Compute non-database fields.'''
         self._computeActions()
-        self.ssl_client_certificate = self._ssl_client_certificate
 
     def _computeActions(self):
         '''What actions are available on the system?'''
@@ -882,22 +773,6 @@ class SystemTargetCredentials(modellib.XObjModel):
         related_name = 'target_credentials')
     credentials = modellib.ForeignKey(targetmodels.TargetCredentials,
         null=False, related_name = 'systems')
-
-class InstalledSoftware(modellib.XObjIdModel):
-
-    class Meta:
-        abstract = True
-    _xobj = xobj.XObjMetadata(
-                tag='installed_software',
-                attributes=dict(id = str))
-    list_fields = ['trove']
-    objects = modellib.InstalledSoftwareManager()
-
-    def get_absolute_url(self, request, parents=None, *args, **kwargs):
-        if parents:
-            return modellib.XObjIdModel.get_absolute_url(self, request,
-                parents, *args, **kwargs)
-        return request.build_absolute_uri(request.get_full_path())
 
 
 class SystemEvent(modellib.XObjIdModel):
@@ -1016,127 +891,6 @@ class SystemLogEntry(modellib.XObjModel):
     entry = models.CharField(max_length=8092, choices=choices)
     entry_date = modellib.DateTimeUtcField(auto_now_add=True)
 
-class Trove(modellib.XObjIdModel):
-    class Meta:
-        db_table = 'inventory_trove'
-        unique_together = (('name', 'version', 'flavor'),)
-
-    _xobj = xobj.XObjMetadata(tag='trove')
-    _xobj_hidden_accessors = set(['package_sources',])
-
-    objects = modellib.TroveManager()
-
-    trove_id = models.AutoField(primary_key=True)
-    name = models.TextField()
-    version = modellib.SerializedForeignKey('Version')
-    flavor = models.TextField()
-    is_top_level = models.BooleanField()
-
-    load_fields = [ name, version, flavor ]
-
-    def get_absolute_url(self, request, *args, **kwargs):
-        """
-        model is an optional xobj model to use when computing the URL.
-        It helps avoid additional database queries.
-        """
-        # Build an id to crest
-        conaryVersion = self.version.conaryVersion
-        label = conaryVersion.trailingLabel()
-        revision = conaryVersion.trailingRevision()
-        shortname = label.getHost().split('.')[0]
-        path = "repos/%s/api/trove/%s=/%s/%s[%s]" % \
-            (shortname, self.name, label.asString(),
-             revision.asString(), self.flavor)
-        path = urllib.quote(path)
-
-        if request:
-            scheme, netloc = urlparse.urlparse(
-                request.build_absolute_uri())[0:2]
-            url = urlparse.urlunparse((scheme, netloc, path, '', '', ''))
-            return url
-        else:
-            return path
-
-    def _is_top_level_group(self):
-        return self.name.startswith('group-') and \
-            self.name.endswith('-appliance')
-
-    def save(self, *args, **kw):
-        self.is_top_level = self._is_top_level_group()
-        if self.flavor is None:
-            self.flavor = ''
-        modellib.XObjModel.save(self, *args, **kw)
-
-    def getFlavor(self):
-        if not self.flavor:
-            return deps.parseFlavor('')
-        return deps.parseFlavor(self.flavor)
-
-    def getLabel(self):
-        if not self.version.label:
-            return None
-        return versions.Label(self.version.label)
-
-    def getHost(self):
-        return self.getLabel().getHost()
-
-    def getVersion(self):
-        return self.version.conaryVersion
-
-    def getNVF(self):
-        return self.name, self.version.conaryVersion, self.getFlavor()
-
-    def __str__(self):
-        return "%s=%s" % (self.name, self.getVersion().asString())
-
-    def serialize(self, *args, **kwargs):
-        etreeModel = modellib.XObjIdModel.serialize(self, *args, **kwargs)
-        modellib.Etree.Node('is_top_level_item', parent=etreeModel, text='true')
-        return etreeModel
-
-class Version(modellib.XObjModel):
-    serialize_accessors = False
-    class Meta:
-        db_table = 'inventory_version'
-        unique_together = [ ('full', 'ordering', 'flavor'), ]
-
-    objects = modellib.VersionManager()
-
-    _xobj = xobj.XObjMetadata(tag='version')
-
-    version_id = models.AutoField(primary_key=True)
-    full = models.TextField()
-    label = models.TextField()
-    revision = models.TextField()
-    ordering = models.TextField()
-    flavor = models.TextField()
-
-    load_fields = [ full, ordering, flavor ]
-
-    @property
-    def conaryVersion(self):
-        return self.getConaryVersion(self)
-
-    @classmethod
-    def getConaryVersion(cls, model):
-        v = versions.VersionFromString(model.full,
-            timeStamps = [ float(model.ordering) ] )
-        return v
-
-    def fromConaryVersion(self, version):
-        self.full = str(version)
-        self.label = str(version.trailingLabel())
-        self.revision = str(version.trailingRevision())
-        self.ordering = str(version.timeStamps()[0])
-
-    def save(self, *args, **kwargs):
-        # If the object is incomplete, fill in the missing information
-        if not self.label or not self.revision:
-            v = self.conaryVersion
-            self.fromConaryVersion(v)
-        if self.flavor is None:
-            self.flavor = ''
-        return super(Version, self).save(*args, **kwargs)
 
 class SystemJobs(modellib.XObjModel):
     class Meta:

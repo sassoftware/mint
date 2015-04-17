@@ -55,17 +55,7 @@ urlpatterns = patterns('',
         inventoryviews.InventoryZoneManagementNodeService(),
         name='ZoneManagementNode',
         model='inventory.ZoneManagementNode'),
-        
-    # Management Interfaces
-    URL(r'/management_interfaces/?$',
-        inventoryviews.InventoryManagementInterfacesService(),
-        name='ManagementInterfaces',
-        model='inventory.ManagementInterfaces'),
-    URL(r'/management_interfaces/(?P<management_interface_id>\d+)/?$',
-        inventoryviews.InventoryManagementInterfaceService(),
-        name='ManagementInterface',
-        model='inventory.ManagementInterface'),
-        
+
     # System types
     URL(r'/system_types/?$',
         inventoryviews.InventorySystemTypesService(),
@@ -131,10 +121,6 @@ urlpatterns = patterns('',
         inventoryviews.InventorySystemsSystemLogService(),
         name='SystemLogFormat',
         model='inventory.SystemLog'),
-    URL(r'/systems/(?P<system_id>\d+)/credentials/?$',
-        inventoryviews.InventorySystemCredentialsServices(),
-        name='SystemCredentials',
-        model='inventory.Credentials'),
 
     # System Events
     URL(r'/system_events/?$',

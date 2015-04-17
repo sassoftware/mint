@@ -2418,70 +2418,6 @@ queryset_filter_descriptor_xml = """
       <value_options/>
     </field_descriptor>
     <field_descriptor>
-      <field_label>System agent port</field_label>
-      <field_key>agent_port</field_key>
-      <value_type>int</value_type>
-      <operator_choices>
-        <operator_choice>
-          <key>AND</key>
-          <label>And</label>
-        </operator_choice>
-        <operator_choice>
-          <key>NOT_IN</key>
-          <label>Not in list</label>
-        </operator_choice>
-        <operator_choice>
-          <key>NOT_LIKE</key>
-          <label>Not like</label>
-        </operator_choice>
-        <operator_choice>
-          <key>LIKE</key>
-          <label>Like</label>
-        </operator_choice>
-        <operator_choice>
-          <key>GREATER_THAN_OR_EQUAL</key>
-          <label>Greater than or equal to</label>
-        </operator_choice>
-        <operator_choice>
-          <key>LESS_THAN_OR_EQUAL</key>
-          <label>Less than or equal to</label>
-        </operator_choice>
-        <operator_choice>
-          <key>CONTAINS</key>
-          <label>Contains</label>
-        </operator_choice>
-        <operator_choice>
-          <key>EQUAL</key>
-          <label>Equal to</label>
-        </operator_choice>
-        <operator_choice>
-          <key>NOT_EQUAL</key>
-          <label>Not equal to</label>
-        </operator_choice>
-        <operator_choice>
-          <key>IN</key>
-          <label>In list</label>
-        </operator_choice>
-        <operator_choice>
-          <key>GREATER_THAN</key>
-          <label>Greater than</label>
-        </operator_choice>
-        <operator_choice>
-          <key>LESS_THAN</key>
-          <label>Less than</label>
-        </operator_choice>
-        <operator_choice>
-          <key>OR</key>
-          <label>Or</label>
-        </operator_choice>
-        <operator_choice>
-          <key>IS_NULL</key>
-          <label>Is NULL</label>
-        </operator_choice>
-      </operator_choices>
-      <value_options/>
-    </field_descriptor>
-    <field_descriptor>
       <field_label>System description</field_label>
       <field_key>description</field_key>
       <value_type>str</value_type>
@@ -3273,7 +3209,6 @@ queryset_filter_descriptor_xml = """
       <value_options>
         <options>inventory</options>
         <options>infrastructure-management-node</options>
-        <options>infrastructure-windows-build-node</options>
       </value_options>
       <value_type>str</value_type>
     </field_descriptor>
