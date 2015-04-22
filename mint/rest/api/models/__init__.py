@@ -13,7 +13,6 @@ class RMCUrlField(fields.CalculatedField):
         return request.getHostWithProtocol() + '/catalog' 
 
 from mint.rest.api.models.builddefinitions import *
-from mint.rest.api.models.capsules import *
 from mint.rest.api.models.members import *
 from mint.rest.api.models.users import *
 from mint.rest.api.models.repos import *

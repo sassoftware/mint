@@ -13,7 +13,6 @@
     compress
 }
 
-/var/log/rbuilder/capsule-indexer.log
 /var/log/rbuilder/platforms.log
 /var/log/rbuilder/repository.log {
     missingok

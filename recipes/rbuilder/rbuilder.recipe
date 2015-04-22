@@ -15,7 +15,6 @@
 #
 
 rbuilder_dirs = {
-    'capsules':                     (0775, ('root', 'apache')),
     'catalog':                      (0775, ('root', 'apache')),
     'config':                       (0775, ('root', 'apache')),
     'cscache':                      (0775, ('root', 'apache')),
@@ -70,7 +69,6 @@ class rBuilderProduct(CPackageRecipe):
         'rmake3:python',
         'rmake:python',
         'robj:python',
-        'rpath-capsule-indexer:python',
         'rpath-job:python',
         'rpath-models:python',
         'rpath-product-definition:python',
