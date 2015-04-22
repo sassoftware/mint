@@ -97,6 +97,7 @@ class MintConfig(conarycfg.ConfigFile):
     bugsEmail               = (CfgString, None)
     bugsEmailName           = (CfgString, 'rBuilder Bugs')
     bugsEmailSubject        = (CfgString, 'rBuilder Unhandled Exception Report from %(hostname)s')
+    commitActionModule      = CfgList(CfgString)
     commitEmail             = (CfgString, None)
     dbDriver                = (CfgString, 'pgpool')
     dbPath                  = (CfgString, 'postgres@localhost.localdomain:6432/mint')

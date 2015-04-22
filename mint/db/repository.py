@@ -529,6 +529,8 @@ class RepositoryHandle(object):
         if self.commitEmail:
             action += (" --module='conary.changemail --user=%%(user)s"
                     " --from=%(commitFromEmail)s --email=%(commitEmail)s'")
+        for module in self._cfg.commitActionModule:
+            action += " --module='%s'" % module
         actionDict = {
                 'executable': sys.executable,
                 'config': config.RBUILDER_CONFIG,
