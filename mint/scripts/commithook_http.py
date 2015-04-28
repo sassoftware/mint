@@ -17,6 +17,7 @@
 import json
 from conary.lib.http import connection
 from conary.lib.http import opener
+from conary.lib.http.http_error import ResponseError
 
 
 class Connection(connection.Connection):
@@ -31,6 +32,11 @@ class Opener(opener.URLOpener):
 def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     url = argv[0]
     body = json.dumps(commitList)
-    response = Opener().open(url, body,
-            headers=[('Content-Length', 'application/json')])
-    response.read()
+    try:
+        response = Opener().open(url, body,
+                headers=[('Content-Length', 'application/json')])
+        response.read()
+    except ResponseError as err:
+        if err.errcode != 204:
+            raise
+    return 0
