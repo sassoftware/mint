@@ -2,7 +2,7 @@
 # Copyright (c) rPath, Inc.
 #
 
-SUBDIRS = docs discovery favorites images inventory jobs manager metrics modellib modulehooks packageindex platforms products projects querysets rbac repos session targets users xmlresources
+SUBDIRS = docs discovery favorites images inventory jobs manager metrics modellib modulehooks packageindex platforms products projects querysets rbac repos session targets users
 
 python_files = $(wildcard *.py)
 

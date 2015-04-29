@@ -4,5 +4,4 @@
 #location /ui/hooks                  { alias /usr/share/rbuilder-ui/modules/hooks; }
 #location /ui/themes                 { alias /usr/share/rbuilder-ui/themes; }
 #location /ui                        { alias /usr/share/rbuilder-ui; }
-location /schemas                   { alias /usr/share/rbuilder-ui/xml_resources/xsd; }
 location /crossdomain.xml           { alias /usr/share/rbuilder-ui/crossdomain.xml; }

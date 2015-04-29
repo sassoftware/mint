@@ -42,20 +42,6 @@ class DiscoveryManager(basemanager.BaseManager):
         ci.maintenance_mode = 'false'
         ci.inventory_configuration_enabled = self._bool(self.cfg.inventoryConfigurationEnabled)
         ci.rbuilder_id = self._getRbuilderId()
-        
-        apiVersion.xml_resources = xr = models.XmlResources()
-        
-        xr.id = apiVersion.get_absolute_url() + "/xml_resources"
-        xr.schemas = models.XmlSchemas()
-        
-        xr.schemas.rpath_descriptor_1_1 = models.XmlSchema()
-        xr.schemas.rpath_descriptor_1_1.id = "/schemas/descriptor-1.1.xsd"
-        xr.schemas.rpath_descriptor_1_1.name = "descriptor-1.1.xsd"
-        
-        xr.schemas.rpath_configurator_2_0 = models.XmlSchema()
-        xr.schemas.rpath_configurator_2_0.id = "/schemas/rpath-configurator-2.0.xsd"
-        xr.schemas.rpath_configurator_2_0.name = "rpath-configurator-2.0.xsd"
-        
         return apiVersion
 
     def _getRbuilderId(self):
