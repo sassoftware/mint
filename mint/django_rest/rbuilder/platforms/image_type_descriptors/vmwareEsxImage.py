@@ -116,7 +116,7 @@ XML = """<?xml version='1.0' encoding='UTF-8'?>
             <hidden>true</hidden>
         </field>
         <field>
-            <name>options.allowSnapshots</name>
+            <name>options.vmSnapshots</name>
             <descriptions>
                 <desc>Allow snapshots?</desc>
             </descriptions>
