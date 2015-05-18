@@ -903,8 +903,8 @@ class MintServer(object):
             # created by the jobmaster for the jobslave to accommodate all the
             # layers, compressed and uncompressed, that we need at the same
             # time.
-            node.buildSettings['swapSize'] = 5 * int(
-                    self._jobslaveSize(node) / 1024 / 1024)
+            node.buildSettings['swapSize'] = 3 * int(
+                    node.computedSize() / 1024 / 1024)
         # Now find everything we need to build
         buildsMap = dict()
         stack = trees
@@ -914,10 +914,6 @@ class MintServer(object):
             if top.url is None:
                 buildsMap[id(top)] = top
         return buildsMap.values()
-
-    @classmethod
-    def _jobslaveSize(cls, img):
-        return img.groupSize + sum(cls._jobslaveSize(x) for x in img.childrenMap.values())
 
     def _filterDockerImages(self, buildsL, repos, pd,
             projectId, versionId, stageName, stageLabel, buildDefList):
@@ -1124,6 +1120,7 @@ class MintServer(object):
                 for k in ['dockerBuildTree', 'outputToken']:
                     bdDict.pop(k, None)
                 pimg.dockerImageId = bdDict.get('attributes.docker_image_id')
+                pimg.groupSize = bdDict.get('attributes.installed_size')
                 pimg.buildData = dict(buildId=pimg.id, name=buildName,
                         data=bdDict)
                 break
@@ -2279,3 +2276,8 @@ class DockerImageBuild(_BaseImageBuild):
         ret = super(DockerImageBuild, self).serialize()
         ret['buildData'] = self.buildData
         return ret
+
+    def computedSize(self, parentSize=0):
+        thisSize = parentSize + self.groupSize
+        return thisSize + sum(x.computedSize(thisSize)
+                for x in self.childrenMap.values())
