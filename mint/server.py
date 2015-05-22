@@ -885,6 +885,7 @@ class MintServer(object):
         return buildId
 
     def _categorizeDockerBuilds(self, dockerBuildChains):
+        MiB = 1 << 20
         # Grab the unique roots of the build chains
         trees = dict((id(x[0]), x[0]) for x in dockerBuildChains).values()
         for dockerBuild in trees:
@@ -904,7 +905,7 @@ class MintServer(object):
             # layers, compressed and uncompressed, that we need at the same
             # time.
             node.buildSettings['swapSize'] = 3 * int(
-                    node.computedSize() / 1024 / 1024)
+                    dockerBuild.computedSize() / MiB)
         # Now find everything we need to build
         buildsMap = dict()
         stack = trees
@@ -1094,6 +1095,7 @@ class MintServer(object):
         return ret
 
     def _findBuildChain(self, repos, img, nvfToBuildMap):
+        GiB = 1 << 30
         ret = [img]
         while 1:
             trv = repos.getTrove(*img.nvf)
@@ -1120,7 +1122,8 @@ class MintServer(object):
                 for k in ['dockerBuildTree', 'outputToken']:
                     bdDict.pop(k, None)
                 pimg.dockerImageId = bdDict.get('attributes.docker_image_id')
-                pimg.groupSize = bdDict.get('attributes.installed_size')
+                # Default to 1GB if the parent image hasn't reported its size
+                pimg.groupSize = bdDict.get('attributes.installed_size') or GiB
                 pimg.buildData = dict(buildId=pimg.id, name=buildName,
                         data=bdDict)
                 break
