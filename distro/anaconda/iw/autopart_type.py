@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 execfile("/usr/lib/anaconda/iw/autopart_type.py")
 oldWindow = PartitionTypeWindow  # pyflakes=ignore
 

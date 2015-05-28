@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 from mint.db import database
 from restlib.http import wsgi
 from catalogService import handler as catalog_handler

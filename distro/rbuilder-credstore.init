@@ -1,6 +1,4 @@
 #!/bin/bash
-#  chkconfig: 345 60 40
-#  description: rBuilder credential store
 #
 # Copyright (c) SAS Institute Inc.
 #
@@ -16,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+#  chkconfig: 345 60 40
+#  description: rBuilder credential store
 
 scriptname=$(basename $0)
 if [ ${scriptname:0:1} = "S" -o ${scriptname:0:1} = "K" ]

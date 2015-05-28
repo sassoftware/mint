@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 SUBDIRS = templates content
 
 python_files = $(wildcard *.py)

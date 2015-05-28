@@ -104,4 +104,3 @@ class rBuilderBackend(object):
             return User.objects.get(pk=user_id, deleted=False)
         except User.DoesNotExist:
             return None
-
