@@ -925,22 +925,7 @@ class MintServer(object):
         # with different dockerfiles. This map should take that into account.
         nvfToBuildMap = {}
         for buildDefinition, nvfList, imageModel in buildsL:
-            buildImage = buildDefinition.getBuildImage()
-            buildType = buildImage.containerFormat and \
-                    str(buildImage.containerFormat) or ''
-            containerTemplate = pd.getContainerTemplate( \
-                    buildDefinition.containerTemplateRef, None)
-            if not containerTemplate:
-                containerTemplate = pd.getPlatformContainerTemplate( \
-                        buildDefinition.containerTemplateRef, None)
-            buildSettings = {}
-            if containerTemplate:
-                buildSettings = containerTemplate.fields.copy()
-
-            for key, val in buildImage.fields.iteritems():
-                if val is not None and val != '':
-                    buildSettings[key] = val
-            img = ImageBuild(buildType=buildType,
+            img = ImageBuild(
                     buildName=buildDefinition.name,
                     buildDefinition=buildDefinition,
                     nvf=nvfList[0],
@@ -948,9 +933,8 @@ class MintServer(object):
                     imageModel=imageModel,
                     projectId = projectId,
                     productVersionId=versionId,
-                    buildSettings=buildSettings,
                     stageName=stageName)
-            if buildType != DockerImageBuild.TypeName:
+            if img.buildType != DockerImageBuild.TypeName:
                 rest.append(img)
                 continue
             assert len(nvfList) == 1
@@ -1003,6 +987,7 @@ class MintServer(object):
                 buildObj.buildDefinition = buildDef
                 if buildDef:
                     buildObj.buildName = buildDef.name
+                buildObj.setBuildSettings()
 
         return dockerImages, rest
 
@@ -2234,6 +2219,7 @@ class _BaseImageBuild(object):
             setattr(self, s, kwargs.pop(s, None))
         if kwargs:
             raise TypeError("Unexpected keywords: %s" % ' '.join(kwargs))
+        self.setBuildSettings()
 
     @classmethod
     def _getSlots(cls):
@@ -2261,6 +2247,27 @@ class _BaseImageBuild(object):
             ret['dockerImageId'] = self.dockerImageId
         ret['children'] = [ x.serialize() for x in self.childrenMap.values() ]
         return ret
+
+    def setBuildSettings(self):
+        if self.buildDefinition is None:
+            return
+        buildImage = self.buildDefinition.getBuildImage()
+        self.buildType = str(buildImage.containerFormat) if buildImage.containerFormat else ''
+        if self.proddef is None:
+            return
+        containerTemplate = self.proddef.getContainerTemplate(
+                self.buildDefinition.containerTemplateRef, None)
+        if not containerTemplate:
+            containerTemplate = self.proddef.getPlatformContainerTemplate(
+                    self.buildDefinition.containerTemplateRef, None)
+        buildSettings = self.buildSettings
+        if containerTemplate:
+            buildSettings.update(containerTemplate.fields)
+
+        for key, val in buildImage.fields.iteritems():
+            if val is not None and val != '':
+                buildSettings[key] = val
+        return self
 
 class ImageBuild(_BaseImageBuild):
     __slots__ = []
