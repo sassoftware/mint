@@ -607,8 +607,18 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             # Nothing to be done, there is another call that posts the
             # image
-            self.image = job.images.all()[0].image
+            images = list(job.images.all())
+            if not images:
+                raise ImageDeletedError("Image was deleted during deployment")
+            self.image = images[0].image
             return self.image
+
+        def handleError(self, job, exc):
+            if isinstance(exc, ImageDeletedError):
+                job.status_text = str(exc)
+                job.status_code = 404
+                return True
+            return False
 
         def getRepeaterMethod(self, cli, job):
             self.extractDescriptorData(job)
@@ -706,7 +716,10 @@ class JobHandlerRegistry(HandlerRegistry):
         def _processJobResults(self, job):
             # Nothing to be done, there is another call that posts the
             # image
-            self.image = job.images.all()[0].image
+            images = list(job.images.all())
+            if not images:
+                raise ImageDeletedError("Image was deleted during deployment")
+            self.image = images[0].image
 
             systems = self.results.iterchildren('system')
 
@@ -930,3 +943,7 @@ class JobHandlerRegistry(HandlerRegistry):
                 job.status_code = 409
                 return True
             return False
+
+
+class ImageDeletedError(Exception):
+    pass
