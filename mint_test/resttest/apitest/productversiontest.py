@@ -494,7 +494,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>KVM/QEMU/Raw Hard Disk</displayName>
+      <displayName>OpenStack/KVM/QEMU/Raw Hard Disk</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86">
       <name>x86</name>
@@ -508,7 +508,7 @@ class ProductVersionTest(restbase.BaseRestTest):
     <displayName>Raw Hard Disk</displayName>
     <container id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/containers/rawHdImage">
       <name>rawHdImage</name>
-      <displayName>KVM/QEMU/Raw Hard Disk</displayName>
+      <displayName>OpenStack/KVM/QEMU/Raw Hard Disk</displayName>
     </container>
     <architecture id="http://%(server)s:%(port)s/api/products/testproject/versions/1.0/architectures/x86_64">
       <name>x86_64</name>

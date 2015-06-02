@@ -175,7 +175,7 @@ xmlTagNameImageTypeMap = {
     'xenOvaImage':         XEN_OVA,
     'imageless':           IMAGELESS,
     'windowsIsoImage':     WINDOWS_ISO,
-    'wimImage':            WINDOWS_WIM, 
+    'wimImage':            WINDOWS_WIM,
 }
 
 imageTypeXmlTagNameMap = dict([(v,k) for k,v in xmlTagNameImageTypeMap.iteritems()])
@@ -185,7 +185,7 @@ typeNamesMarketing = {
     INSTALLABLE_ISO:    "Legacy Installable CD/DVD",
     RAW_FS_IMAGE:       "Eucalyptus/Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
-    RAW_HD_IMAGE:       "KVM/QEMU/Raw Hard Disk",
+    RAW_HD_IMAGE:       "OpenStack/KVM/QEMU/Raw Hard Disk",
     VMWARE_IMAGE:       "VMware(R) Workstation/Fusion / Parallels(R) Virtual Appliance",
     VMWARE_ESX_IMAGE:   "VMware(R) ESX/VCD / Oracle(R) VirtualBox Virtual Appliance",
     VMWARE_OVF_IMAGE:   "VMware(R) Virtual Appliance OVF",

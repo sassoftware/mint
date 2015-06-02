@@ -499,7 +499,7 @@ image_types_get_xml = \
     <image_type_id>3</image_type_id>
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/4">
-    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/netbootImage"/> 
+    <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/netbootImage"/>
     <description>Netboot Image</description>
     <name>netbootImage</name>
     <short_name>Netboot</short_name>
@@ -524,7 +524,7 @@ image_types_get_xml = \
   </image_type>
   <image_type id="http://testserver/api/v1/image_types/7">
     <descriptor id="http://testserver/api/v1/platforms/image_type_definition_descriptors/rawHdImage"/>
-    <description>KVM/QEMU/Raw Hard Disk</description>
+    <description>OpenStack/KVM/QEMU/Raw Hard Disk</description>
     <name>rawHdImage</name>
     <short_name>HDD</short_name>
     <key>RAW_HD_IMAGE</key>
