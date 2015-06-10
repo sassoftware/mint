@@ -161,8 +161,8 @@ class rBuilderProduct(CPackageRecipe):
         r.Transient(r'.*/\.keep[^/]*')
         r.Config(exceptions=r'.*/\.keep[^/]*')
 
-        r.Transient(r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
-        r.Config(exceptions=r'/etc/rmake/(noderc|(node|server).d/20_rbuilder.conf)')
+        r.Transient(r'/etc/rmake/(node|server).d/20_rbuilder.conf')
+        r.Config(exceptions=r'/etc/rmake/(node|server).d/20_rbuilder.conf')
 
         r.User('credstore', 205, homedir='/srv/rbuilder/data/credstore')
 

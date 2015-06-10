@@ -24,8 +24,6 @@ install: default-install
 	# Empty target directories for custom configuration.
 	mkdir -p $(DESTDIR)/etc/rmake/node.d
 	mkdir -p $(DESTDIR)/srv/rbuilder/config/config.d
-	# Install include-* stubs and defaults (Transient)
-	install -D -m0644 noderc $(DESTDIR)/etc/rmake/noderc
 	# Install stubs to be overwritten by setup and/or rAPA.
 	# (InitialContents, possibly group-writable w/ Ownership)
 	install -D -m0664 noderc.rapa \
