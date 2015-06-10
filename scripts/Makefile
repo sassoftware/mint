@@ -20,7 +20,6 @@ static_files =				\
 	add-rmake3-node			\
 	dump-rbuilder-databases		\
 	deleteproject			\
-	generate-certs.sh		\
 	group-script			\
 	mcp-stack			\
 	migrate-all-projects		\

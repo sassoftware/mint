@@ -41,7 +41,7 @@ createdb -U postgres --encoding=UTF8 --owner=rmake rmake &>/dev/null
 createdb -U postgres --encoding=UTF8 --owner=rmake rmake2 &>/dev/null
 
 # SSL certificates
-"$scriptdir"/generate-certs.sh
+"$scriptdir"/pki-tool --initialize -q 2>&1 >>/var/log/rbuilder/scripts.log
 
 
 rand_passwd() {
