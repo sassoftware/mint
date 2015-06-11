@@ -23,3 +23,7 @@ chkconfig postgresql-rbuilder on
 chkconfig jabberd on
 
 chkconfig kdump off
+
+# These will get turned back on by puppet after they are configured
+chkconfig rmake off
+chkconfig rmake-node off
