@@ -36,7 +36,6 @@ install: default-install
 	# nginx
 	install -D -m0644 nginx.conf $(DESTDIR)/etc/nginx/nginx.conf
 	install -D -m0644 nginx-rbuilder.conf $(DESTDIR)/etc/nginx/conf.d/01_rbuilder.conf
-	install -D -m0644 nginx-ledger.inc $(DESTDIR)/etc/nginx/conf.d/rbuilder-ledger.rbuilder
 	install -D -m0644 nginx-ui.inc $(DESTDIR)/etc/nginx/conf.d/rbuilder-ui.rbuilder
 	install -D -m0644 nginx.mime.types $(DESTDIR)/etc/nginx/mime.types
 	install -D -m0644 nginx.sysconfig $(DESTDIR)/etc/sysconfig/nginx
