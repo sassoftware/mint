@@ -520,7 +520,8 @@ class ProjectManager(basemanager.BaseManager):
         buildFiles = list(
                 imagemodels.BuildFile.objects.filter(
                     image__name=image_name,
-                    image__project_branch_stage=stage).order_by(
+                    image__project_branch_stage=stage,
+                    image__status=300).order_by(
                         '-image__image_id',
                         '-size',
                         'file_id')[:1])

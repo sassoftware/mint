@@ -586,6 +586,7 @@ class ProjectsTestCase(RbacEngine):
                     description=name,
                     project_branch=branch,
                     project=prj,
+                    status=300,
                     # this is a for a stage name that is not set
                     # which was a legacy thing.
                     _image_type=10,
@@ -604,6 +605,7 @@ class ProjectsTestCase(RbacEngine):
                         project_branch_stage=stage,
                         # the tests must also set this...
                         stage_name=stage.name,
+                        status=300,
                         _image_type=10,
                         trove_version='/foo@rpath:1/12345:%d-1' % (2*i+j),
                         trove_flavor='1#x86:i486:i586:i686|5#use:~!xen',
@@ -653,6 +655,26 @@ class ProjectsTestCase(RbacEngine):
         self.assertEquals(response.status_code, 307)
         self.assertEquals(response['Location'],
                 'http://testserver/downloadImage?fileId=8&urlType=0')
+
+        # image 1-0devel has status 300, so a redirect should be issued
+        imgName = "image 1-0devel"
+        url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
+                (prj.short_name, branch.label, stage.name, imgName))
+        response = self._get_internal(url, follow=False)
+        self.assertEquals(response.status_code, 307)
+        self.assertEquals(response['Location'],
+                'http://testserver/downloadImage?fileId=4&urlType=0')
+
+        # Now pretend latest image with that name is still building (non-300
+        # status)
+        image = stage.images.get(name=imgName,
+                trove_version='/foo@rpath:1/12345:1-1')
+        image.status = 200
+        image.save()
+        response = self._get_internal(url, follow=False)
+        self.assertEquals(response.status_code, 307)
+        self.assertEquals(response['Location'],
+                'http://testserver/downloadImage?fileId=2&urlType=0')
 
         # Test 404
         url = ('projects/%s/project_branches/%s/project_branch_stages/%s/images_by_name/%s/latest_file' %
