@@ -16,6 +16,7 @@
 
 
 from conary.lib import digestlib
+from rpath_proddef import api1
 
 from restlib import response
 
@@ -107,16 +108,9 @@ class BuildDefinitionMixIn(object):
     @classmethod
     def computeBuildDefinitionDigest(cls, buildDef):
         # We'll serialize the build def and hash it to get an ID
-        digest = cls.Digester_md5()
+        digest = api1.DigesterMd5FLO()
         buildDef.export(digest, level=0, namespace_='')
         return digest.hexdigest()
-
-    class Digester_md5(object):
-        def __init__(self):
-            self._digest = digestlib.md5()
-            self.hexdigest = self._digest.hexdigest
-        def write(self, data):
-            self._digest.update(data)
 
 
 class ProductVersionStages(base.BaseController, BuildDefinitionMixIn):
