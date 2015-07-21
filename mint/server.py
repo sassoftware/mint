@@ -1751,6 +1751,7 @@ class MintServer(object):
 
         buildDict = self.builds.get(buildId)
         return { 'status': buildDict['status'],
+                'name':    buildDict['name'],
                 'message': buildDict['statusMessage'] }
 
     # mirrored labels
