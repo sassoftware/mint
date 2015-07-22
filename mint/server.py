@@ -1307,7 +1307,7 @@ class MintServer(object):
         if not scored:
             return None
         # Pick the highest scoring result
-        return sorted(scored)[-1][1]
+        return trovetup.TroveTuple(sorted(scored)[-1][1])
 
     def _deleteBuild(self, buildId, force=False):
         if not self.builds.buildExists(buildId)  and not force:
